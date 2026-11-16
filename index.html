@@ -166,6 +166,22 @@ pre.cl{white-space:pre-wrap;font:inherit;font-size:14px;line-height:1.5;margin:0
 .nuovo-bar{position:fixed;left:0;right:0;bottom:0;z-index:25;padding:8px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(233,232,228,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .nuovo-in{max-width:456px;margin:0 auto;background:#fff;border-radius:16px;padding:8px 8px 8px 14px;display:flex;align-items:center;gap:8px;box-shadow:0 -2px 18px rgba(20,22,26,.08)}
 .nuovo-in .lab{flex:1;font-size:14px}
+.gwrap{overflow-x:auto;background:#fff;border-radius:18px;padding:6px 0 6px;-webkit-overflow-scrolling:touch}
+.gt{border-collapse:separate;border-spacing:0;font-size:12px}
+.gt th,.gt td{padding:0;text-align:center}
+.gt .nm{position:sticky;left:0;z-index:2;background:#fff;text-align:left;padding:6px 10px 6px 12px;min-width:118px;max-width:118px;border-right:1px solid var(--soft)}
+.gt td.nm b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt td.nm small{display:block;color:var(--muted);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt .gh{min-width:34px;padding:4px 2px 6px;color:var(--muted);font-weight:500}.gt .gh span{display:block;font-size:10px}.gt .gh b{display:block;font-size:14px;color:var(--ink)}
+.tp{display:inline-flex;width:16px;height:16px;border-radius:5px;font-size:10px;font-style:normal;font-weight:700;align-items:center;justify-content:center;margin-top:2px}
+.tp.tS{background:var(--ink);color:#fff}.tp.tA{background:var(--blue-soft);color:var(--blue)}.tp.tR{background:#FFF1D6;color:#7A4B00}.tp.tP{background:#fff;color:var(--muted);border:1px dashed var(--line)}
+.gt .dr td{background:var(--soft);font-size:11px;font-weight:700;color:var(--muted);padding:4px 12px}.gt .dr td.nm{background:var(--soft)}
+.gc{height:40px;cursor:pointer;border-top:1px solid var(--soft);position:relative}
+.gc.on::after{content:"";position:absolute;left:2px;right:2px;top:9px;bottom:9px;border-radius:6px;background:#C9CBD0}
+.gc.on.sok::after{background:var(--ok)}.gc.on.satt::after,.gc.on.sda::after{background:#E0A11B}.gc.on.sno::after{background:#E9B9BC}
+.gc.sel{box-shadow:inset 0 0 0 2px var(--blue)}
+.gt .tot td{font-weight:700;padding:8px 0;border-top:1px solid var(--line)}.gt .tot td.nm{font-size:12px;color:var(--muted)}
+.legenda-g{display:flex;gap:12px;margin:8px 4px 0;font-size:12px;color:var(--muted)}.legenda-g span{display:inline-flex;align-items:center;gap:5px}.legenda-g .tp{margin:0}
 .toast{bottom:auto!important;top:calc(14px + env(safe-area-inset-top))}
 .bar.fissa{position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));max-width:452px;margin:0 auto;z-index:25}
 .add.on{background:var(--ok);border-color:var(--ok);color:#fff;font-size:16px}
@@ -224,7 +240,7 @@ var ALIAS = {
       (ko || function(err){ toast('Qualcosa non va: ' + (err && err.message || 'riprova')); })(e);
     };
     if (window.API_URL) {   // versione su GitHub: parla con Google via internet
-      fetch(window.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
+      fetch(window.API_URL, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
         .then(function(r){ return r.json(); })
         .then(function(j){ if (j.err) fail(new Error(j.err)); else ok(j.data); })
         .catch(function(){ fail(new Error('Connessione assente, riprova')); });
@@ -1268,7 +1284,7 @@ var ALIAS = {
     var ok = col.filter(confOk).length, chiuso = p.stato === 'chiuso';
     return [
       { t: 'Crew', fatto: cr.length > 0, info: cr.length ? cr.length + ' in crew' : 'Aggiungi chi lavora alla produzione', btn: '+ Aggiungi crew', act: 'addCrew', on: !chiuso },
-      { t: 'Conferme', fatto: col.length > 0 && ok === col.length, info: col.length ? ok + ' confermati su ' + col.length + ' da collocare' : 'Nessuno da collocare', btn: 'Vedi chi manca', act: 'filtroDa', on: col.length > ok && !chiuso },
+      { t: 'Conferme', fatto: col.length > 0 && ok === col.length, info: col.length ? ok + (ok === 1 ? ' confermato su ' : ' confermati su ') + col.length + ' da collocare' : 'Nessuno da collocare', btn: 'Vedi chi manca', act: 'filtroDa', on: col.length > ok && !chiuso },
       { t: 'Rilevamento', fatto: !!p.ril, info: p.ril ? 'Creato il ' + itData(p.ril) : ok ? 'Pronto per ' + ok + (ok === 1 ? ' persona confermata' : ' persone confermate') : 'Serve almeno una conferma', btn: p.ril ? 'Rifai' : 'Prepara', go: 'ril', on: ok > 0 && !chiuso },
       { t: 'Mandato', fatto: !!p.man, info: p.man ? 'Creato il ' + itData(p.man) : 'A riprese concluse', btn: p.man ? 'Rifai' : 'Prepara', act: 'apriMan', on: ok > 0 && !chiuso },
       { t: 'Chiusura', fatto: chiuso, info: chiuso ? 'Chiuso il ' + itData(p.chiuso) : 'La cartella passa in Archivio', btn: 'Chiudi', act: 'chiudiPrj', on: !chiuso }
@@ -1320,15 +1336,18 @@ var ALIAS = {
       (chiuso ? '' : '<div class="head-acts"><button class="link" data-act="modPrj">Modifica progetto</button><button class="btn main mini" data-act="addCrew">+ Aggiungi crew</button></div>') +
       (chiuso ? '<p class="muted" style="margin:10px 0 0">Progetto chiuso: lo trovi in Archivio.</p>' : '') + '</div>' +
       (cr.length ? '<div class="row" style="margin:0 0 4px"><button class="btn soft" data-go="cl">Crew list</button><button class="btn soft" data-act="apriCat">Catering</button></div>' +
-        '<div class="fchips">' + chip('tutti', 'Tutti', cr.length) + chip('da', 'Da confermare', daConf, 'da') + chip('ok', 'Confermati', nOk, 'ok') + chip('cl', 'Altri', nCl, 'cl') + '</div>' +
+        '<div class="seg" style="margin-top:12px"><button type="button" class="' + (S.vista !== 'giorni' ? 'on' : '') + '" data-act="vista" data-v="elenco">Elenco</button><button type="button" class="' + (S.vista === 'giorni' ? 'on' : '') + '" data-act="vista" data-v="giorni">Giorni</button></div>' +
+        (S.vista === 'giorni' ? vistaGiorni(p, cr) : '<div class="fchips">' + chip('tutti', 'Tutti', cr.length) + chip('da', 'Da confermare', daConf, 'da') + chip('ok', 'Confermati', nOk, 'ok') + chip('cl', 'Altri', nCl, 'cl') + '</div>' +
 
-        (lista || '<div class="card"><p class="muted" style="margin:0">Nessuno in questo filtro.</p></div>') :
+        (lista || '<div class="card"><p class="muted" style="margin:0">Nessuno in questo filtro.</p></div>')) :
         '<div class="card"><p class="muted" style="margin:0">Ancora nessuno in crew. Tocca + Aggiungi crew per cercare le persone nel database.</p></div>') +
       '<div style="height:170px"></div>' + barraPassi(p);
   }
 
   function azioni5(a, b){
     if (a === 'addCrew') { var rs = {}; S.pr.crew.forEach(function(c){ rs[c.r] = 1; }); S.target = { id: S.pr.id, titolo: S.pr.titolo, rs: rs, n: 0 }; S.q = { ruolo: '', dove: '', nome: '' }; S.view = 'addc'; render(); return true; }
+    if (a === 'vista') { S.vista = b.dataset.v; S.gSel = null; render(); return true; }
+    if (a === 'gCella') { cellaGiorni(b); return true; }
     if (a === 'fCrew') { S.fCrew = b.dataset.f; var y = window.scrollY; render(); window.scrollTo(0, y); return true; }
     if (a === 'filtroDa') { S.fCrew = 'da'; render(); return true; }
     if (a === 'passo') { var i = Number(b.dataset.i); S.passo = S.passo === i ? null : i; var y2 = window.scrollY; render(); window.scrollTo(0, y2); return true; }
@@ -1434,6 +1453,83 @@ var ALIAS = {
       '<div class="f"><label class="lab" for="aqn">Nome</label><input type="search" id="aqn" data-ac="nome" placeholder="Nome o cognome" value="' + esc(S.q.nome) + '" autocomplete="off"></div></div></div>' +
       '<div id="addRis">' + righeAdd() + '</div><div style="height:90px"></div>' +
       '<div class="bar fissa"><button class="btn main" data-act="fattoTarget">' + (t.n ? 'Fatto · ' + t.n + (t.n === 1 ? ' aggiunto' : ' aggiunti') : 'Torna al progetto') + '</button></div>';
+  }
+
+  // ═════════ CONFERMA ISTANTANEA per la crew ═════════
+  // "Grazie, ricevuto" compare subito; il salvataggio continua in sottofondo (anche se la pagina viene chiusa).
+  function inviaConferma(az, d, cat, fatto){
+    var prima = S.cmode;
+    S.cmode = fatto; render();
+    var prova = function(){
+      call('confermaInvia', [CONF, az, d, cat], function(r){
+        if (!r.ok) erroreInvio(r.msg, prova, prima);
+      }, function(){ erroreInvio('Connessione assente: i tuoi dati non sono ancora arrivati.', prova, prima); });
+    };
+    prova();
+  }
+  function erroreInvio(msg, riprova, prima){
+    chiudiFoglio();
+    var o = document.createElement('div'); o.className = 'ov'; o.id = 'foglio';
+    o.innerHTML = '<div class="sheet"><h2>Invio non riuscito</h2><p class="muted" style="margin:0 0 12px">' + esc(msg) + '</p>' +
+      '<button class="btn main" data-f="riprova">Riprova</button><button class="link" style="width:100%;margin-top:6px" data-f="indietro">Torna ai dati</button></div>';
+    o.addEventListener('click', function(e){
+      var t = e.target.closest('[data-f]'); if (!t) return;
+      chiudiFoglio();
+      if (t.dataset.f === 'riprova') { toast('Invio in corso…'); riprova(); }
+      else { S.cmode = prima; render(); }
+    });
+    document.body.appendChild(o);
+  }
+  function confAzione(a, b){
+    if (a === 'correggi') { S.cmode = 'correggi'; return render(); }
+    if (a === 'annulla') { S.cmode = S.cd.conf === 'confermata' ? 'gia' : 'vedi'; return render(); }
+    if (a === 'no' && !confirm('Confermi che non puoi esserci?')) return;
+    var az = a === 'no' ? 'no' : a === 'cat' ? 'cat' : 'ok';
+    inviaConferma(az, null, az === 'no' ? null : leggiCat(), az === 'no' ? 'no' : az === 'cat' ? 'catFatto' : 'fatto');
+  }
+  function confSalva(f){
+    var d = validaDati(f); if (!d) return;
+    inviaConferma('correggi', d, leggiCat(), 'fatto');
+  }
+
+  // ═════════ VISTA GIORNI · chi c'è giorno per giorno ═════════
+  function vistaGiorni(p, cr){
+    var gs = elencoGiorni(p.dal, p.al), m = leggiGiorni(p.giorni), sel = S.gSel;
+    var GS = ['D', 'L', 'M', 'M', 'G', 'V', 'S'];
+    var deps = {};
+    cr.forEach(function(c){ var d = repOf(c.q); (deps[d] = deps[d] || []).push(c); });
+    var testa = '<tr><th class="nm"></th>' + gs.map(function(g){
+      var d = new Date(g + 'T12:00:00'), t = m[g] || 'S';
+      return '<th class="gh"><span>' + GS[d.getDay()] + '</span><b>' + d.getDate() + '</b><i class="tp t' + t + '" title="' + TIPI[t] + '">' + t + '</i></th>';
+    }).join('') + '</tr>';
+    var corpo = Object.keys(deps).sort(function(a, b){ return ordRep(a) - ordRep(b); }).map(function(dep){
+      return '<tr class="dr"><td class="nm">' + esc(dep) + '</td><td colspan="' + gs.length + '"></td></tr>' + deps[dep].map(function(c){
+        var st = statoCrew(c).k;
+        return '<tr><td class="nm" data-pers="' + c.r + '"><b>' + esc(nomeDi(c)) + '</b><small>' + esc(c.q) + '</small></td>' + gs.map(function(g){
+          var on = c.dal <= g && c.al >= g, s = sel && sel.r === c.r && sel.g === g;
+          return '<td class="gc' + (on ? ' on s' + st : '') + (s ? ' sel' : '') + '" data-act="gCella" data-r="' + c.r + '" data-g="' + g + '"></td>';
+        }).join('') + '</tr>';
+      }).join('');
+    }).join('');
+    var tot = '<tr class="tot"><td class="nm">Persone</td>' + gs.map(function(g){
+      return '<td>' + cr.filter(function(c){ return c.conf !== 'non disponibile' && c.dal <= g && c.al >= g; }).length + '</td>';
+    }).join('') + '</tr>';
+    return '<p class="muted" style="margin:10px 4px 6px">' + (sel ? 'Ora tocca l\'ultimo giorno di ' + esc(nomeDi(crewDi(sel.r))) + '.' : 'Per cambiare le date di qualcuno tocca il suo primo giorno, poi l\'ultimo.') + '</p>' +
+      '<div class="gwrap"><table class="gt">' + testa + corpo + tot + '</table></div>' +
+      '<div class="legenda-g"><span><i class="tp tS">S</i>Shoot</span><span><i class="tp tA">A</i>Allestimento</span><span><i class="tp tR">R</i>Ritiri e resi</span></div>';
+  }
+  function cellaGiorni(b){
+    var r = Number(b.dataset.r), g = b.dataset.g, c = crewDi(r);
+    if (!c || S.pr.stato === 'chiuso') return;
+    if (!S.gSel || S.gSel.r !== r) { S.gSel = { r: r, g: g }; var y = window.scrollY, x = (document.querySelector('.gwrap') || {}).scrollLeft; render(); window.scrollTo(0, y); var w = document.querySelector('.gwrap'); if (w) w.scrollLeft = x; return; }
+    var a = S.gSel.g < g ? S.gSel.g : g, z = S.gSel.g < g ? g : S.gSel.g;
+    S.gSel = null;
+    c.dal = a; c.al = z;
+    var y2 = window.scrollY, x2 = (document.querySelector('.gwrap') || {}).scrollLeft; render(); window.scrollTo(0, y2); var w2 = document.querySelector('.gwrap'); if (w2) w2.scrollLeft = x2;
+    toast(nomeDi(c) + ': ' + fmtRange(a, z));
+    call('aggiornaCrew', [S.token, S.pr.id, r, { q: c.q, dal: a, al: z, col: c.col, cm: c.cm, ref: c.ref }], function(res){
+      if (!res.ok) { toast('Non salvato: ' + res.msg); ricarica(); }
+    }, function(e){ toast('Non salvato: ' + e.message); ricarica(); });
   }
 
   if (CONF) { S.view = 'conf'; apriConf(); }
