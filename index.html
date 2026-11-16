@@ -163,6 +163,9 @@ pre.cl{white-space:pre-wrap;font:inherit;font-size:14px;line-height:1.5;margin:0
 .dot.fatto.cur .c{box-shadow:0 0 0 3px #CDE6D6}
 .passo-ora{display:flex;align-items:center;gap:10px;border-top:1px solid var(--soft);padding-top:10px}
 .passo-ora .t{flex:1;min-width:0}.passo-ora b{display:block;font-size:15px}.passo-ora small{display:block;color:var(--muted);font-size:13px;margin-top:1px}
+.nuovo-bar{position:fixed;left:0;right:0;bottom:0;z-index:25;padding:8px 12px calc(10px + env(safe-area-inset-bottom));background:rgba(233,232,228,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.nuovo-in{max-width:456px;margin:0 auto;background:#fff;border-radius:16px;padding:8px 8px 8px 14px;display:flex;align-items:center;gap:8px;box-shadow:0 -2px 18px rgba(20,22,26,.08)}
+.nuovo-in .lab{flex:1;font-size:14px}
 .toast{bottom:auto!important;top:calc(14px + env(safe-area-inset-top))}
 .bar.fissa{position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));max-width:452px;margin:0 auto;z-index:25}
 .add.on{background:var(--ok);border-color:var(--ok);color:#fff;font-size:16px}
@@ -272,9 +275,9 @@ var ALIAS = {
       '<button class="btn main" type="submit"' + (S.contatti ? '' : ' disabled') + '>Cerca</button>' +
       '<p class="muted" style="text-align:center;margin:10px 0 0">' + n + '</p></form></div>' +
       vProgHome() +
-      '<div class="card" style="margin-top:12px"><h2>Nuovo contatto</h2><div class="row">' +
-      '<button class="btn wa" data-act="invita">Invita</button><button class="btn sec" data-go="mano">A mano</button></div>' +
-      '<p class="muted" style="margin:10px 0 0">Invita manda su WhatsApp il link della scheda: la persona compila da sola.</p></div>';
+      '<div style="height:84px"></div>' +
+      '<div class="nuovo-bar"><div class="nuovo-in"><span class="lab" style="margin:0">Nuovo contatto</span>' +
+      '<button class="btn wa mini" data-act="invita">Invita</button><button class="btn sec mini" data-go="mano">A mano</button></div></div>';
   }
 
   function cerca(){
