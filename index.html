@@ -163,6 +163,8 @@ pre.cl{white-space:pre-wrap;font:inherit;font-size:14px;line-height:1.5;margin:0
 .dot.fatto.cur .c{box-shadow:0 0 0 3px #CDE6D6}
 .passo-ora{display:flex;align-items:center;gap:10px;border-top:1px solid var(--soft);padding-top:10px}
 .passo-ora .t{flex:1;min-width:0}.passo-ora b{display:block;font-size:15px}.passo-ora small{display:block;color:var(--muted);font-size:13px;margin-top:1px}
+.toast{bottom:auto!important;top:calc(14px + env(safe-area-inset-top))}
+.bar.fissa{position:fixed;left:14px;right:14px;bottom:calc(12px + env(safe-area-inset-bottom));max-width:452px;margin:0 auto;z-index:25}
 .add.on{background:var(--ok);border-color:var(--ok);color:#fff;font-size:16px}
 .add:disabled{opacity:.5}
 .load{text-align:center;color:var(--muted);padding:50px 0;font-size:14px}
@@ -320,7 +322,7 @@ var ALIAS = {
     else if (!S.sens) sens = '<button class="btn sec" data-act="mostra">Mostra i dati</button><p class="muted" style="margin:8px 0 0">L\'apertura resta nel registro.</p>';
     else sens = '<dl>' + [['Codice fiscale', S.sens.cf], ['Nascita', S.sens.nascita], ['Residenza', S.sens.residenza], ['Regime', S.sens.regime], ['Partita IVA', S.sens.piva], ['IBAN', S.sens.iban]]
       .filter(function(x){ return x[1]; }).map(function(x){ return '<dt>' + x[0] + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join('') + '</dl>';
-    return top('ris') +
+    return top(S.target ? 'addc' : 'ris') +
       '<div class="card"><div class="big">' + esc(nomeDi(c)) + '</div><div class="sub">' + esc([c.ruolo, c.citta].filter(Boolean).join(' · ')) + '</div>' +
       '<div class="acts"><a href="tel:' + esc(String(c.tel).replace(/\s/g, '')) + '" class="' + (c.tel ? '' : 'off') + '">Chiama</a>' +
       '<a href="' + waHref(tel, '') + '" class="' + (tel ? '' : 'off') + '">WhatsApp</a>' +
@@ -347,7 +349,7 @@ var ALIAS = {
 
   function render(){
     if (S.view !== 'pin' && S.view !== 'conf' && !S.token) S.view = 'pin';
-    app.innerHTML = { pin: vPin, home: vHome, ris: vRis, scheda: vScheda, mano: vMano, prjForm: vPrjForm, prj: vPrj, pers: vPers, cl: vCl, scegli: vScegli, conf: vConf, cat: vCat, ril: vRil, man: vMan, adminF: vAdminF, arch: vArch, invio: vInvio, acc: vAcc }[S.view]();
+    app.innerHTML = { pin: vPin, home: vHome, ris: vRis, scheda: vScheda, mano: vMano, prjForm: vPrjForm, prj: vPrj, pers: vPers, cl: vCl, scegli: vScegli, conf: vConf, cat: vCat, ril: vRil, man: vMan, adminF: vAdminF, arch: vArch, invio: vInvio, acc: vAcc, addc: vAdd }[S.view]();
     if (S.view === 'home') { carica(); if (!S.progetti || S.progStale) { S.progStale = false; caricaProgetti(); } }
     window.scrollTo(0, 0);
   }
@@ -399,6 +401,7 @@ var ALIAS = {
   function apri(inp){
     chiudi();
     var tipo = inp.getAttribute('data-ac'), v = voci(tipo, inp.value);
+    if (S.view === 'addc' && tipo === 'nome') return;
     if (!v.length) return;
     lista = document.createElement('ul'); lista.className = 'list'; lista.setAttribute('role', 'listbox');
     v.forEach(function(x){
@@ -408,6 +411,7 @@ var ALIAS = {
         e.preventDefault(); chiudi();
         if (tipo === 'nome' && x[2]) { S.cur = x[2]; S.sens = null; S.ris = [x[2]]; S.sel = {}; S.view = S.target ? 'ris' : 'scheda'; return render(); }
         inp.value = x[0]; if (S.q.hasOwnProperty(tipo)) S.q[tipo] = x[0];
+        if (S.view === 'addc') aggiornaAdd();
       });
       lista.appendChild(li);
     });
@@ -418,6 +422,7 @@ var ALIAS = {
     var t = e.target.getAttribute && e.target.getAttribute('data-ac');
     if (!t) return;
     if (S.q.hasOwnProperty(t)) S.q[t] = e.target.value;
+    if (S.view === 'addc') aggiornaAdd();
     apri(e.target);
   });
   app.addEventListener('focusout', function(){ setTimeout(function(){ var a = document.activeElement; if (!a || !a.getAttribute || !a.getAttribute('data-ac')) chiudi(); }, 150); });
@@ -1228,7 +1233,7 @@ var ALIAS = {
     call('avvio', [S.token], function(d){
       S.caricando = false; S.contatti = d.contatti; S.ruoli = d.ruoli; S.progetti = d.progetti; S.progStale = false;
       try { localStorage.setItem(cacheKey(), JSON.stringify(d)); } catch (e) {}
-      if (S.view === 'home') { var y = window.scrollY; render(); window.scrollTo(0, y); }
+      if (S.view === 'home' || S.view === 'addc') { var y = window.scrollY; render(); window.scrollTo(0, y); }
     }, function(e){ S.caricando = false; toast('Qualcosa non va: ' + e.message); });
   }
   function caricaProgetti(){
@@ -1320,6 +1325,7 @@ var ALIAS = {
   }
 
   function azioni5(a, b){
+    if (a === 'addCrew') { var rs = {}; S.pr.crew.forEach(function(c){ rs[c.r] = 1; }); S.target = { id: S.pr.id, titolo: S.pr.titolo, rs: rs, n: 0 }; S.q = { ruolo: '', dove: '', nome: '' }; S.view = 'addc'; render(); return true; }
     if (a === 'fCrew') { S.fCrew = b.dataset.f; var y = window.scrollY; render(); window.scrollTo(0, y); return true; }
     if (a === 'filtroDa') { S.fCrew = 'da'; render(); return true; }
     if (a === 'passo') { var i = Number(b.dataset.i); S.passo = S.passo === i ? null : i; var y2 = window.scrollY; render(); window.scrollTo(0, y2); return true; }
@@ -1396,6 +1402,35 @@ var ALIAS = {
       '<button class="btn main" type="submit">' + (p.id ? 'Salva le modifiche' : 'Crea progetto') + '</button></form>' +
       (p.id ? '<button class="btn sec danger" data-act="eliminaPrj" style="margin-top:4px">Elimina progetto</button>' +
         '<p class="muted" style="margin:8px 4px 0;text-align:center">Per una produzione che non è andata in porto. La cartella finisce in Drive › OLD, non si perde nulla.</p>' : '');
+  }
+
+  // ═════════ AGGIUNGI CREW · resta dentro il progetto ═════════
+  function righeAdd(){
+    var q = S.q, vuoto = !q.ruolo.trim() && !q.dove.trim() && !q.nome.trim();
+    if (!S.contatti) return '<div class="load">Carico i contatti…</div>';
+    if (vuoto) return '<p class="muted" style="margin:6px 4px">Scrivi un ruolo, una città o un nome: i risultati compaiono qui sotto mentre scrivi.</p>';
+    cerca();
+    if (!S.ris.length) return '<div class="card"><p class="muted" style="margin:0">Nessuno trovato. Prova a togliere un filtro.</p></div>';
+    var t = S.target;
+    return '<p class="count">' + S.ris.length + (S.ris.length === 1 ? ' risultato' : ' risultati') + (S.ris.length > 60 ? ' · mostro i primi 60' : '') + '</p>' +
+      '<div class="card" style="padding:4px 12px">' + S.ris.slice(0, 60).map(function(c){
+        var dx = t.rs[c.r] ? '<span class="add on" title="Già in crew" aria-label="Già in crew">✓</span>' :
+          '<button class="add" data-add="' + c.r + '" aria-label="Aggiungi ' + esc(nomeDi(c)) + '">+</button>';
+        return '<div class="res" data-apri="' + c.r + '"><div class="t"><b>' + esc(nomeDi(c)) + '</b><small>' + esc([c.ruolo, c.citta].filter(Boolean).join(' · ')) + '</small></div>' + dx + '</div>';
+      }).join('') + '</div>';
+  }
+  function aggiornaAdd(){ var b = document.getElementById('addRis'); if (b) b.innerHTML = righeAdd(); }
+  function vAdd(){
+    var t = S.target;
+    if (!S.contatti) setTimeout(carica, 0);
+    return '<div class="top"><button class="link" data-act="fattoTarget">‹ ' + esc(t.titolo) + '</button>' +
+      '<span class="who">' + esc(S.nome) + (S.admin ? ' · admin' : '') + '</span></div>' +
+      '<h1>Aggiungi crew</h1>' +
+      '<div class="card"><div class="f"><label class="lab" for="aqr">Ruolo</label><input type="search" id="aqr" data-ac="ruolo" placeholder="Es. fonico, gaffer, PA" value="' + esc(S.q.ruolo) + '" autocomplete="off"></div>' +
+      '<div class="row"><div class="f"><label class="lab" for="aqd">Dove</label><input type="search" id="aqd" data-ac="dove" placeholder="Es. Milano" value="' + esc(S.q.dove) + '" autocomplete="off"></div>' +
+      '<div class="f"><label class="lab" for="aqn">Nome</label><input type="search" id="aqn" data-ac="nome" placeholder="Nome o cognome" value="' + esc(S.q.nome) + '" autocomplete="off"></div></div></div>' +
+      '<div id="addRis">' + righeAdd() + '</div><div style="height:90px"></div>' +
+      '<div class="bar fissa"><button class="btn main" data-act="fattoTarget">' + (t.n ? 'Fatto · ' + t.n + (t.n === 1 ? ' aggiunto' : ' aggiunti') : 'Torna al progetto') + '</button></div>';
   }
 
   if (CONF) { S.view = 'conf'; apriConf(); }
