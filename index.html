@@ -1317,7 +1317,8 @@ var ALIAS = {
     var daConf = col.filter(function(c){ return !confOk(c) && c.conf !== 'non disponibile'; }).length;
     var senza = col.filter(function(c){ return !confOk(c) && !(c.d[0] && c.d[4]); }).length;
     var f = S.fCrew || 'tutti';
-    var filtra = function(c){ var k = statoCrew(c).k; return f === 'tutti' || (f === 'da' && (k === 'da' || k === 'att')) || (f === 'ok' && k === 'ok') || (f === 'cl' && (k === 'cl' || k === 'no')); };
+    var mancaD = function(c){ return c.col && !confOk(c) && !(c.d[0] && c.d[4]); };
+    var filtra = function(c){ var k = statoCrew(c).k; return f === 'tutti' || (f === 'col' && c.col) || (f === 'sd' && mancaD(c)) || (f === 'da' && (k === 'da' || k === 'att')) || (f === 'ok' && k === 'ok') || (f === 'cl' && (k === 'cl' || k === 'no')); };
     var deps = {};
     cr.filter(filtra).forEach(function(c){ var d = repOf(c.q); (deps[d] = deps[d] || []).push(c); });
     var chiuso = p.stato === 'chiuso';
@@ -1338,13 +1339,12 @@ var ALIAS = {
       '<div class="card hero"><div style="min-width:0"><div class="big">' + esc(p.titolo) + '</div>' +
       '<div class="sub">' + esc([fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ')) + '</div>' +
       puntiGiorni(p) + '</div>' +
-      '<div class="stats"><span>' + cr.length + ' in crew</span><span>' + col.length + ' da collocare</span>' +
-      (daConf ? '<span class="w">' + daConf + ' da confermare</span>' : '') + (senza ? '<span class="w">' + senza + ' senza dati</span>' : '') + '</div>' +
+      '<div class="stats"><span>' + cr.length + (cr.length === 1 ? ' persona in crew' : ' persone in crew') + '</span></div>' +
       (chiuso ? '' : '<div class="head-acts"><button class="link" data-act="modPrj">Modifica progetto</button><button class="btn main mini" data-act="addCrew">+ Aggiungi crew</button></div>') +
       (chiuso ? '<p class="muted" style="margin:10px 0 0">Progetto chiuso: lo trovi in Archivio.</p>' : '') + '</div>' +
       (cr.length ? '<div class="row" style="margin:0 0 4px"><button class="btn soft" data-go="cl">Crew list</button><button class="btn soft" data-act="apriCat">Catering</button></div>' +
         '<div class="seg" style="margin-top:12px"><button type="button" class="' + (S.vista !== 'giorni' ? 'on' : '') + '" data-act="vista" data-v="elenco">Elenco</button><button type="button" class="' + (S.vista === 'giorni' ? 'on' : '') + '" data-act="vista" data-v="giorni">Giorni</button></div>' +
-        (S.vista === 'giorni' ? vistaGiorni(p, cr) : '<div class="fchips">' + chip('tutti', 'Tutti', cr.length) + chip('da', 'Da confermare', daConf, 'da') + chip('ok', 'Confermati', nOk, 'ok') + chip('cl', 'Altri', nCl, 'cl') + '</div>' +
+        (S.vista === 'giorni' ? vistaGiorni(p, cr) : '<div class="fchips">' + chip('tutti', 'Tutti', cr.length) + chip('col', 'Da collocare', col.length) + chip('da', 'Da confermare', daConf, 'da') + chip('ok', 'Confermati', nOk, 'ok') + (senza ? chip('sd', 'Senza dati', senza) : '') + (nCl ? chip('cl', 'Altri', nCl, 'cl') : '') + '</div>' +
 
         (lista || '<div class="card"><p class="muted" style="margin:0">Nessuno in questo filtro.</p></div>')) :
         '<div class="card"><p class="muted" style="margin:0">Ancora nessuno in crew. Tocca + Aggiungi crew per cercare le persone nel database.</p></div>') +
