@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Troupe">
+<meta name="theme-color" content="#E9E8E4">
+<script>window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k-aiQJkvr8yw09bHlwlm3A1Xo8_UHSjB_fqTtdJKW1XoKhHQ/exec";</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Troupe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#E9E8E4;--card:#fff;--ink:#17181B;--muted:#686B70;--line:#DEDDD8;--soft:#F4F3F0;--blue:#1E3A8A;--blue-soft:#EAEFFA;--ok:#1F6B3A;--err:#A3202A;--wa:#1F8F4E}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+.app{max-width:480px;margin:0 auto;min-height:100vh;padding:14px 14px 40px}
+.top{display:flex;align-items:center;justify-content:space-between;padding:4px 4px 14px}
+.brand{font-weight:700;font-size:18px;letter-spacing:-.01em}
+.who{font-size:13px;color:var(--muted);display:flex;gap:10px;align-items:center}
+.link{background:none;border:none;padding:8px 0;color:var(--blue);font-weight:600;font-size:14px;cursor:pointer}
+.card{background:var(--card);border-radius:18px;padding:16px;margin-bottom:12px}
+h1{font-size:24px;line-height:1.2;margin:4px 4px 14px;letter-spacing:-.015em}
+h2{font-size:15px;margin:0 0 10px}
+.lab{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+.f{margin-bottom:12px;position:relative}
+.f:last-child{margin-bottom:0}
+input[type=text],input[type=tel],input[type=email],input[type=search]{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 12px;font-size:16px;background:#fff;outline:none;-webkit-appearance:none;appearance:none}
+input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,58,138,.12)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;border-radius:14px;border:none;font-weight:600;font-size:15px;cursor:pointer;text-decoration:none}
+.btn.main{background:var(--ink);color:#fff}
+.btn.sec{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.btn.wa{background:var(--wa);color:#fff}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:10px}
+.row>*{flex:1}
+.hide{display:none!important}
+.muted{color:var(--muted);font-size:13px;line-height:1.45}
+/* lista a discesa */
+.list{position:absolute;left:0;right:0;top:100%;margin:4px 0 0;padding:4px;list-style:none;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 28px rgba(20,22,26,.14);max-height:260px;overflow-y:auto;z-index:20}
+.list li{padding:11px 10px;border-radius:8px;font-size:15px;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.list li small{color:var(--muted);font-size:12px;align-self:center}
+.list li:hover,.list li.on{background:var(--blue-soft);color:var(--blue)}
+/* accesso */
+.pin{max-width:320px;margin:9vh auto 0;text-align:center}
+.pin .brand{font-size:28px}
+.dots{display:flex;justify-content:center;gap:12px;margin:22px 0 8px;height:14px}
+.dots span{width:13px;height:13px;border-radius:50%;border:1.5px solid var(--ink)}
+.dots span.on{background:var(--ink)}
+.pmsg{min-height:20px;font-size:13px;color:var(--err);margin-bottom:10px}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.keys button{height:62px;border-radius:16px;border:none;background:#fff;font-size:22px;font-weight:600;cursor:pointer}
+.keys button:active{background:var(--soft)}
+.keys .x{background:transparent;font-size:15px}
+/* risultati */
+.res{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--soft);cursor:pointer}
+.res:last-child{border-bottom:none}
+.res .t{flex:1;min-width:0}
+.res b{display:block;font-size:15px;font-weight:600}
+.res small{display:block;color:var(--muted);font-size:13px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chk{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);flex:0 0 auto;display:flex;align-items:center;justify-content:center;background:#fff;cursor:pointer}
+.chk.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.bar{position:sticky;bottom:12px;display:flex;gap:10px;margin-top:12px}
+.count{font-size:13px;color:var(--muted);margin:0 4px 8px}
+/* scheda */
+.big{font-size:22px;font-weight:700;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px;margin-top:4px}
+.acts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.acts a{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;border-radius:14px;background:var(--soft);color:var(--ink);text-decoration:none;font-size:13px;font-weight:600}
+.acts a.off{opacity:.35;pointer-events:none}
+dl{margin:0}
+dt{font-size:12px;color:var(--muted);margin-top:10px}
+dt:first-child{margin-top:0}
+dd{margin:2px 0 0;font-size:15px;word-break:break-word}
+.lock{display:flex;gap:10px;align-items:flex-start;background:var(--soft);border-radius:12px;padding:12px;font-size:13px;color:var(--muted);line-height:1.45}
+.have{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.have span{font-size:12px;padding:4px 9px;border-radius:20px;background:var(--soft);color:var(--muted)}
+.have span.y{background:#E5F2EA;color:var(--ok)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:50;max-width:90vw}
+.err{background:#FBECEC;color:var(--err);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px}
+.sec-h{display:flex;justify-content:space-between;align-items:baseline;margin:18px 4px 8px}
+.sec-h h2{margin:0;font-size:17px}
+.prj{display:block;width:100%;text-align:left;background:#fff;border:none;border-radius:18px;padding:14px 16px;margin-bottom:10px;cursor:pointer}
+.prj b{display:block;font-size:16px}
+.prj small{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+.stats{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.stats span{font-size:12px;padding:4px 9px;border-radius:20px;background:var(--soft);color:var(--ink)}
+.stats span.w{background:#FFF1D6;color:#7A4B00}
+.dep{font-size:13px;font-weight:700;color:var(--muted);margin:16px 4px 6px}
+.badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;background:var(--soft);color:var(--muted);flex:0 0 auto;white-space:nowrap}
+.badge.ok{background:#E5F2EA;color:var(--ok)}.badge.w{background:#FFF1D6;color:#7A4B00}.badge.no{background:#FBECEC;color:var(--err)}
+.seg{display:flex;gap:4px;background:var(--soft);padding:4px;border-radius:12px}
+.seg button{flex:1;min-height:38px;border:none;border-radius:9px;background:transparent;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer;padding:0 4px}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+input[type=date]{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 10px;font-size:16px;background:#fff;-webkit-appearance:none;appearance:none;min-width:0}
+select{width:100%;height:46px;border:1px solid var(--line);border-radius:12px;padding:0 10px;font-size:16px;background:#fff}
+pre.cl{white-space:pre-wrap;font:inherit;font-size:14px;line-height:1.5;margin:0}
+.btn.danger{color:var(--err)}
+.bad input{border-color:var(--err)}
+.fmsg{font-size:12px;color:var(--err);margin-top:4px}
+.row>.f{min-width:0}
+.step{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--soft)}
+.step:first-of-type{border-top:none}
+.step .t{flex:1;min-width:0}.step b{display:block;font-size:15px}.step small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.tg{width:100%;border-collapse:collapse;font-size:14px}.tg th{font-size:12px;font-weight:600;color:var(--muted);text-align:right;padding:6px 0 8px}.tg th:first-child,.tg td:first-child{text-align:left}.tg td{text-align:right;padding:9px 0;border-top:1px solid var(--soft)}
+.btn.mini{width:auto;height:38px;padding:0 14px;font-size:14px;border-radius:11px;flex:0 0 auto}
+.seg.wrap{flex-wrap:wrap}.seg.wrap button{flex:1 1 40%}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--line);border-radius:20px;font-size:14px;cursor:pointer}
+.chip input{position:absolute;opacity:0;pointer-events:none}.chip{position:relative}
+.chip:has(input:checked){background:var(--ink);color:#fff;border-color:var(--ink)}
+.chk-row{display:flex;align-items:center;gap:10px;font-size:14px;margin-top:8px;cursor:pointer}
+.chk-row input{width:20px;height:20px;margin:0;accent-color:var(--ink)}
+.ov{position:fixed;inset:0;background:rgba(20,22,26,.35);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:#fff;width:100%;max-width:480px;border-radius:20px 20px 0 0;padding:18px 16px calc(14px + env(safe-area-inset-bottom))}
+.sheet .prev{max-height:34vh;overflow:auto;background:var(--soft);border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+.add{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--ink);background:#fff;color:var(--ink);font-size:22px;line-height:1;font-weight:500;display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:pointer;padding:0}
+.btn.mini{white-space:nowrap;padding:0 10px}
+.res small{white-space:normal}
+.add.on{background:var(--ok);border-color:var(--ok);color:#fff;font-size:16px}
+.add:disabled{opacity:.5}
+.load{text-align:center;color:var(--muted);padding:50px 0;font-size:14px}
+</style>
+</head>
+<body>
+<div class="app" id="app"><div class="load">Apro Troupe…</div></div>
+
+<script>
+var LINK_SCHEDA = "https://script.google.com/macros/s/AKfycbwJRlfp2wJc1iUXyUsogDX_XTs5rAlOqeXgy2ZrGatSlkEG9gRteOoWLoUCdcXZ9frxMg/exec";
+var Q_ = new URLSearchParams(location.search);
+var CONF = (Q_.get('invito') || '').replace(/[^a-z0-9-]/gi, '').slice(0, 60);
+var MODE = CONF && Q_.get('tipo') === 'cat' ? 'cat' : '';
+var ALIAS = {
+    'Props Master':'attrezzista capo attrezzista','Props Assistant':'aiuto attrezzista','Props Buyer':'acquisti attrezzeria',
+    'Electric':'elettricista','Gaffer':'capo elettricista','Grip':'macchinista','Key Grip':'capo macchinista',
+    'Sound Mixer':'fonico presa diretta','Boom Operator':'microfonista asta','Sound Assistant':'assistente fonico',
+    'Camera Operator':'operatore di macchina cameraman','1st AC':'aiuto operatore primo assistente operatore fuochista focus',
+    '2nd AC':'assistente operatore secondo','Director of Photography':'direttore della fotografia dop dp',
+    'Director':'regista regia','1st Assistant Director':'aiuto regia primo aiuto','2nd Assistant Director':'assistente alla regia secondo aiuto',
+    'Script Supervisor':'segretaria di edizione edizione','Set Designer':'scenografo scenografia','Set Decorator':'arredatore arredamento',
+    'Art Director':'art direction','Stylist':'costumista stylist','Seamstress / Tailor':'sarta sarto',
+    'Make-up Artist':'truccatore trucco make up','Hairdresser':'parrucchiere parrucco hair','Driver':'autista furgone',
+    'Ncc':'autista noleggio con conducente','Runner':'runner fattorino','PA':'assistente di produzione runner',
+    'Production Manager':'direttore di produzione','Production Coordinator':'coordinatore di produzione',
+    'Line Producer':'organizzatore generale','Editor':'montatore montaggio','Assistant Editor':'assistente al montaggio',
+    'Colorist':'colorista color','Photographer':'fotografo foto','Digitech':'dit digital imaging','Data Manager':'data manager backup',
+    'Video Assist Operator':'video assist','Steadicam Operator':'steadicam','Drone Operator':'drone pilota',
+    'Location Manager':'location','Casting Director':'casting','Catering/Craft Services':'catering mensa',
+    'Security':'sicurezza vigilanza','Interpreter / Translator':'interprete traduttore','Food Stylist':'food',
+    'Graphic Designer':'grafico grafica','Music Composer':'compositore musica','Writer':'autore autrice testi',
+    'Editorial Team':'redazione redattore autore','Fixer':'fixer','Voice Over':'speaker voce','Painter Greensman':'pittore'
+  };
+</script>
+<script>
+(function(){
+  var S = { token: null, nome: '', admin: false, view: 'pin', pin: '', msg: '',
+            contatti: null, ruoli: [], progetti: null, target: null, pr: null, cv: null, csens: null, q: { ruolo: '', dove: '', nome: '' }, ris: [], sel: {}, cur: null, sens: null };
+  try { var t = JSON.parse(localStorage.getItem('troupe') || 'null'); if (t) { S.token = t.token; S.nome = t.nome; S.admin = t.admin; S.view = 'home'; } } catch (e) {}
+
+  var app = document.getElementById('app');
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
+  var norm = function(s){ return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim(); };
+  var cap = function(s){ return String(s || '').toLowerCase().replace(/(^|[\s'’-])(\S)/g, function(m, a, b){ return a + b.toUpperCase(); }); };
+  var nomeDi = function(c){ return (cap(c.nome) + ' ' + cap(c.cognome)).trim() || c.azienda; };
+  var waNum = function(t){ var d = String(t || '').replace(/\D/g, ''); if (!d) return ''; if (d.indexOf('00') === 0) d = d.slice(2); if (d.length <= 10 && d[0] === '3') d = '39' + d; return d; };
+
+  function toast(m){ Array.prototype.forEach.call(document.querySelectorAll('.toast'), function(x){ x.remove(); }); var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2600); }
+
+  // chiamate al server
+  function call(fn, args, ok, ko){
+    var fail = function(e){
+      if (String(e && e.message).indexOf('SESSIONE') !== -1) { esci(true); return; }
+      (ko || function(err){ toast('Qualcosa non va: ' + (err && err.message || 'riprova')); })(e);
+    };
+    if (window.API_URL) {   // versione su GitHub: parla con Google via internet
+      fetch(window.API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
+        .then(function(r){ return r.json(); })
+        .then(function(j){ if (j.err) fail(new Error(j.err)); else ok(j.data); })
+        .catch(function(){ fail(new Error('Connessione assente, riprova')); });
+      return;
+    }
+    if (typeof google === 'undefined' || !google.script) return window.__mock(fn, args, ok, fail);
+    var r = google.script.run.withSuccessHandler(ok).withFailureHandler(fail);
+    r[fn].apply(r, args);
+  }
+
+  function salvaSessione(){ try { localStorage.setItem('troupe', JSON.stringify({ token: S.token, nome: S.nome, admin: S.admin })); } catch (e) {} }
+  function esci(scaduta){
+    if (S.token && !scaduta) call('esci', [S.token], function(){});
+    S.token = null; S.contatti = null; S.sens = null; S.view = 'pin'; S.pin = ''; S.msg = scaduta ? 'Sessione scaduta: inserisci di nuovo il codice' : '';
+    try { localStorage.removeItem('troupe'); } catch (e) {}
+    render();
+  }
+
+  function carica(){
+    if (S.contatti || S.caricando) return;
+    S.caricando = true;
+    call('contatti', [S.token], function(c){ S.caricando = false; S.contatti = c; if (S.view === 'home') render(); });
+    call('ruoli', [S.token], function(r){ S.ruoli = r; });
+  }
+
+  // ───── viste ─────
+  function vPin(){
+    var d = ''; for (var i = 0; i < 6; i++) d += '<span class="' + (i < S.pin.length ? 'on' : '') + '"></span>';
+    var k = [1,2,3,4,5,6,7,8,9].map(function(n){ return '<button data-k="' + n + '">' + n + '</button>'; }).join('');
+    return '<div class="pin"><div class="brand">Troupe</div><p class="muted" style="margin-top:6px">Inserisci il tuo codice</p>' +
+      '<div class="dots">' + d + '</div><div class="pmsg" role="alert">' + esc(S.msg) + '</div>' +
+      '<div class="keys">' + k + '<button class="x" data-k="del" aria-label="Cancella">Cancella</button><button data-k="0">0</button>' +
+      '<button class="x" data-k="ok" style="font-weight:700;color:var(--blue)">Entra</button></div></div>';
+  }
+
+  function top(back){
+    return '<div class="top">' + (back ? '<button class="link" data-go="' + back + '">‹ Indietro</button>' : '<span class="brand">Troupe</span>') +
+      '<span class="who">' + esc(S.nome) + (S.admin ? ' · admin' : '') + ' <button class="link" data-act="esci">Esci</button></span></div>';
+  }
+
+  function vHome(){
+    var n = S.contatti ? S.contatti.length + ' contatti' : 'Carico i contatti…';
+    return top() + (S.target ? '<div class="card" style="display:flex;align-items:center;gap:10px;padding:12px 14px"><span class="muted" style="flex:1">Cerca la crew da aggiungere a <b style="color:var(--ink)">' + esc(S.target.titolo) + '</b></span><button class="link" data-act="annullaTarget">Annulla</button></div>' : '') + '<h1>Chi stai cercando?</h1>' +
+      '<div class="card"><form id="cerca" autocomplete="off">' +
+      '<div class="f"><label class="lab" for="qr">Ruolo</label><input type="search" id="qr" data-ac="ruolo" placeholder="Es. fonico, gaffer, PA" value="' + esc(S.q.ruolo) + '"></div>' +
+      '<div class="f"><label class="lab" for="qd">Dove</label><input type="search" id="qd" data-ac="dove" placeholder="Es. Milano" value="' + esc(S.q.dove) + '"></div>' +
+      '<div class="f"><label class="lab" for="qn">Nome o cognome</label><input type="search" id="qn" data-ac="nome" placeholder="Facoltativo" value="' + esc(S.q.nome) + '"></div>' +
+      '<button class="btn main" type="submit"' + (S.contatti ? '' : ' disabled') + '>Cerca</button>' +
+      '<p class="muted" style="text-align:center;margin:10px 0 0">' + n + '</p></form></div>' +
+      vProgHome() +
+      '<div class="card" style="margin-top:12px"><h2>Nuovo contatto</h2><div class="row">' +
+      '<button class="btn wa" data-act="invita">Invita</button><button class="btn sec" data-go="mano">A mano</button></div>' +
+      '<p class="muted" style="margin:10px 0 0">Invita manda su WhatsApp il link della scheda: la persona compila da sola.</p></div>';
+  }
+
+  function cerca(){
+    var r = norm(S.q.ruolo), d = norm(S.q.dove), n = norm(S.q.nome);
+    var ruoliOk = null;
+    if (r) {
+      ruoliOk = {};
+      Object.keys(ALIAS).concat(S.ruoli).forEach(function(k){ if (norm(k).indexOf(r) !== -1 || norm(ALIAS[k] || '').indexOf(r) !== -1) ruoliOk[norm(k)] = 1; });
+    }
+    S.ris = (S.contatti || []).filter(function(c){
+      if (r) { var cr = norm(c.ruolo); if (!(cr.indexOf(r) !== -1 || Object.keys(ruoliOk).some(function(k){ return cr.indexOf(k) !== -1; }))) return false; }
+      if (d && norm(c.citta).indexOf(d) === -1) return false;
+      if (n && norm(c.nome + ' ' + c.cognome + ' ' + c.cognome + ' ' + c.nome + ' ' + c.azienda).indexOf(n) === -1) return false;
+      return true;
+    }).sort(function(a, b){ return norm(a.cognome).localeCompare(norm(b.cognome)); });
+    S.sel = {};
+  }
+
+  function vRis(){
+    var ns = Object.keys(S.sel).length;
+    var righe = S.ris.slice(0, 200).map(function(c){
+      var on = S.sel[c.r];
+      var dx = S.target ? (S.target.rs[c.r] ? '<span class="add on" title="Già in crew" aria-label="Già in crew">✓</span>' :
+          '<button class="add" data-add="' + c.r + '" aria-label="Aggiungi ' + esc(nomeDi(c)) + ' a ' + esc(S.target.titolo) + '">+</button>') :
+        '<button class="chk' + (on ? ' on' : '') + '" data-sel="' + c.r + '" aria-label="Seleziona ' + esc(nomeDi(c)) + '">' + (on ? '✓' : '') + '</button>';
+      return '<div class="res" data-apri="' + c.r + '"><div class="t"><b>' + esc(nomeDi(c)) + '</b><small>' +
+        esc([c.ruolo, c.citta].filter(Boolean).join(' · ')) + '</small></div>' + dx + '</div>';
+    }).join('');
+    var q = [S.q.ruolo, S.q.dove, S.q.nome].filter(Boolean).join(', ') || 'tutti';
+    return top('home') + (S.target ? '<p class="count" style="color:var(--blue);font-weight:600">Tocca + per aggiungere a ' + esc(S.target.titolo) + ', il nome per aprire la scheda</p>' : '') + '<h1>' + S.ris.length + (S.ris.length === 1 ? ' risultato' : ' risultati') + '</h1>' +
+      '<p class="count">Per: ' + esc(q) + '</p>' +
+      (S.ris.length ? '<div class="card" style="padding:4px 12px">' + righe + '</div>' :
+        '<div class="card"><p class="muted" style="margin:0">Nessuno trovato. Prova a togliere un filtro, oppure invita un nuovo contatto dalla Home.</p></div>') +
+      (S.ris.length > 200 ? '<p class="count">Mostro i primi 200: aggiungi un filtro per restringere.</p>' : '') +
+      (S.target ? '<div class="bar"><button class="btn main" data-act="fattoTarget">' + (S.target.n ? 'Fatto · ' + S.target.n + (S.target.n === 1 ? ' aggiunto' : ' aggiunti') : 'Torna a ' + esc(S.target.titolo)) + '</button></div>' :
+       ns ? (
+        '<div class="bar"><button class="btn sec" data-act="condividi">Condividi</button><button class="btn main" data-act="scegliPrj">Aggiungi a progetto</button></div>') : '');
+  }
+
+  function vScheda(){
+    var c = S.cur, tel = waNum(c.tel);
+    var tags = ['Codice fiscale', 'Nascita', 'Residenza', 'Regime', 'IBAN'].map(function(t, i){ return '<span class="' + (c.d[i] ? 'y' : '') + '">' + (c.d[i] ? '✓ ' : '') + t + '</span>'; }).join('');
+    var sens;
+    if (!S.admin) sens = '<div class="lock">I dati per il collocamento si vedono quando la persona conferma di far parte della tua produzione. Arriva con i progetti.</div>';
+    else if (!S.sens) sens = '<button class="btn sec" data-act="mostra">Mostra i dati</button><p class="muted" style="margin:8px 0 0">L\'apertura resta nel registro.</p>';
+    else sens = '<dl>' + [['Codice fiscale', S.sens.cf], ['Nascita', S.sens.nascita], ['Residenza', S.sens.residenza], ['Regime', S.sens.regime], ['Partita IVA', S.sens.piva], ['IBAN', S.sens.iban]]
+      .filter(function(x){ return x[1]; }).map(function(x){ return '<dt>' + x[0] + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join('') + '</dl>';
+    return top('ris') +
+      '<div class="card"><div class="big">' + esc(nomeDi(c)) + '</div><div class="sub">' + esc([c.ruolo, c.citta].filter(Boolean).join(' · ')) + '</div>' +
+      '<div class="acts"><a href="tel:' + esc(String(c.tel).replace(/\s/g, '')) + '" class="' + (c.tel ? '' : 'off') + '">Chiama</a>' +
+      '<a href="' + waHref(tel, '') + '" class="' + (tel ? '' : 'off') + '">WhatsApp</a>' +
+      '<a href="mailto:' + esc(c.email) + '" class="' + (c.email ? '' : 'off') + '">Email</a></div></div>' +
+      '<div class="card"><dl>' + [['Telefono', c.tel], ['Email', c.email], ['Azienda', c.azienda], ['Ultimo lavoro', c.last]]
+        .filter(function(x){ return x[1]; }).map(function(x){ return '<dt>' + x[0] + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join('') + '</dl></div>' +
+      '<div class="card"><h2>Dati per il collocamento</h2>' + sens + '<div class="have">' + tags + '</div></div>' +
+      (S.target ? (S.target.rs[c.r] ? '<p class="count" style="text-align:center">Già nella crew di ' + esc(S.target.titolo) + '</p>' :
+        '<div class="bar"><button class="btn main" data-add="' + c.r + '">Aggiungi a ' + esc(S.target.titolo) + '</button></div>') : '');
+  }
+
+  function vMano(){
+    return top('home') + '<h1>Aggiungi a mano</h1><form id="mano" class="card" autocomplete="off">' +
+      '<div id="manoErr"></div>' +
+      '<div class="row"><div class="f"><label class="lab" for="mn">Nome</label><input type="text" id="mn" name="nome"></div>' +
+      '<div class="f"><label class="lab" for="mc">Cognome</label><input type="text" id="mc" name="cognome"></div></div>' +
+      '<div class="f"><label class="lab" for="mr">Ruolo</label><input type="text" id="mr" name="ruolo" data-ac="ruoloSolo" placeholder="Scegli dalla lista"></div>' +
+      '<div class="f"><label class="lab" for="mw">Città</label><input type="text" id="mw" name="citta" data-ac="dove"></div>' +
+      '<div class="f"><label class="lab" for="mt">Telefono</label><input type="tel" id="mt" name="tel" placeholder="+39 333 1234567"></div>' +
+      '<div class="f"><label class="lab" for="me">Email</label><input type="email" id="me" name="email" placeholder="nome@email.it"></div>' +
+      '<button class="btn main" type="submit">Salva nel database</button>' +
+      '<p class="muted" style="margin:10px 0 0">I dati per il collocamento li chiedi dopo con il link della scheda.</p></form>';
+  }
+
+  function render(){
+    if (S.view !== 'pin' && S.view !== 'conf' && !S.token) S.view = 'pin';
+    app.innerHTML = { pin: vPin, home: vHome, ris: vRis, scheda: vScheda, mano: vMano, prjForm: vPrjForm, prj: vPrj, pers: vPers, cl: vCl, scegli: vScegli, conf: vConf, cat: vCat, ril: vRil, man: vMan, adminF: vAdminF, arch: vArch, invio: vInvio, acc: vAcc }[S.view]();
+    if (S.view === 'home') { carica(); if (!S.progetti || S.progStale) { S.progStale = false; caricaProgetti(); } }
+    window.scrollTo(0, 0);
+  }
+
+  // ───── accesso ─────
+  function tasto(k){
+    if (k === 'del') S.pin = S.pin.slice(0, -1);
+    else if (k === 'ok') return prova();
+    else if (S.pin.length < 6) S.pin += k;
+    S.msg = ''; render();
+    if (S.pin.length === 6) prova();
+  }
+  function prova(){
+    if (S.pin.length < 4) { S.msg = 'Il codice ha almeno 4 cifre'; return render(); }
+    var c = S.pin; S.msg = 'Controllo…'; render();
+    call('entra', [c], function(r){
+      if (!r.ok) { S.pin = ''; S.msg = r.msg; return render(); }
+      S.token = r.token; S.nome = r.nome; S.admin = r.admin; S.view = 'home'; S.pin = ''; S.msg = '';
+      salvaSessione(); render();
+    }, function(){ S.pin = ''; S.msg = 'Connessione assente, riprova'; render(); });
+  }
+  document.addEventListener('keydown', function(e){
+    if (S.view !== 'pin') return;
+    if (/^[0-9]$/.test(e.key)) tasto(e.key);
+    else if (e.key === 'Backspace') tasto('del');
+    else if (e.key === 'Enter') tasto('ok');
+  });
+
+  // ───── autocompletamento ─────
+  var lista = null;
+  function chiudi(){ if (lista) { lista.remove(); lista = null; } }
+  function voci(tipo, q){
+    q = norm(q); var out = [], vis = {};
+    function add(v, hint){ var k = norm(v); if (!v || vis[k]) return; vis[k] = 1; out.push([v, hint || '']); }
+    if (tipo === 'ruolo' || tipo === 'ruoloSolo') {
+      var tutti = S.ruoli.length ? S.ruoli : Object.keys(ALIAS);
+      tutti.forEach(function(r){ if (!q || norm(r).indexOf(q) !== -1) add(r); });
+      tutti.forEach(function(r){ var a = ALIAS[r] || ''; if (q && norm(a).indexOf(q) !== -1) add(r, a.split(' ').filter(function(w){ return norm(w).indexOf(q.split(' ')[0]) !== -1; })[0]); });
+    } else if (tipo === 'dove') {
+      var cnt = {};
+      (S.contatti || []).forEach(function(c){ if (c.citta) { var k = c.citta.split(',')[0].trim(); cnt[k] = (cnt[k] || 0) + 1; } });
+      Object.keys(cnt).sort(function(a, b){ return cnt[b] - cnt[a]; }).forEach(function(k){ if (!q || norm(k).indexOf(q) !== -1) add(k, cnt[k]); });
+    } else if (tipo === 'nome') {
+      if (q.length < 2) return [];
+      (S.contatti || []).forEach(function(c){ if (norm(c.nome + ' ' + c.cognome + ' ' + c.cognome + ' ' + c.nome).indexOf(q) !== -1) out.push([nomeDi(c), c.ruolo, c]); });
+    }
+    return out.slice(0, 30);
+  }
+  function apri(inp){
+    chiudi();
+    var tipo = inp.getAttribute('data-ac'), v = voci(tipo, inp.value);
+    if (!v.length) return;
+    lista = document.createElement('ul'); lista.className = 'list'; lista.setAttribute('role', 'listbox');
+    v.forEach(function(x){
+      var li = document.createElement('li'); li.setAttribute('role', 'option');
+      li.innerHTML = '<span>' + esc(x[0]) + '</span>' + (x[1] !== '' ? '<small>' + esc(x[1]) + '</small>' : '');
+      li.addEventListener('mousedown', function(e){
+        e.preventDefault(); chiudi();
+        if (tipo === 'nome' && x[2]) { S.cur = x[2]; S.sens = null; S.ris = [x[2]]; S.sel = {}; S.view = S.target ? 'ris' : 'scheda'; return render(); }
+        inp.value = x[0]; if (S.q.hasOwnProperty(tipo)) S.q[tipo] = x[0];
+      });
+      lista.appendChild(li);
+    });
+    inp.parentNode.appendChild(lista);
+  }
+  app.addEventListener('focusin', function(e){ if (e.target.getAttribute && e.target.getAttribute('data-ac')) apri(e.target); });
+  app.addEventListener('input', function(e){
+    var t = e.target.getAttribute && e.target.getAttribute('data-ac');
+    if (!t) return;
+    if (S.q.hasOwnProperty(t)) S.q[t] = e.target.value;
+    apri(e.target);
+  });
+  app.addEventListener('focusout', function(){ setTimeout(function(){ var a = document.activeElement; if (!a || !a.getAttribute || !a.getAttribute('data-ac')) chiudi(); }, 150); });
+
+  // ───── clic ─────
+  app.addEventListener('click', function(e){
+    var b = e.target.closest('[data-k],[data-go],[data-act],[data-sel],[data-apri],[data-prj],[data-pers],[data-seg],[data-add]');
+    if (!b) return;
+    if (b.dataset.k) return tasto(b.dataset.k);
+    if (b.dataset.add) { e.stopPropagation(); return aggiungiUno(Number(b.dataset.add), b); }
+    if (b.dataset.prj) return apriPrj(b.dataset.prj);
+    if (b.dataset.pers) { S.cv = Number(b.dataset.pers); S.csens = null; S.view = 'pers'; return render(); }
+    if (b.dataset.seg) { var g = b.parentNode; Array.prototype.forEach.call(g.querySelectorAll('button'), function(x){ x.classList.toggle('on', x === b); }); g.setAttribute('data-val', b.dataset.seg); segCambio(g); return; }
+    if (b.dataset.go) { if (b.dataset.go === 'home') S.progStale = true; S.view = b.dataset.go; return render(); }
+    if (b.dataset.sel) { e.stopPropagation(); var r = b.dataset.sel; if (S.sel[r]) delete S.sel[r]; else S.sel[r] = 1; return render(); }
+    if (b.dataset.apri) { S.cur = S.ris.filter(function(c){ return String(c.r) === b.dataset.apri; })[0]; S.sens = null; S.view = 'scheda'; return render(); }
+    var a = b.dataset.act;
+    if (azioni2(a, b)) return;
+    if (a === 'esci') esci();
+    if (a === 'invita') {
+      if (!/^https?:/.test(LINK_SCHEDA)) return toast('Manca il link della scheda: va incollato nel codice (LINK_SCHEDA)');
+      var m = 'Ciao! Per aggiungerti alla mia lista crew ti chiedo di compilare questa scheda, ci vogliono 3 minuti: ' + LINK_SCHEDA;
+      foglioWA('Invito a compilare la scheda', m, '');
+    }
+    if (a === 'mostra') {
+      b.disabled = true; b.textContent = 'Apro…';
+      call('sensibili', [S.token, S.cur.r], function(d){ S.sens = d; render(); }, function(err){ toast(err.message); render(); });
+    }
+    if (a === 'condividi') {
+      var t = S.ris.filter(function(c){ return S.sel[c.r]; }).map(function(c){
+        return [nomeDi(c) + (c.ruolo ? ' · ' + c.ruolo : ''), c.tel, c.email].filter(Boolean).join('\n');
+      }).join('\n\n');
+      foglioWA(Object.keys(S.sel).length === 1 ? 'Contatto da condividere' : 'Contatti da condividere', t, '');
+    }
+  });
+
+  app.addEventListener('submit', function(e){
+    e.preventDefault();
+    if (e.target.id === 'cerca') { chiudi(); cerca(); S.view = 'ris'; return render(); }
+    if (submit2(e.target)) return;
+    if (e.target.id === 'mano') {
+      var f = e.target, d = {}; ['nome', 'cognome', 'ruolo', 'citta', 'tel', 'email'].forEach(function(k){ d[k] = f.elements[k].value; });
+      var errBox = document.getElementById('manoErr');
+      var ko = function(m){ errBox.innerHTML = '<div class="err" role="alert">' + esc(m) + '</div>'; window.scrollTo(0, 0); };
+      if (!d.nome.trim() || !d.ruolo.trim()) return ko('Servono almeno nome e ruolo');
+      if (!d.tel.trim() && !d.email.trim()) return ko('Serve almeno telefono o email');
+      var btn = f.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Salvo…';
+      call('aggiungi', [S.token, d], function(r){
+        if (!r.ok) { btn.disabled = false; btn.textContent = 'Salva nel database'; return ko(r.msg); }
+        S.contatti = null; S.view = 'home'; render();
+        toast('Contatto salvato: ' + cap(d.nome) + ' ' + cap(d.cognome));
+      });
+    }
+  });
+
+
+  // ═════════ FASE 2 · progetti, crew, conferme ═════════
+  var MESI = ['gen','feb','mar','apr','mag','giu','lug','ago','set','ott','nov','dic'];
+  function pd(s){ var p = String(s || '').split('-'); return p.length === 3 ? { y: +p[0], m: +p[1], d: +p[2] } : null; }
+  function fmtRange(a, b){
+    var x = pd(a), y = pd(b || a); if (!x) return ''; if (!y) y = x;
+    if (a === b || !b) return x.d + ' ' + MESI[x.m - 1] + ' ' + x.y;
+    if (x.m === y.m && x.y === y.y) return x.d + '–' + y.d + ' ' + MESI[x.m - 1] + ' ' + x.y;
+    return x.d + ' ' + MESI[x.m - 1] + ' – ' + y.d + ' ' + MESI[y.m - 1] + ' ' + y.y;
+  }
+  function giorni(a, b){ var x = pd(a), y = pd(b || a); if (!x || !y) return 0; return Math.round((Date.UTC(y.y, y.m - 1, y.d) - Date.UTC(x.y, x.m - 1, x.d)) / 864e5) + 1; }
+
+  var REP = [
+    ['Produzione', /producer|production|showrunner|runner|^pa$|driver|ncc|transport|location manager/i],
+    ['Casting', /casting|talent|model/i],
+    ['Regia', /director(?! of photography)|script supervisor/i],
+    ['Testi', /writer|editorial/i],
+    ['Camera', /photography|camera|1st ac|2nd ac|focus|loader|data manager|video assist|steadicam|drone|videographer|photographer|digitech/i],
+    ['Luci e macchinisti', /lights|cable|gaffer|grip|electric|lighting/i],
+    ['Suono', /sound mixer|boom|sound assistant/i],
+    ['Food', /food|catering/i],
+    ['Scenografia', /set |set$|art director|props|graphic|painter|builder|decorator/i],
+    ['Costumi', /stylist|seamstress|tailor/i],
+    ['Trucco e parrucco', /make-up|makeup|hair/i],
+    ['Effetti speciali', /sfx|special fx|stunt/i],
+    ['Post-produzione', /post|editor|colorist|sound designer|sound editor|music|vfx|compositor|3d|motion/i],
+    ['Fornitori', /rental|^location$|film commission|specific|shipping|fixer|security|animal|interpreter/i]
+  ];
+  function repOf(q){ for (var i = 0; i < REP.length; i++) if (REP[i][1].test(q || '')) return REP[i][0]; return 'Altro'; }
+  function ordRep(a){ for (var i = 0; i < REP.length; i++) if (REP[i][0] === a) return i; return 99; }
+  function crewDi(r){ return (S.pr.crew || []).filter(function(c){ return c.r === r; })[0]; }
+  function confOk(c){ return c.conf === 'confermata' || c.conf === 'sbloccata'; }
+  function badgeConf(c){
+    if (!c.col) return '<span class="badge">non collocato</span>';
+    if (c.conf === 'confermata') return '<span class="badge ok">confermato</span>';
+    if (c.conf === 'sbloccata') return '<span class="badge ok">sbloccato</span>';
+    if (c.conf === 'non disponibile') return '<span class="badge no">non disponibile</span>';
+    if (c.conf === 'chiesta') return '<span class="badge w">in attesa</span>';
+    return '<span class="badge w">da chiedere</span>';
+  }
+  function contactOf(c){
+    if (c.cm === 'nascosto') return { tel: '', txt: 'contatto tramite produzione', email: '' };
+    if (c.cm === 'ref') {
+      var rr = /^r:(\d+)$/.exec(c.ref || '');
+      if (rr) { var x = crewDi(Number(rr[1])); if (x) return { tel: x.tel, txt: 'tramite ' + nomeDi(x) + (x.tel ? ' · ' + x.tel : ''), email: x.email }; }
+      return { tel: '', txt: 'tramite ' + (c.ref || 'referente'), email: '' };
+    }
+    return { tel: c.tel, txt: c.tel || '—', email: c.email };
+  }
+
+  function caricaProgetti(){
+    call('progetti', [S.token], function(p){ S.progetti = p; if (S.view === 'home') { var y = window.scrollY; render(); window.scrollTo(0, y); } });
+  }
+  function vProgHome(){
+    var l = S.progetti;
+    var corpo = !l ? '<p class="muted" style="margin:0 4px">Carico i progetti…</p>' : !l.length ?
+      '<div class="card"><p class="muted" style="margin:0">Nessun progetto in corso. Creane uno per comporre la crew e chiedere le conferme.</p></div>' :
+      l.map(function(p){
+        return '<button class="prj" data-prj="' + esc(p.id) + '"><b>' + esc(p.titolo) + '</b><small>' + esc([fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ')) +
+          (S.admin && p.producer !== S.nome ? ' · ' + esc(p.producer) : '') + '</small><div class="stats"><span>' + p.n + ' in crew</span>' +
+          (p.daConf ? '<span class="w">' + p.daConf + ' da confermare</span>' : '') + '</div></button>';
+      }).join('');
+    return '<div class="sec-h"><h2>In programma</h2><button class="link" data-act="nuovoPrj">+ Nuovo progetto</button></div>' + corpo +
+      '<div style="display:flex;justify-content:space-between;margin:0 4px"><button class="link" data-act="apriArch">Archivio progetti chiusi</button>' +
+      (S.admin ? '<button class="link" data-act="apriAcc">Accessi e registro</button>' : '') + '</div>';
+  }
+
+  S.prjC = {};
+  function apriPrj(id, poi){
+    var c = S.prjC[id];
+    if (c && !poi) { S.pr = c; S.view = 'prj'; render(); }   // subito la versione in memoria, poi aggiorno
+    else if (S.view !== 'prj') { app.innerHTML = top('home') + '<div class="load">Apro il progetto…</div>'; }
+    call('progetto', [S.token, id], function(p){
+      S.prjC[id] = p;
+      if (poi) { S.pr = p; return poi(); }
+      if (S.view === 'prj' && S.pr && S.pr.id === id) { var y = window.scrollY; S.pr = p; render(); window.scrollTo(0, y); }
+      else if (!c) { S.pr = p; S.view = 'prj'; render(); }
+    });
+  }
+  function ricarica(poi){ var id = S.pr.id; call('progetto', [S.token, id], function(p){ S.prjC[id] = p; if (S.pr && S.pr.id === id) S.pr = p; if (poi) poi(); var y = window.scrollY; render(); window.scrollTo(0, y); }); }
+
+  function vPrjForm(){
+    var p = S.prjEdit || {};
+    return top(p.id ? 'prj' : 'home') + '<h1>' + (p.id ? 'Modifica progetto' : 'Nuovo progetto') + '</h1><form id="prjF" class="card" autocomplete="off"><div id="prjErr"></div>' +
+      '<div class="f"><label class="lab" for="pt">Titolo</label><input type="text" id="pt" name="titolo" value="' + esc(p.titolo) + '" placeholder="Es. DbyD Luxottica"></div>' +
+      '<div class="f"><label class="lab" for="pl">Luogo</label><input type="text" id="pl" name="luogo" value="' + esc(p.luogo) + '" placeholder="Es. Milano, studio"></div>' +
+      '<div class="row"><div class="f"><label class="lab" for="pd1">Primo giorno</label><input type="date" id="pd1" name="dal" value="' + esc(p.dal) + '"></div>' +
+      '<div class="f"><label class="lab" for="pd2">Ultimo giorno</label><input type="date" id="pd2" name="al" value="' + esc(p.al) + '"></div></div>' +
+      '<div class="f"><label class="lab" for="paz">Azienda per i collocamenti</label><input type="text" id="paz" name="azienda" value="' + esc(p.azienda || 'COURAGE') + '"></div>' +
+      (p.id ? '<p class="muted" style="margin:0 0 12px">Se cambi le date, chi lavora su tutto il progetto segue le nuove date; gli altri restano dentro il nuovo periodo.</p>' : '') +
+      '<button class="btn main" type="submit">' + (p.id ? 'Salva le modifiche' : 'Crea progetto') + '</button></form>';
+  }
+
+  function vPrj(){
+    var p = S.pr, cr = p.crew || [];
+    var col = cr.filter(function(c){ return c.col; });
+    var daConf = col.filter(function(c){ return !confOk(c); }).length;
+    var senza = col.filter(function(c){ return !(c.d[0] && c.d[4]); }).length;
+    var deps = {};
+    cr.forEach(function(c){ var d = repOf(c.q); (deps[d] = deps[d] || []).push(c); });
+    var lista = Object.keys(deps).sort(function(a, b){ return ordRep(a) - ordRep(b); }).map(function(d){
+      return '<div class="dep">' + esc(d) + '</div><div class="card" style="padding:4px 12px">' + deps[d].map(function(c){
+        var dd = c.dal === p.dal && c.al === p.al ? '' : ' · ' + fmtRange(c.dal, c.al);
+        return '<div class="res" data-pers="' + c.r + '"><div class="t"><b>' + esc(nomeDi(c)) + '</b><small>' + esc(c.q + dd) + '</small></div>' + badgeConf(c) + '</div>';
+      }).join('') + '</div>';
+    }).join('');
+    return top('home') + '<div class="card"><div class="big">' + esc(p.titolo) + '</div><div class="sub">' + esc([fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ')) +
+      '</div><div class="stats"><span>' + cr.length + ' in crew</span><span>' + col.length + ' da collocare</span>' +
+      (daConf ? '<span class="w">' + daConf + ' da confermare</span>' : '') + (senza ? '<span class="w">' + senza + ' senza dati</span>' : '') + '</div>' +
+      (p.cartellaUrl ? '<a class="link" style="display:inline-block;margin-top:8px;text-decoration:none" href="' + esc(p.cartellaUrl) + '" target="_blank">Apri la cartella su Drive</a>' : '') +
+      (p.stato === 'chiuso' ? '<p class="muted" style="margin:12px 0 0">Progetto chiuso il ' + esc(itData(p.chiuso)) + '. Lo trovi in Progetti › Archivio.</p></div>' :
+      '<div class="row" style="margin-top:14px"><button class="btn sec" data-act="modPrj">Modifica</button><button class="btn main" data-act="addCrew">+ Aggiungi crew</button></div></div>') +
+      (cr.length ? '<div class="row" style="margin:4px 0 12px"><button class="btn sec" data-go="cl">Crew list</button><button class="btn sec" data-act="apriCat">Catering</button></div>' +
+        vCollocamenti(p, col) + lista :
+        '<div class="card"><p class="muted" style="margin:0">Ancora nessuno in crew. Tocca Aggiungi crew per cercare le persone nel database.</p></div>');
+  }
+
+  function vPers(){
+    var p = S.pr, c = crewDi(S.cv);
+    if (!c) { S.view = 'prj'; return vPrj(); }
+    var altri = p.crew.filter(function(x){ return x.r !== c.r; });
+    var refR = /^r:(\d+)$/.exec(c.ref || ''), refTxt = refR ? '' : c.ref;
+    var tel = waNum(c.tel);
+    var sens;
+    if (!c.col) sens = '<p class="muted" style="margin:0">Non va collocato: per la crew list bastano i contatti.</p>';
+    else if (!c.vede) sens = '<div class="lock">Li vedi quando ' + esc(cap(c.nome)) + ' conferma di far parte della produzione.' + (S.admin ? '' : ' Se serve prima, chiedi all\'admin di sbloccarli.') + '</div>';
+    else if (!S.csens) sens = '<button class="btn sec" data-act="mostraC">Mostra i dati</button><p class="muted" style="margin:8px 0 0">L\'apertura resta nel registro.</p>';
+    else sens = '<dl>' + [['Codice fiscale', S.csens.cf], ['Nascita', S.csens.nascita], ['Residenza', S.csens.residenza], ['Regime', S.csens.regime], ['Partita IVA', S.csens.piva], ['IBAN', S.csens.iban]]
+      .filter(function(x){ return x[1]; }).map(function(x){ return '<dt>' + x[0] + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join('') + '</dl>';
+    var tags = c.col ? '<div class="have">' + ['Codice fiscale', 'Nascita', 'Residenza', 'Regime', 'IBAN'].map(function(t, i){ return '<span class="' + (c.d[i] ? 'y' : '') + '">' + (c.d[i] ? '✓ ' : '') + t + '</span>'; }).join('') + '</div>' : '';
+    var confBox = !c.col ? '' : '<div class="card"><h2 style="display:flex;justify-content:space-between;align-items:center">Conferma ' + badgeConf(c) + '</h2>' +
+      (c.conf === 'confermata' ? '<p class="muted" style="margin:0 0 12px">Ha confermato presenza e dati' + (c.agg ? ' il ' + esc(c.agg.split('-').reverse().join('/')) : '') + '.</p>' :
+       c.conf === 'non disponibile' ? '<p class="muted" style="margin:0 0 12px">Ha risposto che non può esserci.</p>' :
+       '<p class="muted" style="margin:0 0 12px">Mandale il link: conferma la presenza e controlla i suoi dati. Dopo la conferma vedi i dati per il collocamento.</p>') +
+      '<button class="btn wa" data-act="chiedi"' + (tel ? '' : ' disabled') + '>' + (c.conf ? 'Manda di nuovo il link' : 'Chiedi conferma su WhatsApp') + '</button>' +
+      (S.admin && c.conf !== 'confermata' ? '<button class="btn sec" style="margin-top:8px" data-act="compila">Compila e conferma tu</button><p class="muted" style="margin:8px 0 0">Se non riesce ad aprire il link: inserisci tu i suoi dati e confermi al suo posto. Resta nel registro.</p>' : '') + '</div>';
+    if (p.stato === 'chiuso') { confBox = ''; }
+    return top('prj') +
+      '<div class="card"><div class="big">' + esc(nomeDi(c)) + '</div><div class="sub">' + esc(c.ruolo) + '</div>' +
+      '<div class="acts"><a href="tel:' + esc(String(c.tel).replace(/\s/g, '')) + '" class="' + (c.tel ? '' : 'off') + '">Chiama</a>' +
+      '<a href="' + waHref(tel, '') + '" class="' + (tel ? '' : 'off') + '">WhatsApp</a>' +
+      '<a href="mailto:' + esc(c.email) + '" class="' + (c.email ? '' : 'off') + '">Email</a></div></div>' +
+      '<form id="persF" class="card" autocomplete="off"><div id="persErr"></div>' +
+      '<div class="f"><label class="lab" for="cq">Qualifica in questo progetto</label><input type="text" id="cq" name="q" data-ac="ruoloSolo" value="' + esc(c.q) + '"></div>' +
+      '<div class="row"><div class="f"><label class="lab" for="cd1">Dal</label><input type="date" id="cd1" name="dal" min="' + p.dal + '" max="' + p.al + '" value="' + esc(c.dal) + '"></div>' +
+      '<div class="f"><label class="lab" for="cd2">Al</label><input type="date" id="cd2" name="al" min="' + p.dal + '" max="' + p.al + '" value="' + esc(c.al) + '"></div></div>' +
+      '<div class="f"><span class="lab">Da collocare</span><div class="seg" id="segCol" data-val="' + (c.col ? 'si' : 'no') + '"><button type="button" data-seg="si" class="' + (c.col ? 'on' : '') + '">Sì</button><button type="button" data-seg="no" class="' + (c.col ? '' : 'on') + '">No</button></div></div>' +
+      '<div class="f"><span class="lab">Contatto nella crew list</span><div class="seg" id="segCm" data-val="' + c.cm + '">' +
+      [['suo', 'Il suo numero'], ['ref', 'Referente'], ['nascosto', 'Nascosto']].map(function(o){ return '<button type="button" data-seg="' + o[0] + '" class="' + (c.cm === o[0] ? 'on' : '') + '">' + o[1] + '</button>'; }).join('') + '</div></div>' +
+      '<div id="refBox" class="' + (c.cm === 'ref' ? '' : 'hide') + '"><div class="f"><label class="lab" for="crs">Referente</label><select id="crs" name="refR"><option value="">Scrivo nome e telefono</option>' +
+      altri.map(function(x){ return '<option value="r:' + x.r + '"' + (refR && +refR[1] === x.r ? ' selected' : '') + '>' + esc(nomeDi(x) + ' · ' + x.q) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="f' + (refR ? ' hide' : '') + '" id="refTxtF"><label class="lab" for="crt">Nome e telefono</label><input type="text" id="crt" name="refT" value="' + esc(refTxt) + '" placeholder="Es. Agenzia Rossi · 02 1234567"></div></div>' +
+      '<button class="btn main" type="submit">Salva</button></form>' +
+      confBox +
+      (c.col ? '<div class="card"><h2>Dati per il collocamento</h2>' + sens + tags + '</div>' : '') +
+      (p.stato === 'chiuso' ? '' : '<button class="btn sec danger" data-act="togli">Togli dal progetto</button>');
+  }
+  function segCambio(g){
+    if (g.id === 'segCm') document.getElementById('refBox').classList.toggle('hide', g.getAttribute('data-val') !== 'ref');
+  }
+  app.addEventListener('change', function(e){
+    if (e.target.id === 'crs') document.getElementById('refTxtF').classList.toggle('hide', !!e.target.value);
+  });
+
+  function crewText(){
+    var p = S.pr, deps = {};
+    p.crew.forEach(function(c){ if (c.conf === 'non disponibile') return; var d = repOf(c.q); (deps[d] = deps[d] || []).push(c); });
+    var t = 'CREW LIST · ' + p.titolo + '\n' + [fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ') + '\nProducer: ' + p.producer + '\n';
+    Object.keys(deps).sort(function(a, b){ return ordRep(a) - ordRep(b); }).forEach(function(d){
+      t += '\n' + d.toUpperCase() + '\n' + deps[d].map(function(c){
+        var k = contactOf(c), dd = c.dal === p.dal && c.al === p.al ? '' : ' (' + fmtRange(c.dal, c.al) + ')';
+        return [c.q + dd, nomeDi(c) + (c.azienda && (c.nome || c.cognome) && d === 'Fornitori' ? ' · ' + c.azienda : ''), k.txt, k.email].filter(Boolean).join(' — ');
+      }).join('\n') + '\n';
+    });
+    return t.trim();
+  }
+  function vCl(){
+    return top('prj') + '<h1>Crew list</h1><div class="card"><pre class="cl">' + esc(crewText()) + '</pre></div>' +
+      '<div class="row"><button class="btn sec" data-act="copiaCl">Copia testo</button><button class="btn main" data-act="condCl">Condividi</button></div>' +
+      '<p class="muted" style="margin:10px 4px">Chi ha risposto "non posso esserci" non compare. Per i referenti e i contatti nascosti vale la scelta fatta nella scheda di ogni persona.</p>';
+  }
+
+  function vScegli(){
+    var l = S.progetti || [];
+    var n = Object.keys(S.sel).length;
+    return top('ris') + '<h1>Aggiungi ' + n + (n === 1 ? ' persona' : ' persone') + ' a…</h1>' +
+      (l.length ? l.map(function(p){ return '<button class="prj" data-act="aggiungiQui" data-id="' + esc(p.id) + '"><b>' + esc(p.titolo) + '</b><small>' + esc(fmtRange(p.dal, p.al)) + '</small></button>'; }).join('') :
+        '<div class="card"><p class="muted" style="margin:0">Nessun progetto in corso.</p></div>') +
+      '<button class="btn sec" data-act="nuovoPrjSel">+ Nuovo progetto</button>';
+  }
+
+  function aggiungiSel(id){
+    var righe = Object.keys(S.sel).map(Number);
+    app.innerHTML = top() + '<div class="load">Aggiungo…</div>';
+    call('aggiungiCrew', [S.token, id, righe], function(r){
+      S.sel = {}; S.target = null; S.progStale = true;
+      apriPrj(id, function(){ S.view = 'prj'; render(); toast(r.n ? (r.n === 1 ? '1 persona aggiunta' : r.n + ' persone aggiunte') : 'Erano già tutti in crew'); });
+    });
+  }
+
+  function azioni2(a, b){
+    if (azioni3(a, b) || azioni4(a, b)) return true;
+    if (a === 'nuovoPrj') { S.prjEdit = {}; S.view = 'prjForm'; render(); return true; }
+    if (a === 'nuovoPrjSel') { S.prjEdit = { dopoSel: true }; S.view = 'prjForm'; render(); return true; }
+    if (a === 'modPrj') { S.prjEdit = { id: S.pr.id, titolo: S.pr.titolo, luogo: S.pr.luogo, dal: S.pr.dal, al: S.pr.al, azienda: S.pr.azienda }; S.view = 'prjForm'; render(); return true; }
+    if (a === 'addCrew') { var rs = {}; S.pr.crew.forEach(function(c){ rs[c.r] = 1; }); S.target = { id: S.pr.id, titolo: S.pr.titolo, rs: rs, n: 0 }; S.view = 'home'; render(); return true; }
+    if (a === 'fattoTarget') { var tt = S.target; S.target = null; S.progStale = true; apriPrj(tt.id); return true; }
+    if (a === 'annullaTarget') { var t = S.target; S.target = null; apriPrj(t.id); return true; }
+    if (a === 'aggiungiA') { aggiungiSel(S.target.id); return true; }
+    if (a === 'scegliPrj') {
+      if (S.progetti) { S.view = 'scegli'; render(); }
+      else call('progetti', [S.token], function(p){ S.progetti = p; S.view = 'scegli'; render(); });
+      return true;
+    }
+    if (a === 'aggiungiQui') { aggiungiSel(b.dataset.id); return true; }
+    if (a === 'mostraC') {
+      b.disabled = true; b.textContent = 'Apro…';
+      call('sensibiliCrew', [S.token, S.pr.id, S.cv], function(d){ S.csens = d; render(); }, function(err){ toast(err.message); render(); });
+      return true;
+    }
+    if (a === 'chiedi') {
+      var c = crewDi(S.cv);
+      b.disabled = true; b.textContent = 'Preparo il link…';
+      call('chiediConferma', [S.token, S.pr.id, S.cv], function(r){
+        var p = S.pr;
+        var m = 'Ciao ' + cap(c.nome) + ', ti scrivo per ' + p.titolo + ': ' + c.q + ', ' + fmtRange(c.dal, c.al) + (p.luogo ? ', ' + p.luogo : '') + '.\n' +
+          'Mi confermi la tua presenza e controlli i tuoi dati qui? ' + r.link;
+        ricarica(function(){ foglioWA('Messaggio per ' + cap(c.nome), m, waNum(c.tel)); });
+      }, function(err){ toast(err.message); render(); });
+      return true;
+    }
+    if (a === 'sblocca') {
+      var c2 = crewDi(S.cv);
+      if (!confirm('Sbloccare i dati di ' + nomeDi(c2) + ' per il producer senza la sua conferma? Resta nel registro.')) return true;
+      call('sblocca', [S.token, S.pr.id, S.cv], function(){ ricarica(function(){ toast('Dati sbloccati'); }); });
+      return true;
+    }
+    if (a === 'togli') {
+      var c3 = crewDi(S.cv);
+      if (!confirm('Togliere ' + nomeDi(c3) + ' da ' + S.pr.titolo + '? Resta nel database contatti.')) return true;
+      call('togliCrew', [S.token, S.pr.id, S.cv], function(){ S.view = 'prj'; ricarica(function(){ toast(nomeDi(c3) + ' tolto dal progetto'); }); });
+      return true;
+    }
+    if (a === 'copiaCl') {
+      copia(crewText());
+      return true;
+    }
+    if (a === 'condCl') {
+      var t2 = crewText();
+      foglioWA('Crew list · ' + S.pr.titolo, t2, '');
+      return true;
+    }
+    if (a && a.indexOf('cf_') === 0) { confAzione(a.slice(3), b); return true; }
+    return false;
+  }
+
+  function submit2(f){
+    if (submit3(f) || submit4(f)) return true;
+    if (f.id === 'prjF') {
+      var d = { id: S.prjEdit.id || '', azienda: f.elements.azienda.value, titolo: f.elements.titolo.value, luogo: f.elements.luogo.value, dal: f.elements.dal.value, al: f.elements.al.value };
+      var ko = function(m){ document.getElementById('prjErr').innerHTML = '<div class="err" role="alert">' + esc(m) + '</div>'; };
+      if (!d.titolo.trim() || !d.dal) { ko('Servono almeno titolo e primo giorno'); return true; }
+      if (d.al && d.al < d.dal) { ko('L\'ultimo giorno è prima del primo'); return true; }
+      var btn = f.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Salvo…';
+      call('salvaProgetto', [S.token, d], function(r){
+        if (!r.ok) { btn.disabled = false; btn.textContent = 'Riprova'; return ko(r.msg); }
+        S.progStale = true;
+        if (S.prjEdit.dopoSel) return aggiungiSel(r.id);
+        apriPrj(r.id, function(){ S.view = 'prj'; render(); toast(d.id ? (r.mosse ? 'Salvato. Date aggiornate per ' + r.mosse + (r.mosse === 1 ? ' persona' : ' persone') : 'Salvato') : 'Progetto creato'); });
+      });
+      return true;
+    }
+    if (f.id === 'persF') {
+      var cm = document.getElementById('segCm').getAttribute('data-val');
+      var d2 = { q: f.elements.q.value, dal: f.elements.dal.value, al: f.elements.al.value,
+        col: document.getElementById('segCol').getAttribute('data-val') === 'si', cm: cm,
+        ref: cm === 'ref' ? (f.elements.refR.value || f.elements.refT.value) : '' };
+      var ko2 = function(m){ document.getElementById('persErr').innerHTML = '<div class="err" role="alert">' + esc(m) + '</div>'; window.scrollTo(0, 0); };
+      if (!d2.q.trim()) { ko2('Scrivi la qualifica'); return true; }
+      if (d2.al < d2.dal) { ko2('La data di fine è prima di quella di inizio'); return true; }
+      if (cm === 'ref' && !d2.ref.trim()) { ko2('Scegli il referente o scrivi nome e telefono'); return true; }
+      var c0 = crewDi(S.cv);
+      c0.q = d2.q.trim(); c0.dal = d2.dal; c0.al = d2.al; c0.col = d2.col; c0.cm = d2.cm; c0.ref = d2.ref;
+      S.view = 'prj'; render(); toast('Salvato');
+      call('aggiornaCrew', [S.token, S.pr.id, S.cv, d2], function(r){
+        if (!r.ok) { toast('Non salvato: ' + r.msg); }
+        ricarica();
+      }, function(e){ toast('Non salvato: ' + e.message); ricarica(); });
+      return true;
+    }
+    if (f.id === 'confF') { confSalva(f); return true; }
+    return false;
+  }
+
+  // ───── pagina di conferma per la crew ─────
+  var ODD = {0:1,1:0,2:5,3:7,4:9,5:13,6:15,7:17,8:19,9:21,A:1,B:0,C:5,D:7,E:9,F:13,G:15,H:17,I:19,J:21,K:2,L:4,M:18,N:20,O:11,P:3,Q:6,R:8,S:12,T:14,U:16,V:10,W:22,X:25,Y:24,Z:23};
+  function cfOk(v){
+    v = String(v).toUpperCase().replace(/\s/g, '');
+    if (!/^[A-Z]{6}[0-9LMNPQRSTUV]{2}[ABCDEHLMPRST][0-9LMNPQRSTUV]{2}[A-Z][0-9LMNPQRSTUV]{3}[A-Z]$/.test(v)) return false;
+    var s = 0; for (var i = 0; i < 15; i++){ var c = v[i]; s += i % 2 === 0 ? ODD[c] : (/[0-9]/.test(c) ? +c : c.charCodeAt(0) - 65); }
+    return String.fromCharCode(65 + s % 26) === v[15];
+  }
+  function ibanOk(v){
+    v = String(v).toUpperCase().replace(/\s/g, '');
+    if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(v)) return false;
+    if (v.slice(0, 2) === 'IT' && v.length !== 27) return false;
+    var r = (v.slice(4) + v.slice(0, 4)).replace(/[A-Z]/g, function(c){ return c.charCodeAt(0) - 55; }), m = 0;
+    for (var i = 0; i < r.length; i++) m = (m * 10 + +r[i]) % 97;
+    return m === 1;
+  }
+  function pivaOk(v){
+    v = String(v).replace(/\s/g, '').replace(/^IT/i, '');
+    if (!/^[0-9]{11}$/.test(v)) return false;
+    var s = 0; for (var i = 0; i < 11; i++){ var n = +v[i]; if (i % 2){ n *= 2; if (n > 9) n -= 9; } s += n; }
+    return s % 10 === 0;
+  }
+  var REGIMI = ['I · IVA ordinaria', 'F · Forfettario', 'P · Privato'];
+
+  function apriConf(){
+    S.cmode = 'load';
+    call('confermaLeggi', [CONF], function(r){ S.cd = r; S.cmode = r.ok ? (r.conf === 'confermata' && MODE !== 'cat' ? 'gia' : 'vedi') : 'err'; render(); },
+      function(){ S.cmode = 'err'; render(); });
+  }
+  function vConf(){
+    var d = S.cd, m = S.cmode;
+    var head = '<div class="top"><span class="brand">Troupe</span></div>';
+    if (m === 'load') return head + '<div class="load">Apro i tuoi dati…</div>';
+    if (m === 'err') return head + '<div class="card"><h2>Link non valido</h2><p class="muted" style="margin:0">Il link è scaduto o non è completo. Chiedine uno nuovo a chi ti ha scritto.</p></div>';
+    if (m === 'fatto') return head + '<div class="card" style="text-align:center;padding:30px 20px"><div class="big">Grazie, tutto ricevuto!</div><p class="muted" style="margin:10px 0 0">Procedo con il collocamento, ci vediamo sul set.</p></div>';
+    if (m === 'no') return head + '<div class="card" style="text-align:center;padding:30px 20px"><div class="big">Ricevuto, grazie</div><p class="muted" style="margin:10px 0 0">Ho avvisato che non puoi esserci. Alla prossima!</p></div>';
+    var x = d.dati;
+    var job = '<div class="card"><div class="sub" style="margin:0 0 4px">Ciao ' + esc(cap(x.nome)) + ', ci vediamo sul set</div><div class="big">' + esc(d.titolo) + '</div>' +
+      '<dl style="margin-top:10px"><dt>Ruolo</dt><dd>' + esc(d.q) + '</dd><dt>Date</dt><dd>' + esc(fmtRange(d.dal, d.al)) + (giorni(d.dal, d.al) > 1 ? ' · ' + giorni(d.dal, d.al) + ' giorni' : '') + '</dd>' +
+      (d.luogo ? '<dt>Luogo</dt><dd>' + esc(d.luogo) + '</dd>' : '') + '<dt>Producer</dt><dd>' + esc(d.producer) + '</dd></dl></div>';
+    if (m === 'catFatto') return head + '<div class="card" style="text-align:center;padding:30px 20px"><div class="big">Grazie, ricevuto!</div><p class="muted" style="margin:10px 0 0">Lo giro al catering. Ci vediamo sul set.</p></div>';
+    if (m === 'correggi') return head + job + vConfForm(x);
+    if (MODE === 'cat') return head + job.replace('ci vediamo sul set', 'cosa mangi sul set?') + catBlock(d.cat) + '<button class="btn main" data-act="cf_cat">Invia</button>';
+    var righe = [['Nome', cap(x.nome) + ' ' + cap(x.cognome)], ['Telefono', x.tel], ['Email', x.email], ['Codice fiscale', x.cf], ['Nascita', [x.nascita, x.luogo].filter(Boolean).join(' · ')],
+      ['Residenza', [x.via, [x.cap, x.comune].filter(Boolean).join(' ')].filter(Boolean).join(', ')], ['Regime', x.regime], ['Partita IVA', x.piva], ['IBAN', x.iban]];
+    var manca = !x.cf || !x.iban || !x.via;
+    return head + job + '<div class="card"><h2>Dati collocamento · da ' + esc(String(d.producer).split(' ')[0]) + '</h2>' +
+      (m === 'gia' ? '<p class="muted" style="margin:0 0 10px">Hai già confermato. Se è cambiato qualcosa, correggi qui sotto.</p>' : '') +
+      '<dl>' + righe.map(function(r){ return '<dt>' + r[0] + '</dt><dd>' + (r[1] ? esc(r[1]) : '<span class="muted">mancante</span>') + '</dd>'; }).join('') + '</dl></div>' +
+      (d.col === false ? '' : catBlock(d.cat)) +
+      (manca ? '<div class="err">Mancano alcuni dati: tocca Correggi i dati per completarli.</div>' : '') +
+      (manca ? '' : '<button class="btn main" data-act="cf_ok">' + (m === 'gia' ? 'Confermo di nuovo' : 'Confermo, è tutto giusto') + '</button>') +
+      '<button class="btn sec" style="margin-top:10px" data-act="cf_correggi">Correggi i dati</button>' +
+      (m === 'gia' ? '' : '<button class="btn sec danger" style="margin-top:10px" data-act="cf_no">Non posso esserci</button>');
+  }
+  function vConfForm(x){ return formDati(x, 'confF', 'Correggi i dati', 'Salva e conferma', 'cf_annulla', S.cd.col !== false); }
+  function formDati(x, id, titolo, invia, annulla, conCat){
+    var f = function(n, l, v, t, extra){ return '<div class="f" id="cf-' + n + '"><label class="lab" for="k' + n + '">' + l + '</label><input type="' + (t || 'text') + '" id="k' + n + '" name="' + n + '" value="' + esc(v) + '"' + (extra || '') + '><div class="fmsg hide"></div></div>'; };
+    return '<form id="' + id + '" class="card" autocomplete="off"><h2>' + titolo + '</h2>' +
+      f('tel', 'Telefono', x.tel, 'tel') + f('email', 'Email', x.email, 'email') +
+      f('cf', 'Codice fiscale', x.cf, 'text', ' autocapitalize="characters" maxlength="16"') +
+      '<div class="row">' + f('nascita', 'Data di nascita', x.nascita, 'text', ' placeholder="gg/mm/aaaa"') + f('luogo', 'Luogo di nascita', x.luogo) + '</div>' +
+      f('via', 'Indirizzo di residenza', x.via, 'text', ' placeholder="Via Roma 10"') +
+      '<div class="row">' + f('cap', 'CAP', x.cap, 'text', ' inputmode="numeric" maxlength="5"') + f('comune', 'Comune', x.comune) + '</div>' +
+      '<div class="f"><label class="lab" for="kregime">Come vieni pagato</label><select id="kregime" name="regime"><option value="">Scegli</option>' +
+      REGIMI.map(function(r){ return '<option' + (r === x.regime ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select></div>' +
+      f('piva', 'Partita IVA', x.piva, 'text', ' inputmode="numeric" maxlength="13"') +
+      f('iban', 'IBAN', x.iban, 'text', ' autocapitalize="characters"') +
+      (conCat ? '</form>' + catBlock(S.cd && S.cd.cat) + '<div>' : '') +
+      '<button class="btn main" type="submit"' + (conCat ? ' form="' + id + '"' : '') + '>' + invia + '</button><button class="btn sec" type="button" style="margin-top:10px" data-act="' + annulla + '">Annulla</button>' + (conCat ? '</div>' : '</form>');
+  }
+  function confAzione(a, b){
+    if (a === 'correggi') { S.cmode = 'correggi'; return render(); }
+    if (a === 'annulla') { S.cmode = S.cd.conf === 'confermata' ? 'gia' : 'vedi'; return render(); }
+    if (a === 'no' && !confirm('Confermi che non puoi esserci?')) return;
+    b.disabled = true;
+    var az = a === 'no' ? 'no' : a === 'cat' ? 'cat' : 'ok';
+    call('confermaInvia', [CONF, az, null, az === 'no' ? null : leggiCat()], function(r){
+      if (!r.ok) { toast(r.msg); b.disabled = false; return; }
+      S.cmode = az === 'no' ? 'no' : az === 'cat' ? 'catFatto' : 'fatto'; render();
+    }, function(){ b.disabled = false; toast('Invio non riuscito, riprova'); });
+  }
+  function confSalva(f){
+    var d = validaDati(f); if (!d) return;
+    var btn = f.querySelector('button[type=submit]') || document.querySelector('button[form=confF]'); btn.disabled = true; btn.textContent = 'Invio…';
+    call('confermaInvia', [CONF, 'correggi', d, leggiCat()], function(r){
+      if (!r.ok) { toast(r.msg); btn.disabled = false; btn.textContent = 'Salva e conferma'; return; }
+      S.cmode = 'fatto'; render();
+    }, function(){ btn.disabled = false; btn.textContent = 'Salva e conferma'; toast('Invio non riuscito, riprova'); });
+  }
+  function validaDati(f){
+    var d = {}, ok = true, first = null;
+    ['tel', 'email', 'cf', 'nascita', 'luogo', 'via', 'cap', 'comune', 'regime', 'piva', 'iban'].forEach(function(n){ d[n] = f.elements[n].value.trim(); });
+    function err(n, m){ var box = document.getElementById('cf-' + n); if (!box) return; box.classList.toggle('bad', !!m); var e = box.querySelector('.fmsg'); e.textContent = m || ''; e.classList.toggle('hide', !m); if (m) { ok = false; first = first || box; } }
+    err('tel', d.tel.replace(/\D/g, '').length >= 8 ? '' : 'Controlla il numero');
+    err('email', !d.email || /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email) ? '' : 'Controlla l\'email');
+    err('cf', cfOk(d.cf) ? '' : 'Il codice fiscale non sembra corretto');
+    err('via', d.via ? '' : 'Scrivi via e numero civico');
+    err('cap', /^[0-9]{5}$/.test(d.cap) ? '' : 'Il CAP ha 5 cifre');
+    err('comune', d.comune ? '' : 'Scrivi il comune');
+    err('iban', ibanOk(d.iban) ? '' : 'L\'IBAN non sembra corretto');
+    err('piva', !d.piva || d.regime.indexOf('P ·') === 0 || pivaOk(d.piva) ? '' : 'La partita IVA non sembra corretta');
+    if (!ok) { first.scrollIntoView({ block: 'center' }); return null; }
+    if (d.regime.indexOf('P ·') === 0) d.piva = '';
+    return d;
+  }
+
+  // ───── invio su WhatsApp: apre l'app direttamente, con copia come riserva ─────
+  function waHref(num, testo){
+    return 'whatsapp://send?' + (num ? 'phone=' + num + '&' : '') + 'text=' + encodeURIComponent(testo || '');
+  }
+  function foglioWA(titolo, testo, num){
+    chiudiFoglio();
+    var o = document.createElement('div'); o.className = 'ov'; o.id = 'foglio';
+    o.innerHTML = '<div class="sheet" role="dialog" aria-label="' + esc(titolo) + '"><h2>' + esc(titolo) + '</h2>' +
+      '<pre class="cl prev">' + esc(testo) + '</pre>' +
+      '<a class="btn wa" href="' + waHref(num, testo) + '" target="_top">Apri WhatsApp</a>' +
+      '<div class="row" style="margin-top:8px"><button class="btn sec" data-f="copia">Copia testo</button>' +
+      (navigator.share ? '<button class="btn sec" data-f="altro">Altre app</button>' : '') + '</div>' +
+      '<button class="link" style="width:100%;margin-top:6px" data-f="chiudi">Chiudi</button></div>';
+    o.addEventListener('click', function(e){
+      var t = e.target.closest('[data-f]');
+      if (e.target === o) return chiudiFoglio();
+      if (!t) return;
+      if (t.dataset.f === 'chiudi') chiudiFoglio();
+      if (t.dataset.f === 'copia') copia(testo);
+      if (t.dataset.f === 'altro') navigator.share({ text: testo }).catch(function(){ copia(testo); });
+    });
+    document.body.appendChild(o);
+  }
+  function chiudiFoglio(){ var o = document.getElementById('foglio'); if (o) o.remove(); }
+  function copia(t){
+    var ok = function(){ toast('Testo copiato: incollalo dove vuoi'); };
+    var vecchio = function(){ var ta = document.createElement('textarea'); ta.value = t; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, t.length); try { document.execCommand('copy'); ok(); } catch (e) { toast('Copia non riuscita'); } ta.remove(); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, vecchio); else vecchio();
+  }
+
+  // aggiunge una persona al progetto con un tocco (dalla ricerca "Aggiungi crew")
+  function aggiungiUno(r, b){
+    var t = S.target; if (!t || t.rs[r]) return;
+    t.rs[r] = 1; t.n++;
+    var c = (S.contatti || []).filter(function(x){ return x.r === r; })[0];
+    var y = window.scrollY; render(); window.scrollTo(0, y);
+    toast((c ? nomeDi(c) : 'Persona') + ' è nella crew di ' + t.titolo);
+    delete S.prjC[t.id];
+    call('aggiungiCrew', [S.token, t.id, [r]], function(){}, function(e){
+      delete t.rs[r]; t.n--; var y2 = window.scrollY; render(); window.scrollTo(0, y2); toast('Non aggiunto: ' + e.message);
+    });
+  }
+
+  // ═════════ FASE 3 · catering, collocamenti, chiusura ═════════
+  function itData(iso){ var x = pd(iso); return x ? ('0' + x.d).slice(-2) + '/' + ('0' + x.m).slice(-2) + '/' + x.y : ''; }
+  var DIETE = ['Mangio tutto', 'Vegetariana', 'Vegana', 'Pescetariana'];
+  var ALLERGIE = ['Glutine', 'Lattosio', 'Frutta a guscio', 'Crostacei e pesce', 'Uova'];
+
+  // blocco "Per il catering" nella pagina della crew
+  function catBlock(cat){
+    cat = cat || {};
+    var dieta = cat.dieta || 'Mangio tutto', all = String(cat.allergie || '').split(', ').filter(Boolean);
+    return '<div class="card" id="catBox"><h2>Per il catering</h2><p class="muted" style="margin:-4px 0 10px">Facoltativo. Va solo al catering di questa produzione.</p>' +
+      '<div class="f"><span class="lab">Cosa mangi</span><div class="seg wrap" id="segDieta" data-val="' + esc(dieta) + '">' +
+      DIETE.map(function(t){ return '<button type="button" data-seg="' + t + '" class="' + (t === dieta ? 'on' : '') + '">' + t + '</button>'; }).join('') + '</div></div>' +
+      '<div class="f"><span class="lab">Allergie o intolleranze</span><div class="chips">' +
+      ALLERGIE.map(function(t){ return '<label class="chip"><input type="checkbox" name="all" value="' + t + '"' + (all.indexOf(t) !== -1 ? ' checked' : '') + '>' + t + '</label>'; }).join('') + '</div></div>' +
+      '<div class="f"><label class="lab" for="catAltro">Altro</label><input type="text" id="catAltro" value="' + esc(cat.altro) + '" placeholder="Es. niente funghi"></div>' +
+      '<label class="chk-row"><input type="checkbox" id="catGrave"' + (cat.grave ? ' checked' : '') + '>Ho un\'allergia grave: avvisate il catering</label></div>';
+  }
+  function leggiCat(){
+    var box = document.getElementById('catBox'); if (!box) return null;
+    return { dieta: document.getElementById('segDieta').getAttribute('data-val'),
+      allergie: Array.prototype.map.call(box.querySelectorAll('input[name=all]:checked'), function(i){ return i.value; }),
+      altro: document.getElementById('catAltro').value, grave: document.getElementById('catGrave').checked };
+  }
+
+  // ───── collocamenti nel progetto ─────
+  function vCollocamenti(p, col){
+    var conf = col.filter(confOk).length;
+    var chiuso = p.stato === 'chiuso';
+    var riga = function(t, s, btn){ return '<div class="step"><div class="t"><b>' + t + '</b><small>' + s + '</small></div>' + btn + '</div>'; };
+    return '<div class="card"><h2>Collocamenti</h2>' +
+      riga('Rilevamento nullaosta', conf + ' confermati su ' + col.length + ' da collocare' + (p.ril ? ' · creato il ' + itData(p.ril) : ''),
+        '<button class="btn sec mini" data-go="ril"' + (conf && !chiuso ? '' : ' disabled') + '>Prepara</button>') +
+      riga('Mandato di pagamento', p.man ? 'creato il ' + itData(p.man) : 'a riprese concluse', '<button class="btn sec mini" data-act="apriMan"' + (conf && !chiuso ? '' : ' disabled') + '>Prepara</button>') +
+      (chiuso ? '' : riga('Chiudi progetto', 'la cartella passa in Archivio', '<button class="btn sec mini danger" data-act="chiudiPrj">Chiudi</button>')) +
+      '</div>';
+  }
+
+  function vRil(){
+    var p = S.pr, col = p.crew.filter(function(c){ return c.col && c.conf !== 'non disponibile'; });
+    var ok = col.filter(confOk), no = col.filter(function(c){ return !confOk(c); });
+    return top('prj') + '<h1>Rilevamento nullaosta</h1>' +
+      '<div class="card"><h2>Nel file (' + ok.length + ')</h2>' + ok.map(function(c){
+        return '<div class="res"><div class="t"><b>' + esc(nomeDi(c)) + '</b><small>' + esc(c.q + ' · ' + fmtRange(c.dal, c.al)) + '</small></div></div>'; }).join('') + '</div>' +
+      (no.length ? '<div class="card"><h2>Non ancora confermati (' + no.length + ')</h2><p class="muted" style="margin:0 0 6px">Restano fuori finché non confermano' + (S.admin ? ' o finché non confermi tu al loro posto' : '') + '.</p>' +
+        no.map(function(c){ return '<div class="res" data-pers="' + c.r + '"><div class="t"><b>' + esc(nomeDi(c)) + '</b><small>' + esc(c.q) + '</small></div>' + badgeConf(c) + '</div>'; }).join('') + '</div>' : '') +
+      '<p class="muted" style="margin:0 4px 12px">Creo il file .xlsx nella cartella del progetto' + ' e ti preparo l\'email per lo studio.' + '</p>' +
+      '<button class="btn main" data-act="creaRil">Crea file</button>';
+  }
+
+  function vMan(){
+    var p = S.pr, ok = p.crew.filter(function(c){ return c.col && confOk(c); });
+    return top('prj') + '<h1>Mandato di pagamento</h1><form id="manF" autocomplete="off">' + ok.map(function(c){
+      var gg = giorni(c.dal, c.al);
+      return '<div class="card" data-r="' + c.r + '"><b>' + esc(nomeDi(c)) + '</b><div class="sub" style="margin:2px 0 10px">' + esc(c.q + ' · ' + fmtRange(c.dal, c.al) + ' · ' + gg + (gg === 1 ? ' giorno' : ' giorni')) + '</div>' +
+        '<div class="f"><label class="lab">Compenso totale €</label><input type="text" inputmode="decimal" name="comp" value="' + esc(c.comp) + '" placeholder="Es. 1250"></div>' +
+        '<div class="row"><div class="f"><label class="lab">Diaria €</label><input type="text" inputmode="decimal" name="diaria" value="' + esc(c.diaria) + '"></div>' +
+        '<div class="f"><label class="lab">Rimborso km €</label><input type="text" inputmode="decimal" name="km" value="' + esc(c.km) + '"></div></div>' +
+        '<label class="chk-row"><input type="checkbox" name="diariaGia"' + (c.diariaGia === 'sì' ? ' checked' : '') + '>Diaria già data</label>' +
+        '<label class="chk-row"><input type="checkbox" name="kmGia"' + (c.kmGia === 'sì' ? ' checked' : '') + '>Rimborso km già dato</label></div>';
+    }).join('') + '<div id="manErr"></div><button class="btn sec" type="button" data-act="salvaMan">Salva per dopo</button>' +
+      '<button class="btn main" type="submit" style="margin-top:10px">Crea file</button></form>';
+  }
+  function datiMan(){
+    return Array.prototype.map.call(document.querySelectorAll('#manF [data-r]'), function(box){
+      var v = function(n){ return box.querySelector('[name=' + n + ']'); };
+      return { r: Number(box.getAttribute('data-r')), comp: v('comp').value, diaria: v('diaria').value, km: v('km').value, diariaGia: v('diariaGia').checked, kmGia: v('kmGia').checked };
+    });
+  }
+
+  function vInvio(){
+    var r = S.invio;
+    var mail = 'mailto:' + r.email + '?subject=' + encodeURIComponent(r.oggetto) + '&body=' + encodeURIComponent(r.testo);
+    return top('prj') + '<div class="card" style="text-align:center;padding:24px 18px"><div class="big">File pronto</div>' +
+      '<p class="muted" style="margin:8px 0 0">È nella cartella del progetto. Scaricalo e allegalo all\'email per lo studio.</p></div>' +
+      (r.esclusi && r.esclusi.length ? '<div class="err">Fuori dal file perché non hanno confermato: ' + esc(r.esclusi.map(cap).join(', ')) + '</div>' : '') +
+      '<a class="btn sec" href="' + esc(r.fileUrl) + '" target="_blank" style="margin-bottom:12px">Apri il file</a>' +
+      '<div class="card"><h2>Email per lo studio</h2><dl><dt>A</dt><dd>' + esc(r.email) + '</dd><dt>Oggetto</dt><dd>' + esc(r.oggetto) + '</dd></dl><pre class="cl prev" style="margin-top:10px">' + esc(r.testo) + '</pre></div>' +
+      '<div class="row"><button class="btn sec" data-act="copiaMail">Copia testo</button><a class="btn main" href="' + esc(mail) + '">Apri email</a></div>' +
+      '<p class="muted" style="margin:10px 4px">Apri email usa l\'app di posta del telefono: scegli l\'account Courage come mittente e ricordati l\'allegato.</p>';
+  }
+
+  // ───── catering nel progetto ─────
+  function vCat(){
+    var p = S.pr, cat = S.catD || [];
+    var crew = p.crew.filter(function(c){ return c.conf !== 'non disponibile'; });
+    var di = function(c){ return cat.filter(function(x){ return x.r === c.r; })[0]; };
+    var risp = crew.filter(di), mancano = crew.filter(function(c){ return !di(c); });
+    var giorniL = [], x = pd(p.dal), y = pd(p.al);
+    for (var t = Date.UTC(x.y, x.m - 1, x.d); t <= Date.UTC(y.y, y.m - 1, y.d); t += 864e5) giorniL.push(new Date(t).toISOString().slice(0, 10));
+    var gruppi = [];
+    giorniL.forEach(function(g){
+      var qui = crew.filter(function(c){ return c.dal <= g && c.al >= g; });
+      var conta = function(tp){ return qui.filter(function(c){ var k = di(c); return k && k.dieta === tp; }).length; };
+      var v = [qui.length, conta('Vegetariana'), conta('Vegana'), conta('Pescetariana')];
+      var u = gruppi[gruppi.length - 1];
+      if (u && u.v.join() === v.join()) u.al = g; else gruppi.push({ dal: g, al: g, v: v });
+    });
+    var temp = function(n){ return n ? n : '<span class="muted">–</span>'; };
+    var righeG = '<table class="tg"><thead><tr><th>Giorni</th><th>Pasti</th><th>Veget.</th><th>Vegani</th><th>Pesc.</th></tr></thead><tbody>' +
+      gruppi.map(function(gr){ return '<tr><td>' + esc(fmtRange(gr.dal, gr.al).replace(/ \d{4}$/, '')) + '</td><td><b>' + gr.v[0] + '</b></td><td>' + temp(gr.v[1]) + '</td><td>' + temp(gr.v[2]) + '</td><td>' + temp(gr.v[3]) + '</td></tr>'; }).join('') +
+      '</tbody></table>';
+    var esig = risp.filter(function(c){ var k = di(c); return k.dieta !== 'Mangio tutto' || k.allergie || k.altro; }).map(function(c){
+      var k = di(c);
+      return '<div class="res"><div class="t"><b>' + esc(nomeDi(c)) + '</b><small>' + esc([k.dieta !== 'Mangio tutto' ? k.dieta : '', k.allergie, k.altro].filter(Boolean).join(' · ')) + '</small></div>' + (k.grave ? '<span class="badge no">allergia grave</span>' : '') + '</div>';
+    }).join('');
+    return top('prj') + '<h1>Catering</h1><p class="count">' + risp.length + (risp.length === 1 ? ' risposta su ' : ' risposte su ') + crew.length + (mancano.length ? ' · ' + mancano.length + ' da sentire' : ' · tutti hanno risposto') + '</p>' +
+      '<div class="dep">Pasti al giorno</div><div class="card" style="padding:6px 14px">' + righeG + '</div>' +
+      '<div class="dep">Esigenze</div><div class="card" style="padding:4px 12px">' + (esig || '<p class="muted">Nessuna esigenza particolare finora.</p>') + '</div>' +
+      (mancano.length ? '<div class="dep">Non hanno ancora risposto</div><div class="card" style="padding:4px 12px">' + mancano.map(function(c){
+        return '<div class="res"><div class="t"><b>' + esc(nomeDi(c)) + '</b><small>' + esc(c.q) + '</small></div><button class="btn sec mini" data-act="catChiedi" data-r="' + c.r + '"' + (waNum(c.tel) ? '' : ' disabled') + '>Chiedi</button></div>'; }).join('') + '</div>' : '') +
+      '<div class="row" style="margin-top:12px"><button class="btn sec" data-act="copiaCat">Copia testo</button><button class="btn main" data-act="fileCat">File per il catering</button></div>' +
+      '<p class="muted" style="margin:10px 4px">Le risposte restano solo in questo progetto e si cancellano 30 giorni dopo l\'ultimo giorno di riprese.</p>';
+  }
+  function testoCat(){
+    var p = S.pr, cat = S.catD || [];
+    var crew = p.crew.filter(function(c){ return c.conf !== 'non disponibile'; });
+    var di = function(c){ return cat.filter(function(x){ return x.r === c.r; })[0]; };
+    var t = 'CATERING · ' + p.titolo + '\n' + [fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ') + '\n\n';
+    var x = pd(p.dal), y = pd(p.al);
+    for (var s = Date.UTC(x.y, x.m - 1, x.d); s <= Date.UTC(y.y, y.m - 1, y.d); s += 864e5) {
+      var g = new Date(s).toISOString().slice(0, 10);
+      var qui = crew.filter(function(c){ return c.dal <= g && c.al >= g; });
+      var vv = ['Vegetariana', 'Vegana', 'Pescetariana'].map(function(tp){ var n = qui.filter(function(c){ var k = di(c); return k && k.dieta === tp; }).length; return n ? n + ' ' + tp.toLowerCase() : ''; }).filter(Boolean);
+      t += fmtRange(g, g) + ': ' + qui.length + (qui.length === 1 ? ' pasto' : ' pasti') + (vv.length ? ' (di cui ' + vv.join(', ') + ')' : '') + '\n';
+    }
+    var es = crew.filter(function(c){ var k = di(c); return k && (k.allergie || k.altro || k.dieta !== 'Mangio tutto'); });
+    if (es.length) t += '\nESIGENZE\n' + es.map(function(c){ var k = di(c); return nomeDi(c) + ' — ' + [k.dieta, k.allergie, k.altro].filter(Boolean).join(', ') + (k.grave ? ' — ALLERGIA GRAVE' : ''); }).join('\n');
+    return t.trim();
+  }
+
+  // ───── compila e conferma (admin) ─────
+  function vAdminF(){
+    var c = crewDi(S.cv);
+    if (!S.adm) return top('pers') + '<div class="load">Apro i dati…</div>';
+    return top('pers') + '<h1>' + esc(nomeDi(c)) + '</h1><p class="count">Compili tu i dati e confermi al suo posto. Resta nel registro.</p>' +
+      formDati(S.adm, 'admF', 'Dati per il collocamento', 'Salva e conferma', 'admAnnulla', false);
+  }
+
+  function vArch(){
+    var l = S.arch;
+    return top('home') + '<h1>Archivio</h1>' + (!l ? '<div class="load">Carico…</div>' : !l.length ? '<div class="card"><p class="muted" style="margin:0">Nessun progetto chiuso.</p></div>' :
+      l.map(function(p){ return '<button class="prj" data-prj="' + esc(p.id) + '"><b>' + esc(p.titolo) + '</b><small>' + esc(fmtRange(p.dal, p.al) + (p.chiuso ? ' · chiuso il ' + itData(p.chiuso) : '')) + '</small></button>'; }).join('')) +
+      '<p class="muted" style="margin:10px 4px">Dopo 30 giorni dalla chiusura i dati per il collocamento li vede solo l\'admin.</p>';
+  }
+
+  function azioni3(a, b){
+    if (a === 'apriCat') {
+      app.innerHTML = top('prj') + '<div class="load">Carico le risposte…</div>';
+      call('catering', [S.token, S.pr.id], function(d){ S.catD = d; S.view = 'cat'; render(); });
+      return true;
+    }
+    if (a === 'catChiedi') {
+      var c = crewDi(Number(b.dataset.r)); b.disabled = true;
+      call('chiediCatering', [S.token, S.pr.id, c.r], function(r){
+        b.disabled = false;
+        var m = 'Ciao ' + cap(c.nome) + ', per ' + S.pr.titolo + ' ti chiedo cosa mangi sul set, così lo giro al catering: ' + r.link;
+        foglioWA('Messaggio per ' + cap(c.nome), m, waNum(c.tel));
+      }, function(e){ b.disabled = false; toast(e.message); });
+      return true;
+    }
+    if (a === 'copiaCat') { copia(testoCat()); return true; }
+    if (a === 'fileCat') {
+      b.disabled = true; b.textContent = 'Creo il file…';
+      call('fileCatering', [S.token, S.pr.id], function(r){ b.disabled = false; b.textContent = 'File per il catering'; foglioLink('File per il catering pronto', 'È nella cartella del progetto. Da Google Sheets puoi scaricarlo in PDF o Excel e mandarlo al catering.', r.url); },
+        function(e){ b.disabled = false; b.textContent = 'File per il catering'; toast(e.message); });
+      return true;
+    }
+    if (a === 'creaRil') {
+      b.disabled = true; b.textContent = 'Creo il file…';
+      call('rilevamento', [S.token, S.pr.id], function(r){
+        if (!r.ok) { b.disabled = false; b.textContent = 'Riprova'; return toast(r.msg); }
+        S.invio = r; S.view = 'invio'; ricarica();
+      }, function(e){ b.disabled = false; b.textContent = 'Riprova'; toast(e.message); });
+      return true;
+    }
+    if (a === 'apriMan') { S.view = 'man'; render(); return true; }
+    if (a === 'salvaMan') {
+      b.disabled = true;
+      call('salvaMandato', [S.token, S.pr.id, datiMan()], function(){ ricarica(function(){ S.view = 'prj'; toast('Salvato'); }); }, function(e){ b.disabled = false; toast(e.message); });
+      return true;
+    }
+    if (a === 'copiaMail') { copia(S.invio.testo); return true; }
+    if (a === 'chiudiPrj') {
+      if (!confirm('Chiudere ' + S.pr.titolo + '? La cartella passa in Archivio e i link di conferma smettono di funzionare.')) return true;
+      call('chiudiProgetto', [S.token, S.pr.id], function(){ S.progStale = true; S.view = 'home'; render(); toast('Progetto chiuso e archiviato'); });
+      return true;
+    }
+    if (a === 'apriArch') {
+      S.arch = null; S.view = 'arch'; render();
+      call('archivio', [S.token], function(l){ S.arch = l; if (S.view === 'arch') render(); });
+      return true;
+    }
+    if (a === 'compila') {
+      S.adm = null; S.view = 'adminF'; render();
+      call('datiPersona', [S.token, S.pr.id, S.cv], function(d){ S.adm = d; if (S.view === 'adminF') render(); }, function(e){ toast(e.message); S.view = 'pers'; render(); });
+      return true;
+    }
+    if (a === 'admAnnulla') { S.view = 'pers'; render(); return true; }
+    if (a === 'cf_cat') { confAzione('cat', b); return true; }
+    return false;
+  }
+
+  function submit3(f){
+    if (f.id === 'manF') {
+      var d = datiMan();
+      var manca = d.filter(function(x){ return !String(x.comp).trim(); });
+      if (manca.length) { document.getElementById('manErr').innerHTML = '<div class="err">Manca il compenso di ' + manca.length + (manca.length === 1 ? ' persona' : ' persone') + '.</div>'; return true; }
+      var btn = f.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Creo il file…';
+      call('salvaMandato', [S.token, S.pr.id, d], function(){
+        call('mandato', [S.token, S.pr.id], function(r){
+          if (!r.ok) { btn.disabled = false; btn.textContent = 'Riprova'; return toast(r.msg); }
+          S.invio = r; S.view = 'invio'; ricarica();
+        }, function(e){ btn.disabled = false; btn.textContent = 'Riprova'; toast(e.message); });
+      }, function(e){ btn.disabled = false; btn.textContent = 'Riprova'; toast(e.message); });
+      return true;
+    }
+    if (f.id === 'admF') {
+      var dd = validaDati(f); if (!dd) return true;
+      var b2 = f.querySelector('button[type=submit]'); b2.disabled = true; b2.textContent = 'Salvo…';
+      call('confermaAdmin', [S.token, S.pr.id, S.cv, dd], function(){ S.view = 'pers'; S.csens = null; ricarica(function(){ toast('Dati salvati e confermati'); }); },
+        function(e){ b2.disabled = false; b2.textContent = 'Salva e conferma'; toast(e.message); });
+      return true;
+    }
+    return false;
+  }
+
+  function foglioLink(titolo, testo, url){
+    chiudiFoglio();
+    var o = document.createElement('div'); o.className = 'ov'; o.id = 'foglio';
+    o.innerHTML = '<div class="sheet"><h2>' + esc(titolo) + '</h2><p class="muted" style="margin:0 0 12px">' + esc(testo) + '</p>' +
+      '<a class="btn main" href="' + esc(url) + '" target="_blank">Apri il file</a><button class="link" style="width:100%;margin-top:6px" data-f="chiudi">Chiudi</button></div>';
+    o.addEventListener('click', function(e){ if (e.target === o || e.target.closest('[data-f]')) chiudiFoglio(); });
+    document.body.appendChild(o);
+  }
+
+  // ═════════ ACCESSI (admin) ═════════
+  function vAcc(){
+    var d = S.acc;
+    if (!d) return top('home') + '<h1>Accessi</h1><div class="load">Carico…</div>';
+    var utenti = d.utenti.map(function(x){
+      return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b style="font-size:16px">' + esc(x.nome) + '</b>' +
+        '<div class="sub" style="margin-top:2px">' + (x.admin ? 'Admin' : 'Producer') + ' · codice <b style="color:var(--ink);letter-spacing:.06em">' + esc(x.codice) + '</b></div></div>' +
+        '<span class="badge ' + (x.attivo ? 'ok' : 'no') + '">' + (x.attivo ? 'attivo' : 'disattivato') + '</span></div>' +
+        '<div class="row" style="margin-top:12px">' +
+        (x.attivo ? '<button class="btn sec mini" style="flex:1" data-act="accInvia" data-row="' + x.row + '">Invia</button>' : '') +
+        '<button class="btn sec mini" style="flex:1" data-act="accCodice" data-row="' + x.row + '">Cambia codice</button>' +
+        (x.nome === S.nome ? '' : '<button class="btn sec mini' + (x.attivo ? ' danger' : '') + '" style="flex:1" data-act="' + (x.attivo ? 'accOff' : 'accOn') + '" data-row="' + x.row + '">' + (x.attivo ? 'Disattiva' : 'Riattiva') + '</button>') +
+        '</div></div>';
+    }).join('');
+    var reg = d.registro.length ? d.registro.map(function(r){
+      return '<div class="res"><div class="t"><b style="font-weight:500">' + esc(r.cosa) + '</b><small>' + esc([r.quando, r.chi, r.persona].filter(Boolean).join(' · ')) + '</small></div></div>';
+    }).join('') : '<p class="muted">Ancora niente.</p>';
+    return top('home') + '<h1>Accessi</h1>' + utenti +
+      '<form id="accF" class="card" autocomplete="off"><h2>Nuovo producer</h2><div id="accErr"></div>' +
+      '<div class="f"><label class="lab" for="accN">Nome e cognome</label><input type="text" id="accN" name="nome" placeholder="Es. Giulia Bianchi"></div>' +
+      '<button class="btn main" type="submit">Crea accesso</button><p class="muted" style="margin:10px 0 0">Troupe crea un codice personale: vede solo i progetti suoi e i dati di chi ha confermato.</p></form>' +
+      '<div class="dep">Registro · ultimi 40</div><div class="card" style="padding:4px 12px">' + reg + '</div>';
+  }
+  function caricaAcc(){ call('accessi', [S.token], function(d){ S.acc = d; if (S.view === 'acc') { var y = window.scrollY; render(); window.scrollTo(0, y); } }); }
+  function utenteRow(row){ return S.acc.utenti.filter(function(x){ return x.row === Number(row); })[0]; }
+  function mandaCodice(nome, codice){
+    var m = 'Ciao ' + String(nome).split(' ')[0] + ', ecco Troupe, l\'app per crew e collocamenti: ' + S.acc.link +
+      '\nIl tuo codice personale è ' + codice + '. Tienilo per te: con quel codice entri a nome tuo.\nSu iPhone: Condividi › Aggiungi alla schermata Home.';
+    foglioWA('Codice per ' + nome, m, '');
+  }
+  function azioni4(a, b){
+    if (a === 'apriAcc') { S.acc = null; S.view = 'acc'; render(); caricaAcc(); return true; }
+    if (a === 'accInvia') { var u = utenteRow(b.dataset.row); mandaCodice(u.nome, u.codice); return true; }
+    if (a === 'accOff' || a === 'accOn' || a === 'accCodice') {
+      var u2 = utenteRow(b.dataset.row);
+      var q = a === 'accOff' ? 'Disattivare l\'accesso di ' + u2.nome + '? Esce subito da Troupe e il codice smette di funzionare.' :
+              a === 'accCodice' ? 'Creare un nuovo codice per ' + u2.nome + '? Il vecchio smette di funzionare' + (u2.nome === S.nome ? ' e dovrai rientrare con il nuovo.' : '.') : '';
+      if (q && !confirm(q)) return true;
+      b.disabled = true;
+      call('cambiaAccesso', [S.token, u2.row, a === 'accOff' ? 'disattiva' : a === 'accOn' ? 'attiva' : 'codice'], function(r){
+        if (!r.ok) { b.disabled = false; return toast(r.msg); }
+        if (r.io) { alert('Il tuo nuovo codice è ' + r.codice + '. Segnatelo: ora rientri con questo.'); return esci(true); }
+        caricaAcc();
+        if (r.codice) { u2.codice = r.codice; mandaCodice(u2.nome, r.codice); } else toast(a === 'accOff' ? 'Accesso disattivato' : 'Accesso riattivato');
+      }, function(e){ b.disabled = false; toast(e.message); });
+      return true;
+    }
+    return false;
+  }
+  function submit4(f){
+    if (f.id !== 'accF') return false;
+    var nome = f.elements.nome.value.trim(), box = document.getElementById('accErr');
+    if (nome.split(' ').length < 2) { box.innerHTML = '<div class="err">Scrivi nome e cognome</div>'; return true; }
+    var btn = f.querySelector('button[type=submit]'); btn.disabled = true; btn.textContent = 'Creo…';
+    call('creaProducer', [S.token, nome], function(r){
+      if (!r.ok) { btn.disabled = false; btn.textContent = 'Crea accesso'; box.innerHTML = '<div class="err">' + esc(r.msg) + '</div>'; return; }
+      caricaAcc(); mandaCodice(r.nome, r.codice);
+    }, function(e){ btn.disabled = false; btn.textContent = 'Crea accesso'; toast(e.message); });
+    return true;
+  }
+
+  if (CONF) { S.view = 'conf'; apriConf(); }
+  render();
+})();
+</script>
+</body>
+</html>
