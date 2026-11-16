@@ -120,6 +120,35 @@ pre.cl{white-space:pre-wrap;font:inherit;font-size:14px;line-height:1.5;margin:0
 .add{width:36px;height:36px;border-radius:50%;border:1.5px solid var(--ink);background:#fff;color:var(--ink);font-size:22px;line-height:1;font-weight:500;display:flex;align-items:center;justify-content:center;flex:0 0 auto;cursor:pointer;padding:0}
 .btn.mini{white-space:nowrap;padding:0 10px}
 .res small{white-space:normal}
+.btn.soft{background:var(--blue-soft);color:var(--blue);border:none}
+.head-acts{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.fchips{display:flex;gap:6px;overflow-x:auto;margin:12px 0 0;padding:0 2px 2px;-webkit-overflow-scrolling:touch}
+.fchip{flex:0 0 auto;height:34px;padding:0 12px;border-radius:17px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer}
+.fchip span{color:var(--muted);font-weight:500;margin-left:2px}
+.fchip.on{background:var(--ink);border-color:var(--ink);color:#fff}.fchip.on span{color:#C9CBD0}
+.cr{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--soft);cursor:pointer}
+.cr:first-child{border-top:none}
+.cr .t{flex:1;min-width:0}.cr b{display:block;font-size:15px;font-weight:600}
+.cr small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.cr .manca{color:#7A4B00}
+.st{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;margin-top:5px;color:var(--muted)}
+.st::before{content:"";width:7px;height:7px;border-radius:50%;background:#B9BBBF}
+.st.ok{color:var(--ok)}.st.ok::before{background:var(--ok)}
+.st.w{color:#8A5A00}.st.w::before{background:#E0A11B}
+.st.no{color:var(--err)}.st.no::before{background:var(--err)}
+.freccia{color:#B9BBBF;font-size:22px;padding:0 4px}
+.passi{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(233,232,228,.92);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);padding:8px 10px calc(10px + env(safe-area-inset-bottom))}
+.passi-in{max-width:480px;margin:0 auto;background:#fff;border-radius:18px;padding:10px 12px 12px;box-shadow:0 -2px 18px rgba(20,22,26,.08)}
+.steps{display:flex;justify-content:space-between;position:relative;margin-bottom:10px}
+.steps::before{content:"";position:absolute;left:10%;right:10%;top:13px;height:2px;background:var(--line)}
+.dot{position:relative;flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;background:none;border:none;padding:0;cursor:pointer}
+.dot .c{width:26px;height:26px;border-radius:50%;background:#fff;border:2px solid var(--line);font-size:12px;font-weight:700;color:var(--muted);display:flex;align-items:center;justify-content:center}
+.dot .l{font-size:11px;color:var(--muted);font-weight:600}
+.dot.fatto .c{background:var(--ok);border-color:var(--ok);color:#fff}
+.dot.cur .c{border-color:var(--ink);color:var(--ink)}.dot.cur .l{color:var(--ink)}
+.dot.fatto.cur .c{box-shadow:0 0 0 3px #CDE6D6}
+.passo-ora{display:flex;align-items:center;gap:10px;border-top:1px solid var(--soft);padding-top:10px}
+.passo-ora .t{flex:1;min-width:0}.passo-ora b{display:block;font-size:15px}.passo-ora small{display:block;color:var(--muted);font-size:13px;margin-top:1px}
 .add.on{background:var(--ok);border-color:var(--ok);color:#fff;font-size:16px}
 .add:disabled{opacity:.5}
 .load{text-align:center;color:var(--muted);padding:50px 0;font-size:14px}
@@ -499,6 +528,7 @@ var ALIAS = {
 
   S.prjC = {};
   function apriPrj(id, poi){
+    if (!S.pr || S.pr.id !== id) { S.passo = null; S.fCrew = 'tutti'; }
     var c = S.prjC[id];
     if (c && !poi) { S.pr = c; S.view = 'prj'; render(); }   // subito la versione in memoria, poi aggiorno
     else if (S.view !== 'prj') { app.innerHTML = top('home') + '<div class="load">Apro il progetto…</div>'; }
@@ -631,7 +661,7 @@ var ALIAS = {
   }
 
   function azioni2(a, b){
-    if (azioni3(a, b) || azioni4(a, b)) return true;
+    if (azioni5(a, b) || azioni3(a, b) || azioni4(a, b)) return true;
     if (a === 'nuovoPrj') { S.prjEdit = {}; S.view = 'prjForm'; render(); return true; }
     if (a === 'nuovoPrjSel') { S.prjEdit = { dopoSel: true }; S.view = 'prjForm'; render(); return true; }
     if (a === 'modPrj') { S.prjEdit = { id: S.pr.id, titolo: S.pr.titolo, luogo: S.pr.luogo, dal: S.pr.dal, al: S.pr.al, azienda: S.pr.azienda }; S.view = 'prjForm'; render(); return true; }
@@ -1169,6 +1199,117 @@ var ALIAS = {
       caricaAcc(); mandaCodice(r.nome, r.codice);
     }, function(e){ btn.disabled = false; btn.textContent = 'Crea accesso'; toast(e.message); });
     return true;
+  }
+
+  // ═════════ AVVIO VELOCE · una sola chiamata + memoria sul telefono ═════════
+  function cacheKey(){ return 'troupe_dati_' + S.nome; }
+  function carica(){
+    if (S.contatti || S.caricando) return;
+    S.caricando = true;
+    try {
+      var c = JSON.parse(localStorage.getItem(cacheKey()) || 'null');
+      if (c) { S.contatti = c.contatti; S.ruoli = c.ruoli || []; if (!S.progetti) S.progetti = c.progetti; }
+    } catch (e) {}
+    call('avvio', [S.token], function(d){
+      S.caricando = false; S.contatti = d.contatti; S.ruoli = d.ruoli; S.progetti = d.progetti; S.progStale = false;
+      try { localStorage.setItem(cacheKey(), JSON.stringify(d)); } catch (e) {}
+      if (S.view === 'home') { var y = window.scrollY; render(); window.scrollTo(0, y); }
+    }, function(e){ S.caricando = false; toast('Qualcosa non va: ' + e.message); });
+  }
+  function caricaProgetti(){
+    if (S.caricando) return;
+    call('progetti', [S.token], function(p){
+      S.progetti = p;
+      try { var c = JSON.parse(localStorage.getItem(cacheKey()) || 'null'); if (c) { c.progetti = p; localStorage.setItem(cacheKey(), JSON.stringify(c)); } } catch (e) {}
+      if (S.view === 'home') { var y = window.scrollY; render(); window.scrollTo(0, y); }
+    });
+  }
+  function esci(scaduta){
+    if (S.token && !scaduta) call('esci', [S.token], function(){});
+    try { localStorage.removeItem('troupe'); localStorage.removeItem(cacheKey()); } catch (e) {}
+    S.token = null; S.contatti = null; S.progetti = null; S.prjC = {}; S.sens = null; S.view = 'pin'; S.pin = ''; S.msg = scaduta ? 'Sessione scaduta: inserisci di nuovo il codice' : '';
+    render();
+  }
+
+  // ═════════ SCHEDA PROGETTO · nuova versione ═════════
+  function statoCrew(c){
+    if (!c.col) return { k: 'cl', t: 'Solo crew list', cls: '' };
+    if (c.conf === 'confermata') return { k: 'ok', t: 'Confermato', cls: 'ok' };
+    if (c.conf === 'sbloccata') return { k: 'ok', t: 'Sbloccato', cls: 'ok' };
+    if (c.conf === 'non disponibile') return { k: 'no', t: 'Non disponibile', cls: 'no' };
+    if (c.conf === 'chiesta') return { k: 'att', t: 'In attesa', cls: 'w' };
+    return { k: 'da', t: 'Da chiedere', cls: 'w' };
+  }
+  function passi(p){
+    var cr = p.crew || [], col = cr.filter(function(c){ return c.col && c.conf !== 'non disponibile'; });
+    var ok = col.filter(confOk).length, chiuso = p.stato === 'chiuso';
+    return [
+      { t: 'Crew', fatto: cr.length > 0, info: cr.length ? cr.length + ' in crew' : 'Aggiungi chi lavora alla produzione', btn: '+ Aggiungi crew', act: 'addCrew', on: !chiuso },
+      { t: 'Conferme', fatto: col.length > 0 && ok === col.length, info: col.length ? ok + ' confermati su ' + col.length + ' da collocare' : 'Nessuno da collocare', btn: 'Vedi chi manca', act: 'filtroDa', on: col.length > ok && !chiuso },
+      { t: 'Rilevamento', fatto: !!p.ril, info: p.ril ? 'Creato il ' + itData(p.ril) : ok ? 'Pronto per ' + ok + (ok === 1 ? ' persona confermata' : ' persone confermate') : 'Serve almeno una conferma', btn: p.ril ? 'Rifai' : 'Prepara', go: 'ril', on: ok > 0 && !chiuso },
+      { t: 'Mandato', fatto: !!p.man, info: p.man ? 'Creato il ' + itData(p.man) : 'A riprese concluse', btn: p.man ? 'Rifai' : 'Prepara', act: 'apriMan', on: ok > 0 && !chiuso },
+      { t: 'Chiusura', fatto: chiuso, info: chiuso ? 'Chiuso il ' + itData(p.chiuso) : 'La cartella passa in Archivio', btn: 'Chiudi', act: 'chiudiPrj', on: !chiuso }
+    ];
+  }
+  function barraPassi(p){
+    var ps = passi(p), cur = S.passo != null ? S.passo : ps.findIndex(function(x){ return !x.fatto; });
+    if (cur < 0) cur = ps.length - 1;
+    var x = ps[cur];
+    var attr = x.go ? 'data-go="' + x.go + '"' : 'data-act="' + x.act + '"';
+    return '<div class="passi" role="navigation" aria-label="Avanzamento del progetto"><div class="passi-in">' +
+      '<div class="steps">' + ps.map(function(s, i){
+        return '<button class="dot' + (s.fatto ? ' fatto' : '') + (i === cur ? ' cur' : '') + '" data-act="passo" data-i="' + i + '" aria-label="' + s.t + (s.fatto ? ', fatto' : '') + '">' +
+          '<span class="c">' + (s.fatto ? '✓' : i + 1) + '</span><span class="l">' + s.t + '</span></button>';
+      }).join('') + '</div>' +
+      '<div class="passo-ora"><div class="t"><b>' + esc(x.t) + '</b><small>' + esc(x.info) + '</small></div>' +
+      (x.on ? '<button class="btn main mini" ' + attr + '>' + esc(x.btn) + '</button>' : '') + '</div></div></div>';
+  }
+
+  function vPrj(){
+    var p = S.pr, cr = p.crew || [];
+    var col = cr.filter(function(c){ return c.col; });
+    var daConf = col.filter(function(c){ return !confOk(c) && c.conf !== 'non disponibile'; }).length;
+    var senza = col.filter(function(c){ return !confOk(c) && !(c.d[0] && c.d[4]); }).length;
+    var f = S.fCrew || 'tutti';
+    var filtra = function(c){ var k = statoCrew(c).k; return f === 'tutti' || (f === 'da' && (k === 'da' || k === 'att')) || (f === 'ok' && k === 'ok') || (f === 'cl' && (k === 'cl' || k === 'no')); };
+    var deps = {};
+    cr.filter(filtra).forEach(function(c){ var d = repOf(c.q); (deps[d] = deps[d] || []).push(c); });
+    var chiuso = p.stato === 'chiuso';
+    var lista = Object.keys(deps).sort(function(a, b){ return ordRep(a) - ordRep(b); }).map(function(d){
+      return '<div class="dep">' + esc(d) + ' · ' + deps[d].length + '</div><div class="card" style="padding:2px 14px">' + deps[d].map(function(c){
+        var st = statoCrew(c);
+        var manca = c.col && !confOk(c) && !(c.d[0] && c.d[4]);
+        var chiedi = !chiuso && (st.k === 'da' || st.k === 'att') && waNum(c.tel);
+        return '<div class="cr" data-pers="' + c.r + '"><div class="t"><b>' + esc(nomeDi(c)) + '</b>' +
+          '<small>' + esc(c.q) + ' · ' + esc(fmtRange(c.dal, c.al).replace(/ \d{4}$/, '')) + (manca ? ' · <span class="manca">dati mancanti</span>' : '') + '</small>' +
+          '<span class="st ' + st.cls + '">' + st.t + '</span></div>' +
+          (chiedi ? '<button class="btn sec mini" data-act="chiediR" data-r="' + c.r + '">' + (st.k === 'att' ? 'Richiedi' : 'Chiedi') + '</button>' : '<span class="freccia">›</span>') + '</div>';
+      }).join('') + '</div>';
+    }).join('');
+    var chip = function(k, t, n){ return '<button class="fchip' + (f === k ? ' on' : '') + '" data-act="fCrew" data-f="' + k + '">' + t + (n != null ? ' <span>' + n + '</span>' : '') + '</button>'; };
+    var nOk = cr.filter(function(c){ return statoCrew(c).k === 'ok'; }).length, nCl = cr.filter(function(c){ var k = statoCrew(c).k; return k === 'cl' || k === 'no'; }).length;
+    return top('home') +
+      '<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="min-width:0"><div class="big">' + esc(p.titolo) + '</div>' +
+      '<div class="sub">' + esc([fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ')) + '</div></div>' +
+      (chiuso ? '' : '<button class="link" data-act="modPrj">Modifica</button>') + '</div>' +
+      '<div class="stats"><span>' + cr.length + ' in crew</span><span>' + col.length + ' da collocare</span>' +
+      (daConf ? '<span class="w">' + daConf + ' da confermare</span>' : '') + (senza ? '<span class="w">' + senza + ' senza dati</span>' : '') + '</div>' +
+      '<div class="head-acts">' + (p.cartellaUrl ? '<a class="link" href="' + esc(p.cartellaUrl) + '" target="_blank">Cartella su Drive</a>' : '<span></span>') +
+      (chiuso ? '' : '<button class="btn main mini" data-act="addCrew">+ Aggiungi crew</button>') + '</div>' +
+      (chiuso ? '<p class="muted" style="margin:10px 0 0">Progetto chiuso: lo trovi in Archivio.</p>' : '') + '</div>' +
+      (cr.length ? '<div class="row" style="margin:0 0 4px"><button class="btn soft" data-go="cl">Crew list</button><button class="btn soft" data-act="apriCat">Catering</button></div>' +
+        '<div class="fchips">' + chip('tutti', 'Tutti', cr.length) + chip('da', 'Da confermare', daConf) + chip('ok', 'Confermati', nOk) + chip('cl', 'Altri', nCl) + '</div>' +
+        (lista || '<div class="card"><p class="muted" style="margin:0">Nessuno in questo filtro.</p></div>') :
+        '<div class="card"><p class="muted" style="margin:0">Ancora nessuno in crew. Tocca + Aggiungi crew per cercare le persone nel database.</p></div>') +
+      '<div style="height:170px"></div>' + barraPassi(p);
+  }
+
+  function azioni5(a, b){
+    if (a === 'fCrew') { S.fCrew = b.dataset.f; var y = window.scrollY; render(); window.scrollTo(0, y); return true; }
+    if (a === 'filtroDa') { S.fCrew = 'da'; render(); return true; }
+    if (a === 'passo') { var i = Number(b.dataset.i); S.passo = S.passo === i ? null : i; var y2 = window.scrollY; render(); window.scrollTo(0, y2); return true; }
+    if (a === 'chiediR') { S.cv = Number(b.dataset.r); return azioni2('chiedi', b); }
+    return false;
   }
 
   if (CONF) { S.view = 'conf'; apriConf(); }
