@@ -136,6 +136,16 @@ pre.cl{white-space:pre-wrap;font:inherit;font-size:14px;line-height:1.5;margin:0
 .st.ok{color:var(--ok)}.st.ok::before{background:var(--ok)}
 .st.w{color:#8A5A00}.st.w::before{background:#E0A11B}
 .st.no{color:var(--err)}.st.no::before{background:var(--err)}
+.hero{background:var(--ink);color:#fff;padding:20px 18px 16px}
+.hero .big{font-size:26px;color:#fff}.hero .sub{color:#C9CBD0;font-size:15px}.hero .sub2{color:#9EA2A9;font-size:13px;margin-top:4px}
+.hero .stats span{background:rgba(255,255,255,.12);color:#fff}.hero .stats span.w{background:rgba(224,161,27,.22);color:#FFD98A}
+.hero .link{color:#AFC3F5}.hero .btn.main{background:#fff;color:var(--ink)}
+.fchip .pallino{width:9px;height:9px;margin-right:6px;vertical-align:0}.fchip .pallino.da{border-width:1.5px}
+.fchip.on .pallino.da{background:transparent}
+.giorni{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
+.gg{display:flex;flex-direction:column;align-items:center;padding:7px 2px 8px;border-radius:12px;border:1.5px solid transparent;cursor:pointer;font:inherit}
+.gg .w{font-size:11px;text-transform:capitalize;opacity:.8}.gg b{font-size:18px;line-height:1.2}.gg .k{font-size:10px;font-weight:600;margin-top:1px;white-space:nowrap}
+.gg.tS{background:var(--ink);color:#fff}.gg.tA{background:var(--blue-soft);color:var(--blue)}.gg.tR{background:#FFF1D6;color:#7A4B00}.gg.tP{background:#fff;color:var(--muted);border-style:dashed;border-color:var(--line)}
 .pallino{display:inline-block;width:12px;height:12px;border-radius:50%;flex:0 0 auto;background:#C9CBD0}
 .pallino.ok{background:var(--ok)}.pallino.att{background:#E0A11B}.pallino.da{background:#fff;border:2px solid #E0A11B;width:12px;height:12px;box-sizing:border-box}
 .pallino.no{background:var(--err)}.pallino.cl{background:#C9CBD0}
@@ -631,7 +641,8 @@ var ALIAS = {
   function crewText(){
     var p = S.pr, deps = {};
     p.crew.forEach(function(c){ if (c.conf === 'non disponibile') return; var d = repOf(c.q); (deps[d] = deps[d] || []).push(c); });
-    var t = 'CREW LIST · ' + p.titolo + '\n' + [fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ') + '\nProducer: ' + p.producer + '\n';
+    var rg = riassuntoGiorni(p);
+    var t = 'CREW LIST · ' + p.titolo + '\n' + [fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ') + (rg ? '\n' + rg : '') + '\nProducer: ' + p.producer + '\n';
     Object.keys(deps).sort(function(a, b){ return ordRep(a) - ordRep(b); }).forEach(function(d){
       t += '\n' + d.toUpperCase() + '\n' + deps[d].map(function(c){
         var k = contactOf(c), dd = c.dal === p.dal && c.al === p.al ? '' : ' (' + fmtRange(c.dal, c.al) + ')';
@@ -666,9 +677,9 @@ var ALIAS = {
 
   function azioni2(a, b){
     if (azioni5(a, b) || azioni3(a, b) || azioni4(a, b)) return true;
-    if (a === 'nuovoPrj') { S.prjEdit = {}; S.view = 'prjForm'; render(); return true; }
-    if (a === 'nuovoPrjSel') { S.prjEdit = { dopoSel: true }; S.view = 'prjForm'; render(); return true; }
-    if (a === 'modPrj') { S.prjEdit = { id: S.pr.id, titolo: S.pr.titolo, luogo: S.pr.luogo, dal: S.pr.dal, al: S.pr.al, azienda: S.pr.azienda }; S.view = 'prjForm'; render(); return true; }
+    if (a === 'nuovoPrj') { S.prjEdit = {}; S.giorniEdit = null; S.view = 'prjForm'; render(); return true; }
+    if (a === 'nuovoPrjSel') { S.prjEdit = { dopoSel: true }; S.giorniEdit = null; S.view = 'prjForm'; render(); return true; }
+    if (a === 'modPrj') { S.prjEdit = { id: S.pr.id, titolo: S.pr.titolo, luogo: S.pr.luogo, dal: S.pr.dal, al: S.pr.al, azienda: S.pr.azienda, giorni: S.pr.giorni }; S.giorniEdit = null; S.view = 'prjForm'; render(); return true; }
     if (a === 'addCrew') { var rs = {}; S.pr.crew.forEach(function(c){ rs[c.r] = 1; }); S.target = { id: S.pr.id, titolo: S.pr.titolo, rs: rs, n: 0 }; S.view = 'home'; render(); return true; }
     if (a === 'fattoTarget') { var tt = S.target; S.target = null; S.progStale = true; apriPrj(tt.id); return true; }
     if (a === 'annullaTarget') { var t = S.target; S.target = null; apriPrj(t.id); return true; }
@@ -723,7 +734,7 @@ var ALIAS = {
   function submit2(f){
     if (submit3(f) || submit4(f)) return true;
     if (f.id === 'prjF') {
-      var d = { id: S.prjEdit.id || '', azienda: f.elements.azienda.value, titolo: f.elements.titolo.value, luogo: f.elements.luogo.value, dal: f.elements.dal.value, al: f.elements.al.value };
+      var d = { id: S.prjEdit.id || '', giorni: scriviGiorni(S.giorniEdit || {}, f.elements.dal.value, f.elements.al.value || f.elements.dal.value), azienda: f.elements.azienda.value, titolo: f.elements.titolo.value, luogo: f.elements.luogo.value, dal: f.elements.dal.value, al: f.elements.al.value };
       var ko = function(m){ document.getElementById('prjErr').innerHTML = '<div class="err" role="alert">' + esc(m) + '</div>'; };
       if (!d.titolo.trim() || !d.dal) { ko('Servono almeno titolo e primo giorno'); return true; }
       if (d.al && d.al < d.dal) { ko('L\'ultimo giorno è prima del primo'); return true; }
@@ -1290,19 +1301,19 @@ var ALIAS = {
           '<span class="pallino ' + st.k + '" title="' + st.t + '" aria-label="' + st.t + '"></span></div>';
       }).join('') + '</div>';
     }).join('');
-    var chip = function(k, t, n){ return '<button class="fchip' + (f === k ? ' on' : '') + '" data-act="fCrew" data-f="' + k + '">' + t + (n != null ? ' <span>' + n + '</span>' : '') + '</button>'; };
+    var chip = function(k, t, n, dot){ return '<button class="fchip' + (f === k ? ' on' : '') + '" data-act="fCrew" data-f="' + k + '">' + (dot ? '<i class="pallino ' + dot + '"></i>' : '') + t + (n != null ? ' <span>' + n + '</span>' : '') + '</button>'; };
     var nOk = cr.filter(function(c){ return statoCrew(c).k === 'ok'; }).length, nCl = cr.filter(function(c){ var k = statoCrew(c).k; return k === 'cl' || k === 'no'; }).length;
     return top('home') +
-      '<div class="card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div style="min-width:0"><div class="big">' + esc(p.titolo) + '</div>' +
-      '<div class="sub">' + esc([fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ')) + '</div></div>' +
-'</div>' +
+      '<div class="card hero"><div style="min-width:0"><div class="big">' + esc(p.titolo) + '</div>' +
+      '<div class="sub">' + esc([fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ')) + '</div>' +
+      (riassuntoGiorni(p) ? '<div class="sub2">' + esc(riassuntoGiorni(p)) + '</div>' : '') + '</div>' +
       '<div class="stats"><span>' + cr.length + ' in crew</span><span>' + col.length + ' da collocare</span>' +
       (daConf ? '<span class="w">' + daConf + ' da confermare</span>' : '') + (senza ? '<span class="w">' + senza + ' senza dati</span>' : '') + '</div>' +
       (chiuso ? '' : '<div class="head-acts"><button class="link" data-act="modPrj">Modifica progetto</button><button class="btn main mini" data-act="addCrew">+ Aggiungi crew</button></div>') +
       (chiuso ? '<p class="muted" style="margin:10px 0 0">Progetto chiuso: lo trovi in Archivio.</p>' : '') + '</div>' +
       (cr.length ? '<div class="row" style="margin:0 0 4px"><button class="btn soft" data-go="cl">Crew list</button><button class="btn soft" data-act="apriCat">Catering</button></div>' +
-        '<div class="fchips">' + chip('tutti', 'Tutti', cr.length) + chip('da', 'Da confermare', daConf) + chip('ok', 'Confermati', nOk) + chip('cl', 'Altri', nCl) + '</div>' +
-        '<div class="legenda"><span><i class="pallino ok"></i>Confermato</span><span><i class="pallino att"></i>In attesa</span><span><i class="pallino da"></i>Da chiedere</span><span><i class="pallino no"></i>Non disponibile</span><span><i class="pallino cl"></i>Solo crew list</span></div>' +
+        '<div class="fchips">' + chip('tutti', 'Tutti', cr.length) + chip('da', 'Da confermare', daConf, 'da') + chip('ok', 'Confermati', nOk, 'ok') + chip('cl', 'Altri', nCl, 'cl') + '</div>' +
+
         (lista || '<div class="card"><p class="muted" style="margin:0">Nessuno in questo filtro.</p></div>') :
         '<div class="card"><p class="muted" style="margin:0">Ancora nessuno in crew. Tocca + Aggiungi crew per cercare le persone nel database.</p></div>') +
       '<div style="height:170px"></div>' + barraPassi(p);
@@ -1312,8 +1323,79 @@ var ALIAS = {
     if (a === 'fCrew') { S.fCrew = b.dataset.f; var y = window.scrollY; render(); window.scrollTo(0, y); return true; }
     if (a === 'filtroDa') { S.fCrew = 'da'; render(); return true; }
     if (a === 'passo') { var i = Number(b.dataset.i); S.passo = S.passo === i ? null : i; var y2 = window.scrollY; render(); window.scrollTo(0, y2); return true; }
+    if (a === 'eliminaPrj') {
+      if (!confirm('Eliminare ' + S.prjEdit.titolo + '? Sparisce da Troupe e i link di conferma smettono di funzionare. La cartella va in Drive › OLD.')) return true;
+      b.disabled = true; b.textContent = 'Elimino…';
+      call('eliminaProgetto', [S.token, S.prjEdit.id], function(){ delete S.prjC[S.prjEdit.id]; S.progStale = true; S.progetti = (S.progetti || []).filter(function(x){ return x.id !== S.prjEdit.id; }); S.view = 'home'; render(); toast('Progetto eliminato'); },
+        function(e){ b.disabled = false; b.textContent = 'Elimina progetto'; toast(e.message); });
+      return true;
+    }
     if (a === 'chiediR') { S.cv = Number(b.dataset.r); return azioni2('chiedi', b); }
     return false;
+  }
+
+  // ═════════ GIORNI DEL PROGETTO · shoot, allestimento, ritiri e resi ═════════
+  var TIPI = { S: 'Shoot', A: 'Allestimento', R: 'Ritiri e resi', P: 'Pausa' };
+  var CICLO = ['S', 'A', 'R', 'P'];
+  function elencoGiorni(dal, al){
+    var out = [], x = pd(dal), y = pd(al || dal); if (!x || !y) return out;
+    for (var t = Date.UTC(x.y, x.m - 1, x.d), e = Date.UTC(y.y, y.m - 1, y.d); t <= e && out.length < 120; t += 864e5) out.push(new Date(t).toISOString().slice(0, 10));
+    return out;
+  }
+  function leggiGiorni(s){ var m = {}; String(s || '').split(';').forEach(function(x){ var p = x.split(':'); if (p.length === 2) m[p[0]] = p[1]; }); return m; }
+  function scriviGiorni(m, dal, al){ return elencoGiorni(dal, al).filter(function(g){ return m[g] && m[g] !== 'S'; }).map(function(g){ return g + ':' + m[g]; }).join(';'); }
+  // "Shoot 17–20 nov · Allestimento 15–16 nov · Ritiri e resi 23 nov"
+  function riassuntoGiorni(p){
+    var m = leggiGiorni(p.giorni), gs = elencoGiorni(p.dal, p.al);
+    if (!gs.length) return '';
+    var gruppi = {};
+    gs.forEach(function(g){ var t = m[g] || 'S'; if (t === 'P') return; (gruppi[t] = gruppi[t] || []).push(g); });
+    if (!gruppi.A && !gruppi.R) return '';
+    var blocchi = function(arr){
+      var out = [], ini = arr[0], prev = arr[0];
+      for (var i = 1; i <= arr.length; i++) {
+        var g = arr[i], cont = g && (Date.parse(g) - Date.parse(prev) === 864e5);
+        if (!cont) { out.push(fmtRange(ini, prev).replace(/ \d{4}$/, '')); ini = g; }
+        prev = g;
+      }
+      return out.join(', ');
+    };
+    return ['S', 'A', 'R'].filter(function(t){ return gruppi[t]; }).map(function(t){ return TIPI[t] + ' ' + blocchi(gruppi[t]); }).join(' · ');
+  }
+  function griglia(){
+    var f = document.getElementById('prjF'); if (!f) return;
+    var dal = f.elements.dal.value, al = f.elements.al.value || dal, box = document.getElementById('giorniBox');
+    var gs = elencoGiorni(dal, al);
+    if (!gs.length || al < dal) { box.innerHTML = '<p class="muted" style="margin:0">Scegli primo e ultimo giorno.</p>'; return; }
+    var m = S.giorniEdit || (S.giorniEdit = {});
+    var GS = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
+    box.innerHTML = '<div class="giorni">' + gs.map(function(g){
+      var t = m[g] || 'S', d = new Date(g + 'T12:00:00');
+      return '<button type="button" class="gg t' + t + '" data-gg="' + g + '"><span class="w">' + GS[d.getDay()] + '</span><b>' + d.getDate() + '</b><span class="k">' + TIPI[t] + '</span></button>';
+    }).join('') + '</div><p class="muted" style="margin:8px 0 0">Tocca un giorno per cambiarlo: Shoot › Allestimento › Ritiri e resi › Pausa.</p>';
+  }
+  app.addEventListener('change', function(e){ if (e.target.id === 'pd1' || e.target.id === 'pd2') griglia(); });
+  app.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[data-gg]'); if (!b) return;
+    var m = S.giorniEdit || (S.giorniEdit = {}), g = b.dataset.gg, t = m[g] || 'S';
+    m[g] = CICLO[(CICLO.indexOf(t) + 1) % CICLO.length]; griglia();
+  });
+
+  function vPrjForm(){
+    var p = S.prjEdit || {};
+    if (!S.giorniEdit) S.giorniEdit = leggiGiorni(p.giorni);
+    setTimeout(griglia, 0);
+    return top(p.id ? 'prj' : 'home') + '<h1>' + (p.id ? 'Modifica progetto' : 'Nuovo progetto') + '</h1><form id="prjF" class="card" autocomplete="off"><div id="prjErr"></div>' +
+      '<div class="f"><label class="lab" for="pt">Titolo</label><input type="text" id="pt" name="titolo" value="' + esc(p.titolo) + '" placeholder="Es. DbyD Luxottica"></div>' +
+      '<div class="f"><label class="lab" for="pl">Luogo</label><input type="text" id="pl" name="luogo" value="' + esc(p.luogo) + '" placeholder="Es. Milano, studio"></div>' +
+      '<div class="row"><div class="f"><label class="lab" for="pd1">Primo giorno</label><input type="date" id="pd1" name="dal" value="' + esc(p.dal) + '"></div>' +
+      '<div class="f"><label class="lab" for="pd2">Ultimo giorno</label><input type="date" id="pd2" name="al" value="' + esc(p.al) + '"></div></div>' +
+      '<div class="f"><span class="lab">Giorni</span><div id="giorniBox"></div></div>' +
+      '<div class="f"><label class="lab" for="paz">Azienda per i collocamenti</label><input type="text" id="paz" name="azienda" value="' + esc(p.azienda || 'COURAGE') + '"></div>' +
+      (p.id ? '<p class="muted" style="margin:0 0 12px">Se cambi le date, chi lavora su tutto il progetto segue le nuove date; gli altri restano dentro il nuovo periodo.</p>' : '') +
+      '<button class="btn main" type="submit">' + (p.id ? 'Salva le modifiche' : 'Crea progetto') + '</button></form>' +
+      (p.id ? '<button class="btn sec danger" data-act="eliminaPrj" style="margin-top:4px">Elimina progetto</button>' +
+        '<p class="muted" style="margin:8px 4px 0;text-align:center">Per una produzione che non è andata in porto. La cartella finisce in Drive › OLD, non si perde nulla.</p>' : '');
   }
 
   if (CONF) { S.view = 'conf'; apriConf(); }
