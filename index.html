@@ -139,6 +139,10 @@ pre.cl{white-space:pre-wrap;font:inherit;font-size:14px;line-height:1.5;margin:0
 .st.no{color:var(--err)}.st.no::before{background:var(--err)}
 .hero{background:var(--ink);color:#fff;padding:20px 18px 16px}
 .hero .big{font-size:26px;color:#fff}.hero .sub{color:#C9CBD0;font-size:15px}.hero .sub2{color:#9EA2A9;font-size:13px;margin-top:4px}
+.gpunti{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.gp{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#9EA2A9;border:1.5px solid rgba(255,255,255,.22)}
+.gp.tS{background:#fff;border-color:#fff;color:var(--ink);font-weight:700}
+.gp.tP{border-style:dashed;border-color:rgba(255,255,255,.14);color:#6B6F76}
 .hero .stats span{background:rgba(255,255,255,.12);color:#fff}.hero .stats span.w{background:rgba(224,161,27,.22);color:#FFD98A}
 .hero .link{color:#AFC3F5}.hero .btn.main{background:#fff;color:var(--ink)}
 .fchip .pallino{width:9px;height:9px;margin-right:6px;vertical-align:0}.fchip .pallino.da{border-width:1.5px}
@@ -1333,7 +1337,7 @@ var ALIAS = {
     return top('home') +
       '<div class="card hero"><div style="min-width:0"><div class="big">' + esc(p.titolo) + '</div>' +
       '<div class="sub">' + esc([fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ')) + '</div>' +
-      (riassuntoGiorni(p) ? '<div class="sub2">' + esc(riassuntoGiorni(p)) + '</div>' : '') + '</div>' +
+      puntiGiorni(p) + '</div>' +
       '<div class="stats"><span>' + cr.length + ' in crew</span><span>' + col.length + ' da collocare</span>' +
       (daConf ? '<span class="w">' + daConf + ' da confermare</span>' : '') + (senza ? '<span class="w">' + senza + ' senza dati</span>' : '') + '</div>' +
       (chiuso ? '' : '<div class="head-acts"><button class="link" data-act="modPrj">Modifica progetto</button><button class="btn main mini" data-act="addCrew">+ Aggiungi crew</button></div>') +
@@ -1533,6 +1537,16 @@ var ALIAS = {
     call('aggiornaCrew', [S.token, S.pr.id, r, { q: c.q, dal: a, al: z, col: c.col, cm: c.cm, ref: c.ref }], function(res){
       if (!res.ok) { toast('Non salvato: ' + res.msg); ricarica(); }
     }, function(e){ toast('Non salvato: ' + e.message); ricarica(); });
+  }
+
+  // nella testata: solo i numeri dei giorni; quelli di shoot in bianco pieno
+  function puntiGiorni(p){
+    var gs = elencoGiorni(p.dal, p.al), m = leggiGiorni(p.giorni);
+    if (gs.length < 2 || gs.length > 31) return '';
+    return '<div class="gpunti">' + gs.map(function(g){
+      var t = m[g] || 'S';
+      return '<span class="gp t' + t + '" title="' + TIPI[t] + '">' + Number(g.slice(8)) + '</span>';
+    }).join('') + '</div>';
   }
 
   if (CONF) { S.view = 'conf'; apriConf(); }
