@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function admin() {
+      return request.auth != null && request.auth.token.email == 'simonemanfredaa@gmail.com'
+        && request.auth.token.email_verified == true;
+    }
+    function producer() {
+      return admin() || (request.auth != null && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/producer/$(request.auth.token.email.lower())));
+    }
+    function io() { return request.auth != null && request.auth.token.email_verified == true; }
+    // collaboratore: è entrato in questa produzione con un link di invito
+    function collab(p) {
+      return io() && exists(/databases/$(database)/documents/produzioni/$(p)/membri/$(request.auth.token.email));
+    }
+    function testo(v, max) { return v is string && v.size() <= max; }
+
+    // elenco dei producer abilitati: lo gestisce solo l'admin
+    match /producer/{email} {
+      allow read: if producer();
+      allow write: if admin() && request.resource.data.keys().hasOnly(['nome']) && testo(request.resource.data.nome, 80);
+    }
+
+    // produzioni: chiunque abbia il link legge solo nome e data della sua; i producer vedono e gestiscono tutto
+    match /produzioni/{p} {
+      allow get: if true;
+      allow list: if producer();
+      allow create: if producer()
+        && request.resource.data.keys().hasOnly(['nome', 'inizio', 'creataNome', 'creataDa', 'creata', 'eliminata', 'pulita', 'conteggi'])
+        && testo(request.resource.data.nome, 80) && request.resource.data.nome.size() >= 2
+        && request.resource.data.creataDa == request.auth.token.email
+        && request.resource.data.eliminata == false;
+      allow update: if producer()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'inizio', 'eliminata', 'pulita', 'conteggi'])
+        && testo(request.resource.data.nome, 80);
+
+      // chi ha accesso grazie a un link di invito
+      match /membri/{email} {
+        allow create: if io() && email == request.auth.token.email
+          && request.resource.data.keys().hasOnly(['email', 'nome', 'invito', 'quando'])
+          && request.resource.data.email == email && testo(request.resource.data.nome, 80)
+          && request.resource.data.quando == request.time
+          && get(/databases/$(database)/documents/inviti/$(request.resource.data.invito)).data.p == p;
+        allow read: if producer() || (io() && email == request.auth.token.email);
+        allow delete: if producer();
+        allow update: if false;
+      }
+      allow delete: if false;
+
+      // risposte della crew: chi ha il link può solo aggiungere la sua, mai leggere quelle degli altri
+      match /risposte/{r} {
+        allow create: if get(/databases/$(database)/documents/produzioni/$(p)).data.eliminata == false
+          && request.resource.data.keys().hasOnly(['nome', 'dieta', 'allergie', 'altro', 'grave', 'quando'])
+          && testo(request.resource.data.nome, 80) && request.resource.data.nome.size() >= 3
+          && request.resource.data.dieta in ['Mangio tutto', 'Vegetariana', 'Vegana', 'Pescetariana']
+          && testo(request.resource.data.allergie, 300) && testo(request.resource.data.altro, 300)
+          && request.resource.data.grave is bool
+          && request.resource.data.quando == request.time;
+        allow read: if producer() || collab(p);
+        allow delete: if producer();
+        allow update: if false;
+      }
+    }
+
+    // nomi delle produzioni importate: fanno funzionare i link vecchi (?e=Nome)
+    match /alias/{a} {
+      allow get: if true;
+      allow create: if producer() && request.resource.data.keys().hasOnly(['c']) && request.resource.data.c is string;
+      allow update, delete: if admin();
+    }
+
+    // link di invito: chi ha il codice lo legge; li creano e li cancellano i producer
+    match /inviti/{t} {
+      allow get: if true;
+      allow list, delete: if producer();
+      allow create: if producer() && request.resource.data.keys().hasOnly(['p', 'creato', 'da'])
+        && request.resource.data.p is string && request.resource.data.da == request.auth.token.email;
+      allow update: if false;
+    }
+
+    // le mie partecipazioni (per trovare le produzioni a cui sono invitato)
+    match /{path=**}/membri/{m} {
+      allow read: if producer() || (io() && resource.data.email == request.auth.token.email);
+    }
+
+    // tutte le risposte insieme (per i conteggi in home): solo producer
+    match /{path=**}/risposte/{r} {
+      allow read: if producer();
+    }
+  }
+}

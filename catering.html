@@ -88,11 +88,11 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   var CHEV = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
   var SIGLA = { 'Mangio tutto': 'Tutto', 'Vegetariana': 'Vege', 'Vegana': 'Vegan', 'Pescetariana': 'Pesce' };
   var TX = {
-    it: { titolo: 'Cosa mangi sul set?', nome: 'Nome e cognome', eNome: 'Scrivi nome e cognome', dieta: 'La tua dieta', eDieta: 'Scegli la tua dieta', diete: DIETE, scegli: 'Scegli', nessuna: 'Nessuna',
+    it: { titolo: 'Cosa mangi sul set?', nome: 'Nome', eNome: 'Scrivi il nome', cognome: 'Cognome', eCognome: 'Scrivi il cognome', dieta: 'La tua dieta', eDieta: 'Scegli la tua dieta', diete: DIETE, scegli: 'Scegli', nessuna: 'Nessuna',
       all: 'Allergie o intolleranze', chips: ALL, altro: 'Altro', ph: 'Es. niente funghi', grave: 'Ho un\'allergia grave: avvisate il catering', invia: 'Invia',
       nota: 'Le risposte vanno solo al catering di questa produzione.', grazie: 'Grazie, ricevuto!', grazie2: 'Lo giriamo al catering. Ci vediamo sul set.',
       off: 'Link non più attivo', off2: 'Chiedi un link nuovo a chi te l\'ha mandato.', rete: 'Connessione assente', rete2: 'Controlla internet e riapri il link.', ko: 'La risposta non è arrivata. Riprova.' },
-    en: { titolo: 'What do you eat on set?', nome: 'Full name', eNome: 'Please enter your full name', dieta: 'Your diet', eDieta: 'Please choose your diet', scegli: 'Choose', nessuna: 'None', diete: ['I eat everything', 'Vegetarian', 'Vegan', 'Pescatarian'],
+    en: { titolo: 'What do you eat on set?', nome: 'First name', eNome: 'Please enter your first name', cognome: 'Last name', eCognome: 'Please enter your last name', dieta: 'Your diet', eDieta: 'Please choose your diet', scegli: 'Choose', nessuna: 'None', diete: ['I eat everything', 'Vegetarian', 'Vegan', 'Pescatarian'],
       all: 'Allergies or intolerances', chips: ['Gluten', 'Lactose', 'Tree nuts', 'Shellfish and fish', 'Eggs'], altro: 'Other', ph: 'E.g. no mushrooms', grave: 'I have a severe allergy: please tell the caterer', invia: 'Send',
       nota: 'Your answers go only to this production\'s caterer.', grazie: 'Thanks, got it!', grazie2: 'We\'ll pass it on to the caterer. See you on set.',
       off: 'This link is no longer active', off2: 'Ask the person who sent it for a new one.', rete: 'No connection', rete2: 'Check your internet and open the link again.', ko: 'Your answer didn\'t go through. Please try again.' }
@@ -466,7 +466,8 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     var D = T('diete'), C = T('chips');
     app.innerHTML = '<div class="top"><p class="eyebrow" style="margin:0">Catering · ' + esc(EV) + '</p><span class="lang"><button data-l="it" class="' + (LG === 'it' ? 'on' : '') + '">IT</button><button data-l="en" class="' + (LG === 'en' ? 'on' : '') + '">EN</button></span></div>' +
       '<h1>' + esc(T('titolo')) + '</h1>' + (err ? '<div class="err">' + esc(err) + '</div>' : '') +
-      '<form id="mod" autocomplete="off" novalidate><div class="card"><div class="f" id="f-nm"><label class="lab" for="nm">' + esc(T('nome')) + '</label><input type="text" id="nm" autocomplete="name" required aria-describedby="e-nm"><p class="ferr" id="e-nm" hidden>' + esc(T('eNome')) + '</p></div>' +
+      '<form id="mod" autocomplete="off" novalidate><div class="card"><div class="f" id="f-nm"><label class="lab" for="nm">' + esc(T('nome')) + '</label><input type="text" id="nm" autocomplete="given-name" required aria-describedby="e-nm"><p class="ferr" id="e-nm" hidden>' + esc(T('eNome')) + '</p></div>' +
+      '<div class="f" id="f-cg"><label class="lab" for="cg">' + esc(T('cognome')) + '</label><input type="text" id="cg" autocomplete="family-name" required aria-describedby="e-cg"><p class="ferr" id="e-cg" hidden>' + esc(T('eCognome')) + '</p></div>' +
       '<div class="f" id="f-seg"><span class="lab" id="l-seg">' + esc(T('dieta')) + '</span><button type="button" class="dd" id="seg" aria-expanded="false" aria-labelledby="l-seg"><span id="v-seg">' + (dieta ? esc(D[DIETE.indexOf(dieta)]) : '<i>' + esc(T('scegli')) + '</i>') + '</span>' + CHEV + '</button>' +
         '<div class="ddl" id="l-dieta" role="radiogroup" hidden>' + DIETE.map(function(t, i){ return '<button type="button" class="op' + (t === dieta ? ' on' : '') + '" role="radio" aria-checked="' + (t === dieta) + '" data-d="' + t + '"><span>' + esc(D[i]) + '</span><span class="ck"></span></button>'; }).join('') + '</div><p class="ferr" id="e-seg" hidden>' + esc(T('eDieta')) + '</p></div>' +
       '<div class="f"><span class="lab" id="l-al">' + esc(T('all')) + '</span><button type="button" class="dd" id="ddal" aria-expanded="false" aria-labelledby="l-al"><span id="v-al"><i>' + esc(T('nessuna')) + '</i></span>' + CHEV + '</button>' +
@@ -488,13 +489,13 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       segna('seg', false);
     });
     la.addEventListener('change', riassumiAllergie);
-    document.getElementById('nm').addEventListener('input', function(){ if (this.value.trim().length >= 2 && /\s/.test(this.value.trim())) segna('nm', false); });
+    ['nm', 'cg'].forEach(function(k){ document.getElementById(k).addEventListener('input', function(){ if (this.value.trim().length >= 2) segna(k, false); }); });
     document.getElementById('mod').addEventListener('submit', function(e){
       e.preventDefault();
       var d = leggi();
-      var okN = d.nome.length >= 2 && /\s/.test(d.nome), okD = !!d.dieta;
-      segna('nm', !okN); segna('seg', !okD);
-      if (!okN || !okD) { (okN ? document.getElementById('seg') : document.getElementById('nm')).scrollIntoView({ behavior: 'smooth', block: 'center' }); if (!okN) document.getElementById('nm').focus(); return; }
+      var okN = d.n1.length >= 2, okC = d.n2.length >= 2, okD = !!d.dieta;
+      segna('nm', !okN); segna('cg', !okC); segna('seg', !okD);
+      if (!okN || !okC || !okD) { var primo = !okN ? 'nm' : !okC ? 'cg' : 'seg'; document.getElementById(primo).scrollIntoView({ behavior: 'smooth', block: 'center' }); if (primo !== 'seg') document.getElementById(primo).focus(); return; }
       fine(T('grazie'), T('grazie2'));
       if (CID) {
         var F = window.FB;
@@ -506,7 +507,9 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     });
   }
   function leggi(){
-    return { e: EV, f: FINO, p: PRJ, nome: (document.getElementById('nm') || {}).value ? document.getElementById('nm').value.trim() : '', dieta: dieta,
+    var v = function(k){ var el = document.getElementById(k); return el ? el.value.trim().replace(/\s+/g, ' ') : ''; };
+    var n1 = v('nm'), n2 = v('cg');
+    return { e: EV, f: FINO, p: PRJ, n1: n1, n2: n2, nome: (n1 + ' ' + n2).trim(), dieta: dieta,
       allergie: Array.prototype.map.call(document.querySelectorAll('input[name=al]:checked'), function(i){ return i.value; }),
       altro: document.getElementById('al') ? document.getElementById('al').value.trim() : '', grave: !!(document.getElementById('gr') && document.getElementById('gr').checked) };
   }
@@ -515,7 +518,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     document.getElementById('v-al').innerHTML = sel.length ? esc(sel.join(', ')) : '<i>' + esc(T('nessuna')) + '</i>';
   }
   function rimetti(d){
-    document.getElementById('nm').value = d.nome; document.getElementById('al').value = d.altro; document.getElementById('gr').checked = d.grave;
+    document.getElementById('nm').value = d.n1 || ''; document.getElementById('cg').value = d.n2 || ''; document.getElementById('al').value = d.altro; document.getElementById('gr').checked = d.grave;
     Array.prototype.forEach.call(document.querySelectorAll('input[name=al]'), function(i){ i.checked = d.allergie.indexOf(i.value) !== -1; });
     riassumiAllergie();
   }
