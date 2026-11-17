@@ -22,4 +22,6 @@ jobs:
       - name: Pubblica le regole
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
-        run: npx -y firebase-tools@latest deploy --only firestore:rules --project troupe-app-f0364 --non-interactive
+        run: |
+          npm install --no-save google-auth-library@9 >/dev/null
+          node .github/scripts/regole.mjs
