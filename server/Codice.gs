@@ -25,7 +25,7 @@ const LINK_PUBBLICO = 'https://simonemanfredaa-glitch.github.io/troupe/';
 const API_OK = ['versione', 'avvio', 'entra', 'esci', 'contatti', 'ruoli', 'sensibili', 'aggiungi', 'progetti', 'progetto', 'salvaProgetto', 'aggiungiCrew',
   'aggiornaCrew', 'togliCrew', 'chiediConferma', 'sblocca', 'sensibiliCrew', 'confermaLeggi', 'confermaInvia', 'datiPersona', 'confermaAdmin',
   'chiediCatering', 'catering', 'fileCatering', 'rilevamento', 'salvaMandato', 'mandato', 'chiudiProgetto', 'archivio', 'accessi',
-  'creaProducer', 'cambiaAccesso', 'eliminaProgetto', 'aggiornaOra'];
+  'creaProducer', 'cambiaAccesso', 'eliminaProgetto', 'aggiornaOra', 'catInvia'];
 function doPost(e) {
   let out;
   try {
@@ -53,7 +53,7 @@ function doGet(e) {
 
 // per controllare da fuori quale versione del motore è attiva
 function versione() { return VERSIONE_MOTORE; }
-const VERSIONE_MOTORE = '2026-11-16b';
+const VERSIONE_MOTORE = '2026-11-17a';
 
 function nuovoCodice_(esistenti) {
   let c;
@@ -883,6 +883,7 @@ function archivio(token) {
 // I dati del catering si cancellano 30 giorni dopo l'ultimo giorno di riprese: restano solo i conteggi.
 function pulizia() {
   bump_();
+  try { puliziaCatLibero_(); } catch (e) {}
   leggiProgetti_().forEach(p => {
     if (!p.foglio || giorniDa_(p.al) <= 30) return;
     try {
@@ -1089,4 +1090,70 @@ function aggiornaOra(token) {
   const u = chi_(token);
   if (!u.admin) throw new Error('Solo l\'admin');
   return aggiornaDaGitHub(false);
+}
+
+// ═════════════════════════ CATERING LIBERO · link unico, fuori dai progetti ═════════════════════════
+// Un link per produzione (catering.html?e=Nome&f=ultimo giorno): chiunque lo apre scrive nome ed esigenze.
+// Le risposte vanno nel file "CATERING · risposte" (cartella TROUPE), un tab per produzione.
+// Non toccano il database contatti né i progetti. Si cancellano 30 giorni dopo l'ultimo giorno.
+const CARTELLA_TROUPE = '1ytiU_TFTpA_AbWbmMxl4v3Zro_TdOWAh';
+const H_CATL = ['Quando', 'Nome', 'Cosa mangia', 'Allergie e intolleranze', 'Altro', 'Allergia grave'];
+
+function catLiberoSS_() {
+  const props = PropertiesService.getScriptProperties();
+  let id = props.getProperty('CAT_LIBERO_ID');
+  if (id) { try { return SpreadsheetApp.openById(id); } catch (e) {} }
+  const ss = SpreadsheetApp.create('CATERING · risposte');
+  DriveApp.getFileById(ss.getId()).moveTo(DriveApp.getFolderById(CARTELLA_TROUPE));
+  ss.getSheets()[0].setName('LEGGIMI').getRange(1, 1, 3, 1).setValues([['Un tab per ogni produzione, creato dal link del catering.'],
+    ['Le risposte di ogni tab si cancellano da sole 30 giorni dopo l\'ultimo giorno indicato nel link.'], ['Nel tab CONTEGGI restano solo i numeri.']]);
+  props.setProperty('CAT_LIBERO_ID', ss.getId());
+  return ss;
+}
+
+function catInvia(d) {
+  d = d || {};
+  const pul = (s, n) => String(s || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n || 200);
+  const evento = pul(d.e, 80).replace(/[\[\]\*\?\/\\:]/g, ' ');
+  const nome = pul(d.nome, 80);
+  if (!evento) return { ok: false, msg: 'Link non completo: chiedi di nuovo il link a chi te l\'ha mandato' };
+  if (nome.length < 2) return { ok: false, msg: 'Scrivi nome e cognome' };
+  const fino = /^\d{4}-\d{2}-\d{2}$/.test(String(d.f || '')) ? String(d.f) : '';
+  // freno anti-abuso: massimo 300 risposte all'ora per tutto il catering
+  const c = CacheService.getScriptCache(), n = Number(c.get('catl_n') || 0);
+  if (n > 300) return { ok: false, msg: 'Troppe risposte in poco tempo, riprova tra un po\'' };
+  c.put('catl_n', String(n + 1), 3600);
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const ss = catLiberoSS_();
+    let sh = ss.getSheetByName(evento);
+    if (!sh) {
+      sh = ss.insertSheet(evento);
+      sh.getRange(1, 1, 1, H_CATL.length).setValues([H_CATL]).setFontWeight('bold');
+      sh.setFrozenRows(1);
+    }
+    if (fino) sh.getRange('H1').setValue('Ultimo giorno: ' + fino);
+    const all = [].concat(d.allergie || []).map(x => pul(x, 40)).filter(Boolean).slice(0, 10).join(', ');
+    // stessa persona che rimanda: aggiorno la sua riga invece di aggiungerne una
+    const righe = sh.getLastRow() > 1 ? sh.getRange(2, 2, sh.getLastRow() - 1, 1).getDisplayValues() : [];
+    const k = righe.findIndex(r => chiave_(r[0]) === chiave_(nome));
+    const riga = [Utilities.formatDate(new Date(), 'Europe/Rome', 'dd/MM HH:mm'), nome, pul(d.dieta, 30) || 'Mangio tutto', all, pul(d.altro, 200), d.grave ? 'SÌ' : ''];
+    sh.getRange(k >= 0 ? k + 2 : sh.getLastRow() + 1, 1, 1, H_CATL.length).setValues([riga]);
+    return { ok: true };
+  } finally { lock.releaseLock(); }
+}
+
+function puliziaCatLibero_() {
+  const id = PropertiesService.getScriptProperties().getProperty('CAT_LIBERO_ID');
+  if (!id) return;
+  const ss = SpreadsheetApp.openById(id);
+  ss.getSheets().forEach(sh => {
+    const m = /(\d{4}-\d{2}-\d{2})/.exec(sh.getRange('H1').getDisplayValue());
+    if (!m || giorniDa_(m[1]) <= 30 || sh.getLastRow() < 2) return;
+    const v = sh.getRange(2, 1, sh.getLastRow() - 1, H_CATL.length).getDisplayValues();
+    const conta = t => v.filter(r => r[2] === t).length;
+    tabIn_(ss, 'CONTEGGI', ['Produzione', 'Risposte', 'Mangio tutto', 'Vegetariana', 'Vegana', 'Pescetariana', 'Con allergie', 'Cancellato il'])
+      .appendRow([sh.getName(), v.length, conta('Mangio tutto'), conta('Vegetariana'), conta('Vegana'), conta('Pescetariana'), v.filter(r => r[3] || r[4]).length, oggi_()]);
+    ss.deleteSheet(sh);
+  });
 }
