@@ -92,8 +92,8 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function vCrea(){
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Nuova produzione</h1>' +
       '<form id="crea" class="card" autocomplete="off"><div id="er"></div><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" placeholder="Es. Alain Mikli N1"></div>' +
-      '<div class="f"><label class="lab" for="fi">Ultimo giorno</label><input type="date" id="fi"></div>' +
-      '<button class="btn main" type="submit">Crea</button><p class="muted" style="margin:10px 0 0">Le risposte si cancellano da sole 30 giorni dopo l\'ultimo giorno.</p></form>';
+      '<div class="f"><label class="lab" for="fi">Ultimo giorno di set</label><input type="date" id="fi"></div>' +
+      '<button class="btn main" type="submit">Crea</button><p class="muted" style="margin:10px 0 0">Serve solo per la privacy: 30 giorni dopo l\'ultimo giorno di set le risposte si cancellano da sole e restano solo i numeri.</p></form>';
     document.getElementById('ind').onclick = vHome;
     document.getElementById('crea').addEventListener('submit', function(e){
       e.preventDefault();
@@ -115,10 +115,10 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       '<div class="row"><button class="btn sec" id="cp">Copia</button><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(msg) + '">WhatsApp</a></div></div>' +
       '<div id="ris"><div class="card"><p class="muted" style="margin:0">Carico le risposte…</p></div></div>' +
       '<button class="btn main" id="pdf" style="margin-top:4px">Scarica il PDF per il catering</button>' +
-      '<p class="muted" style="margin:14px 4px 0">Per aprire questa pagina da un altro telefono <button class="link" id="priv" style="font-size:13px;padding:0">copia il tuo link privato</button>: non darlo a chi deve solo rispondere.</p>';
+      '<div class="card"><h2>Altri producer</h2><p class="muted" style="margin:0 0 10px">Con questo link vedono le stesse risposte, scaricano il PDF e possono modificare la produzione. Non darlo a chi deve solo rispondere.</p><button class="btn sec" id="priv">Copia il link per i producer</button></div>';
     document.getElementById('ind').onclick = vHome;
     document.getElementById('cp').onclick = function(){ copia(linkModulo(x), 'Link copiato'); };
-    document.getElementById('priv').onclick = function(){ copia(linkPrivato(x), 'Link privato copiato'); };
+    document.getElementById('priv').onclick = function(){ copia(linkPrivato(x), 'Link per i producer copiato'); };
     document.getElementById('agg').onclick = function(){ carica(x); };
     document.getElementById('mod').onclick = function(){ vModifica(x); };
     document.getElementById('pdf').onclick = function(){ scaricaPdf(x, this); };
@@ -128,7 +128,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function vModifica(x){
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Modifica produzione</h1>' +
       '<form id="frm" class="card" autocomplete="off"><div id="er"></div><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" value="' + esc(x.e) + '"></div>' +
-      '<div class="f"><label class="lab" for="fi">Ultimo giorno</label><input type="date" id="fi" value="' + esc(x.f || '') + '"></div>' +
+      '<div class="f"><label class="lab" for="fi">Ultimo giorno di set</label><input type="date" id="fi" value="' + esc(x.f || '') + '"></div>' +
       '<button class="btn main" type="submit">Salva modifiche</button><p class="muted" style="margin:10px 0 0">I link già mandati continuano a funzionare anche col nome nuovo.</p></form>' +
       '<div id="del"><button class="btn danger" id="eli">Elimina produzione</button></div>';
     document.getElementById('ind').onclick = function(){ vEvento(x); };
