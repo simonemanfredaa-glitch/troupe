@@ -78,16 +78,44 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   var linkModulo = function(x){ return BASE + '?e=' + encodeURIComponent(x.e) + (x.f ? '&f=' + x.f : ''); };
   var linkPrivato = function(x){ return BASE + '?e=' + encodeURIComponent(x.e) + '&k=' + x.k; };
 
-  // ── home dell'app: le mie produzioni ──
+  // ── accesso con il codice Troupe ──
+  var TOKEN = '', NOME = '';
+  try { var ses = JSON.parse(localStorage.getItem('catering_t') || 'null'); if (ses) { TOKEN = ses.t; NOME = ses.n; } } catch (e) {}
+  function sessioneScaduta(err){ if (err && err.message === 'SESSIONE') { TOKEN = ''; try { localStorage.removeItem('catering_t'); } catch (e) {} vLogin('Accesso scaduto: inserisci di nuovo il codice'); return true; } return false; }
+  function vLogin(msg){
+    app.innerHTML = '<p class="eyebrow">Catering</p><h1>Accedi</h1>' +
+      '<form id="lg" class="card" autocomplete="off">' + (msg ? '<div class="err">' + esc(msg) + '</div>' : '') +
+      '<div class="f"><label class="lab" for="cd">Il tuo codice Troupe</label><input type="password" id="cd" inputmode="numeric" autocomplete="one-time-code"></div>' +
+      '<button class="btn main" type="submit">Entra</button><p class="muted" style="margin:10px 0 0">Lo stesso codice che usi per Troupe. Se non ce l\'hai chiedilo a Simone.</p></form>';
+    var cd = document.getElementById('cd'); cd.focus();
+    document.getElementById('lg').addEventListener('submit', function(e){
+      e.preventDefault(); var b = this.querySelector('button'); if (!cd.value.trim()) return;
+      b.disabled = true; b.textContent = 'Controllo…';
+      api('entra', [cd.value.trim()]).then(function(r){
+        if (!r.ok) return vLogin(r.msg);
+        TOKEN = r.token; NOME = r.nome; try { localStorage.setItem('catering_t', JSON.stringify({ t: TOKEN, n: NOME })); } catch (e) {}
+        vHome();
+      }).catch(function(err){ vLogin(err.message); });
+    });
+  }
+  function esci(){ api('esci', [TOKEN]).catch(function(){}); TOKEN = ''; try { localStorage.removeItem('catering_t'); } catch (e) {} vLogin(); }
+
+  // ── home: tutte le produzioni ──
   function vHome(){
-    var l = mie();
-    app.innerHTML = '<p class="eyebrow">Catering</p><h1>Le tue produzioni</h1>' +
-      (l.length ? '<div class="card list" style="padding:2px 16px">' + l.map(function(x, i){
-        return '<div class="it" data-i="' + i + '"><div class="t"><b>' + esc(x.e) + '</b><small>' + (x.f ? 'shoot dal ' + fmt(x.f) : 'senza data') + '</small></div><span style="color:#B9BBBF;font-size:22px">›</span></div>'; }).join('') + '</div>' :
-        '<div class="card"><p class="muted" style="margin:0">Crea una produzione: ti do il link da mandare a crew, clienti e ospiti. Le risposte arrivano qui e puoi scaricarle in PDF per il catering.</p></div>') +
+    if (!TOKEN) return vLogin();
+    app.innerHTML = '<div class="top"><span class="muted">' + esc(NOME) + '</span><button class="link" id="out">Esci</button></div><p class="eyebrow">Catering</p><h1>Produzioni</h1>' +
+      '<div id="lst"><div class="card"><p class="muted" style="margin:0">Carico le produzioni…</p></div></div>' +
       '<button class="btn main" id="nuova">+ Nuova produzione</button>';
     document.getElementById('nuova').onclick = vCrea;
-    Array.prototype.forEach.call(app.querySelectorAll('[data-i]'), function(el){ el.onclick = function(){ vEvento(l[Number(el.dataset.i)]); }; });
+    document.getElementById('out').onclick = esci;
+    api('catElenco', [TOKEN]).then(function(l){
+      var el = document.getElementById('lst'); if (!el) return;
+      el.innerHTML = l.length ? '<div class="card list" style="padding:2px 16px">' + l.map(function(x, i){
+        var info = [x.f ? 'shoot dal ' + fmt(x.f) : 'senza data', x.n + (x.n === 1 ? ' risposta' : ' risposte'), x.da ? 'di ' + x.da : ''].filter(Boolean).join(' · ');
+        return '<div class="it" data-i="' + i + '"><div class="t"><b>' + esc(x.e) + '</b><small>' + esc(info) + '</small></div><span style="color:#B9BBBF;font-size:22px">›</span></div>'; }).join('') + '</div>' :
+        '<div class="card"><p class="muted" style="margin:0">Nessuna produzione. Creane una: ti do il link da mandare a crew, clienti e ospiti, e le risposte arrivano qui.</p></div>';
+      Array.prototype.forEach.call(el.querySelectorAll('[data-i]'), function(it){ it.onclick = function(){ vEvento(l[Number(it.dataset.i)]); }; });
+    }).catch(function(err){ if (sessioneScaduta(err)) return; var el = document.getElementById('lst'); if (el) el.innerHTML = '<div class="err">' + esc(err.message) + '</div>'; });
   }
   function vCrea(){
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Nuova produzione</h1>' +
@@ -100,10 +128,10 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       var ev = document.getElementById('ev').value.trim(), fi = document.getElementById('fi').value, b = this.querySelector('button[type=submit]');
       if (ev.length < 2) return toast('Scrivi il nome della produzione');
       b.disabled = true; b.textContent = 'Creo…';
-      api('catCrea', [ev, fi]).then(function(r){
+      api('catCrea', [ev, fi, TOKEN]).then(function(r){
         if (!r.ok) { b.disabled = false; b.textContent = 'Crea'; document.getElementById('er').innerHTML = '<div class="err">' + esc(r.msg) + '</div>'; return; }
         var x = { e: r.e, f: r.f, k: r.k }; salvaMia(x); vEvento(x, true);
-      }).catch(function(err){ b.disabled = false; b.textContent = 'Crea'; toast(err.message); });
+      }).catch(function(err){ if (sessioneScaduta(err)) return; b.disabled = false; b.textContent = 'Crea'; toast(err.message); });
     });
   }
   // ── una produzione: link da mandare, risposte, PDF ──

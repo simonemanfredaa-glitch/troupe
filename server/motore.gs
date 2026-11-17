@@ -25,7 +25,7 @@ const LINK_PUBBLICO = 'https://simonemanfredaa-glitch.github.io/troupe/';
 const API_OK = ['versione', 'avvio', 'entra', 'esci', 'contatti', 'ruoli', 'sensibili', 'aggiungi', 'progetti', 'progetto', 'salvaProgetto', 'aggiungiCrew',
   'aggiornaCrew', 'togliCrew', 'chiediConferma', 'sblocca', 'sensibiliCrew', 'confermaLeggi', 'confermaInvia', 'datiPersona', 'confermaAdmin',
   'chiediCatering', 'catering', 'fileCatering', 'rilevamento', 'salvaMandato', 'mandato', 'chiudiProgetto', 'archivio', 'accessi',
-  'creaProducer', 'cambiaAccesso', 'eliminaProgetto', 'aggiornaOra', 'catInvia', 'catCrea', 'catRiepilogo', 'catPdf', 'catModifica', 'catElimina'];
+  'creaProducer', 'cambiaAccesso', 'eliminaProgetto', 'aggiornaOra', 'catInvia', 'catCrea', 'catRiepilogo', 'catPdf', 'catModifica', 'catElimina', 'catElenco'];
 function doPost(e) {
   let out;
   try {
@@ -56,7 +56,7 @@ function doGet(e) {
 
 // per controllare da fuori quale versione del motore è attiva
 function versione() { return VERSIONE_MOTORE; }
-const VERSIONE_MOTORE = '2026-11-17d';
+const VERSIONE_MOTORE = '2026-11-17e';
 
 function nuovoCodice_(esistenti) {
   let c;
@@ -1128,7 +1128,8 @@ function puliziaCatLibero_() {
 }
 
 // ───── app Catering separata: crea produzione, riepilogo e PDF (con chiave privata) ─────
-function catCrea(e, f) {
+function catCrea(e, f, token) {
+  const u = chi_(token);   // per creare serve il codice Troupe
   const pul = (s, n) => String(s || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n || 200);
   const evento = pul(e, 80).replace(/[\[\]\*\?\/\\:]/g, ' ').trim();
   if (evento.length < 2) return { ok: false, msg: 'Scrivi il nome della produzione' };
@@ -1142,6 +1143,7 @@ function catCrea(e, f) {
     sh.setFrozenRows(1);
     const k = Utilities.getUuid().replace(/-/g, '').slice(0, 18);
     sh.getRange('H1:H2').setValues([['Inizio shoot: ' + (fino || '–')], ['Chiave: ' + k]]);
+    sh.getRange('H4').setValue('Creata da: ' + u.nome);
     return { ok: true, e: evento, f: fino, k: k };
   } finally { lock.releaseLock(); }
 }
@@ -1226,4 +1228,16 @@ function catElimina(e, k) {
     sh.hideSheet();
     return { ok: true };
   } finally { lock.releaseLock(); }
+}
+
+// tutte le produzioni attive, per chi entra con il codice Troupe (admin e producer)
+function catElenco(token) {
+  chi_(token);
+  return catLiberoSS_().getSheets().filter(sh => !sh.isSheetHidden() && sh.getLastRow() > 0).map(sh => {
+    const v = sh.getRange(1, 1, sh.getLastRow(), 8).getDisplayValues();
+    const h = i => String((v[i] || [])[7] || '');
+    if (!/^Chiave: /.test(h(1))) return null;
+    return { e: sh.getName(), f: (/(\d{4}-\d{2}-\d{2})/.exec(h(0)) || [])[1] || '', k: h(1).replace('Chiave: ', ''),
+      da: h(3).replace(/^Creata da: /, ''), n: v.slice(1).filter(r => r[1]).length };
+  }).filter(Boolean).sort((a, b) => (b.f || '9').localeCompare(a.f || '9') || a.e.localeCompare(b.e, 'it'));
 }
