@@ -68,6 +68,8 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;backgr
 .brand{font-size:40px;font-weight:800;letter-spacing:-.03em;margin:6px 4px 18px;line-height:1}.brand span{color:#3E7F4E}
 .sez{font-size:13px;font-weight:700;color:var(--muted);margin:0 6px 8px}
 .gear{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));width:54px;height:54px;border-radius:50%;border:none;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.12);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);z-index:10}
+.sep{width:40px;height:4px;border-radius:2px;background:#C9C8C3;margin:6px auto 14px}
+.az{display:grid;grid-template-columns:1fr 1fr;gap:8px}.az .btn{height:48px;font-size:15px}
 .cent{text-align:center}.cent h2{margin-bottom:10px}
 .toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:50}
 </style>
@@ -273,11 +275,9 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     app.innerHTML = '<div class="top" style="position:relative"><button class="link" id="ind">‹ Produzioni</button><span>' +
       (gest ? '<button class="ib" id="sh" aria-label="Condividi con un collaboratore">' + ICO_SHARE + '</button><button class="ib" id="mn" aria-label="Altro">' + ICO_DOTS + '</button>' : '') + '</span></div>' +
       '<h1 style="margin-bottom:2px">' + esc(x.e) + '</h1><p class="eyebrow" style="margin-bottom:14px">' + [x.f ? 'Shoot dal ' + fmt(x.f) : 'Senza data', x.da ? 'di ' + esc(x.da) : ''].filter(Boolean).join(' · ') + '</p>' +
-      '<div id="ris"></div>' +
-      '<div class="card cent"><h2>' + (nuova ? 'Pronta! Manda il modulo alla crew' : 'Manda il modulo alla crew') + '</h2>' +
-      '<a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(messaggio(x)) + '">Manda su WhatsApp</a>' +
-      '<button class="link" id="cp" style="display:block;margin:8px auto 0">Copia il link</button></div>' +
-      '<button class="btn main" id="pdf">Scarica il PDF per il catering</button>';
+      '<div id="ris"></div><div class="sep"></div>' + (nuova ? '<p class="muted" style="text-align:center;margin:0 0 8px">Pronta! Ora manda il modulo alla crew.</p>' : '') +
+      '<div class="az" id="az"><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(messaggio(x)) + '">Manda modulo</a><button class="btn main" id="pdf">PDF catering</button></div>' +
+      '<button class="link" id="cp" style="display:block;margin:10px auto 0">Copia il link del modulo</button>';
     document.getElementById('ind').onclick = vHome;
     document.getElementById('cp').onclick = function(){ copia(linkModulo(x), 'Link copiato'); };
     if (gest) {
@@ -335,6 +335,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     el.innerHTML = '<div class="card"><div class="tot"><b>' + c.totale + '</b><span>' + (c.totale === 1 ? 'persona' : 'persone') + '</span></div>' +
       righe.map(function(v){ return '<div class="rw"><span>' + v[0] + '</span><b>' + v[1] + '</b></div>'; }).join('') +
       (c.allergie ? '<div class="rw al"><span>Con allergie o note</span><b>' + c.allergie + '</b></div>' + (c.gravi ? '<div class="rw sub"><span>di cui allergie gravi</span><b>' + c.gravi + '</b></div>' : '') : '') + '</div>' +
+      '<p class="sez" style="margin-top:4px">Crew</p>' +
       (r.length ? '<div class="card list" style="padding:2px 16px">' + ordina(r).map(function(y){
         var al = y.allergie || y.altro || y.grave;
         return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(y.nome) + (y.grave ? ' <span class="badge">grave</span>' : '') + '</b>' +
@@ -349,7 +350,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   }
   function scaricaPdf(id, b){
     var x = trova(id), r = ordina(RIS[id] || []), c = x.pulita && x.conteggi ? x.conteggi : conta(RIS[id] || []);
-    b.disabled = true; b.textContent = 'Preparo il PDF…';
+    b.disabled = true; b.textContent = 'Preparo…';
     caricaPdfLib().then(function(L){
       var d = new L.jsPDF({ unit: 'pt', format: 'a4' }), oggi = new Date().toLocaleDateString('it-IT');
       d.setFont('helvetica', 'bold'); d.setFontSize(20); d.setTextColor(23, 24, 27); d.text('Catering · ' + x.e, 40, 56);
@@ -378,11 +379,11 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
         '<div class="row"><a class="btn main" id="sv" href="' + u + '" download="' + esc(nome) + '">Salva il PDF</a>' + (puo ? '<button class="btn sec" id="sh">Invia…</button>' : '') + '</div>' +
         '<p class="muted" style="margin:10px 0 0">Salvalo e allegalo alla mail o al messaggio per il catering.' + (puo ? ' Con «Invia…» lo mandi subito da Mail, WhatsApp o Messaggi.' : '') + '</p>';
       var old = document.getElementById('pdfbox'); if (old) old.remove();
-      b.parentNode.insertBefore(bx2, b);
-      b.disabled = false; b.textContent = 'Rifai il PDF con le ultime risposte'; b.className = 'btn sec';
+      var az = document.getElementById('az'); az.parentNode.insertBefore(bx2, az);
+      b.disabled = false; b.textContent = 'Rifai PDF';
       if (puo) document.getElementById('sh').onclick = function(){ navigator.share({ files: [file], title: nome }).catch(function(){}); };
       bx2.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }).catch(function(err){ b.disabled = false; b.textContent = 'Scarica il PDF per il catering'; toast('PDF non riuscito: ' + (err && err.message || 'connessione')); });
+    }).catch(function(err){ b.disabled = false; b.textContent = 'PDF catering'; toast('PDF non riuscito: ' + (err && err.message || 'connessione')); });
   }
 
   // ── producer abilitati (solo admin) ──
