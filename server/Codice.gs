@@ -25,7 +25,7 @@ const LINK_PUBBLICO = 'https://simonemanfredaa-glitch.github.io/troupe/';
 const API_OK = ['versione', 'avvio', 'entra', 'esci', 'contatti', 'ruoli', 'sensibili', 'aggiungi', 'progetti', 'progetto', 'salvaProgetto', 'aggiungiCrew',
   'aggiornaCrew', 'togliCrew', 'chiediConferma', 'sblocca', 'sensibiliCrew', 'confermaLeggi', 'confermaInvia', 'datiPersona', 'confermaAdmin',
   'chiediCatering', 'catering', 'fileCatering', 'rilevamento', 'salvaMandato', 'mandato', 'chiudiProgetto', 'archivio', 'accessi',
-  'creaProducer', 'cambiaAccesso', 'eliminaProgetto', 'aggiornaOra', 'catInvia'];
+  'creaProducer', 'cambiaAccesso', 'eliminaProgetto', 'aggiornaOra', 'catInvia', 'catCrea', 'catRiepilogo', 'catPdf'];
 function doPost(e) {
   let out;
   try {
@@ -1145,13 +1145,8 @@ function catInvia(d) {
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     const ss = catLiberoSS_();
-    let sh = ss.getSheetByName(evento);
-    if (!sh) {
-      sh = ss.insertSheet(evento);
-      sh.getRange(1, 1, 1, H_CATL.length).setValues([H_CATL]).setFontWeight('bold');
-      sh.setFrozenRows(1);
-    }
-    if (fino) sh.getRange('H1').setValue('Ultimo giorno: ' + fino);
+    const sh = ss.getSheetByName(evento);
+    if (!sh || ['LEGGIMI', 'CONTEGGI'].indexOf(evento.toUpperCase()) !== -1) return { ok: false, msg: 'Questo link non è più attivo: chiedine uno nuovo a chi te l\'ha mandato' };
     const all = [].concat(d.allergie || []).map(x => pul(x, 40)).filter(Boolean).slice(0, 10).join(', ');
     // stessa persona che rimanda: aggiorno la sua riga invece di aggiungerne una
     const righe = sh.getLastRow() > 1 ? sh.getRange(2, 2, sh.getLastRow() - 1, 1).getDisplayValues() : [];
@@ -1175,4 +1170,60 @@ function puliziaCatLibero_() {
       .appendRow([sh.getName(), v.length, conta('Mangio tutto'), conta('Vegetariana'), conta('Vegana'), conta('Pescetariana'), v.filter(r => r[3] || r[4]).length, oggi_()]);
     ss.deleteSheet(sh);
   });
+}
+
+// ───── app Catering separata: crea produzione, riepilogo e PDF (con chiave privata) ─────
+function catCrea(e, f) {
+  const pul = (s, n) => String(s || '').replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, n || 200);
+  const evento = pul(e, 80).replace(/[\[\]\*\?\/\\:]/g, ' ').trim();
+  if (evento.length < 2) return { ok: false, msg: 'Scrivi il nome della produzione' };
+  const fino = /^\d{4}-\d{2}-\d{2}$/.test(String(f || '')) ? String(f) : '';
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const ss = catLiberoSS_();
+    if (ss.getSheetByName(evento) || ['LEGGIMI', 'CONTEGGI'].indexOf(evento.toUpperCase()) !== -1) return { ok: false, msg: 'Esiste già una produzione con questo nome: aggiungi qualcosa, per esempio la data' };
+    const sh = ss.insertSheet(evento);
+    sh.getRange(1, 1, 1, H_CATL.length).setValues([H_CATL]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+    const k = Utilities.getUuid().replace(/-/g, '').slice(0, 18);
+    sh.getRange('H1:H2').setValues([['Ultimo giorno: ' + (fino || '–')], ['Chiave: ' + k]]);
+    return { ok: true, e: evento, f: fino, k: k };
+  } finally { lock.releaseLock(); }
+}
+function catTabConChiave_(e, k) {
+  const sh = catLiberoSS_().getSheetByName(String(e || ''));
+  if (!sh || !k || sh.getRange('H2').getDisplayValue() !== 'Chiave: ' + k) throw new Error('Link non valido');
+  return sh;
+}
+function catRiepilogo(e, k) {
+  const sh = catTabConChiave_(e, k);
+  const v = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, H_CATL.length).getDisplayValues() : [];
+  return { e: sh.getName(), fino: (/(\d{4}-\d{2}-\d{2})/.exec(sh.getRange('H1').getDisplayValue()) || [])[1] || '',
+    risposte: v.filter(r => r[1]).map(r => ({ quando: r[0], nome: r[1], dieta: r[2], allergie: r[3], altro: r[4], grave: r[5] === 'SÌ' })) };
+}
+function catPdf(e, k) {
+  const d = catRiepilogo(e, k);
+  const es = s => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  const r = d.risposte;
+  const conta = t => r.filter(x => x.dieta === t).length;
+  const conEsig = r.filter(x => x.allergie || x.altro || x.grave);
+  const oggiIt = Utilities.formatDate(new Date(), 'Europe/Rome', 'dd/MM/yyyy');
+  const html = '<html><head><meta charset="utf-8"><style>' +
+    'body{font-family:Helvetica,Arial,sans-serif;color:#17181B;font-size:11pt;margin:28px}' +
+    'h1{font-size:20pt;margin:0 0 4px}.sub{color:#686B70;margin:0 0 18px}' +
+    'h2{font-size:12pt;margin:20px 0 8px;border-bottom:1px solid #ccc;padding-bottom:4px}' +
+    'table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #e3e3e3;padding:6px 8px;text-align:left;vertical-align:top}th{font-size:9pt;color:#686B70}' +
+    '.box{display:inline-block;border:1px solid #ccc;border-radius:6px;padding:8px 14px;margin:0 8px 8px 0}.box b{font-size:16pt;display:block}' +
+    '.grave{color:#A3202A;font-weight:bold}</style></head><body>' +
+    '<h1>Catering · ' + es(d.e) + '</h1><p class="sub">' + r.length + ' risposte' + (d.fino ? ' · ultimo giorno ' + d.fino.split('-').reverse().join('/') : '') + ' · aggiornato al ' + oggiIt + '</p>' +
+    '<div>' + [['Totale', r.length], ['Mangio tutto', conta('Mangio tutto')], ['Vegetariani', conta('Vegetariana')], ['Vegani', conta('Vegana')], ['Pescetariani', conta('Pescetariana')], ['Con allergie', conEsig.length]]
+      .map(x => '<span class="box"><b>' + x[1] + '</b>' + x[0] + '</span>').join('') + '</div>' +
+    (conEsig.length ? '<h2>Allergie ed esigenze</h2><table><tr><th>Nome</th><th>Dieta</th><th>Allergie e intolleranze</th><th>Note</th></tr>' +
+      conEsig.map(x => '<tr><td>' + es(x.nome) + (x.grave ? ' <span class="grave">· ALLERGIA GRAVE</span>' : '') + '</td><td>' + es(x.dieta) + '</td><td>' + es(x.allergie) + '</td><td>' + es(x.altro) + '</td></tr>').join('') + '</table>' : '') +
+    '<h2>Tutte le risposte</h2><table><tr><th>Nome</th><th>Dieta</th><th>Allergie</th><th>Note</th></tr>' +
+    r.map(x => '<tr><td>' + es(x.nome) + '</td><td>' + es(x.dieta) + '</td><td>' + es(x.allergie) + (x.grave ? ' <span class="grave">(grave)</span>' : '') + '</td><td>' + es(x.altro) + '</td></tr>').join('') + '</table>' +
+    '</body></html>';
+  const nome = 'Catering_' + d.e.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') + '_' + Utilities.formatDate(new Date(), 'Europe/Rome', 'yyyy-MM-dd') + '.pdf';
+  const pdf = Utilities.newBlob(html, 'text/html', 'catering.html').getAs('application/pdf').setName(nome);
+  return { nome: nome, b64: Utilities.base64Encode(pdf.getBytes()) };
 }

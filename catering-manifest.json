@@ -1,0 +1,1 @@
+{"name": "Catering", "short_name": "Catering", "start_url": "./catering.html", "display": "standalone", "background_color": "#E9E8E4", "theme_color": "#E9E8E4", "icons": [{"src": "catering-180.png", "sizes": "180x180", "type": "image/png"}, {"src": "catering-512.png", "sizes": "512x512", "type": "image/png"}]}

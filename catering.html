@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Catering</title>
 <meta name="theme-color" content="#E9E8E4">
+<link rel="manifest" href="catering-manifest.json">
+<link rel="apple-touch-icon" href="catering-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Catering">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -37,6 +41,12 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,58,138,.12)}
 .err{background:#FBECEC;color:var(--err);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px}
 .fine{text-align:center;padding:34px 20px}.fine .big{font-size:24px;font-weight:700}
 pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;background:var(--soft);border-radius:12px;padding:10px 12px;margin:0 0 12px}
+.list .it{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--soft);cursor:pointer}.list .it:first-child{border-top:none}
+.it .t{flex:1;min-width:0}.it b{display:block;font-size:15px}.it small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.nums div{background:var(--soft);border-radius:12px;padding:10px;text-align:center}.nums b{display:block;font-size:22px}.nums span{font-size:12px;color:var(--muted)}
+.badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;background:#FBECEC;color:var(--err);white-space:nowrap}
+.link{background:none;border:none;color:var(--blue);font-weight:600;font-size:15px;padding:8px 0;cursor:pointer}
+.top{display:flex;justify-content:space-between;align-items:center;margin:0 4px 8px}
 .toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:50}
 </style>
 </head>
@@ -46,35 +56,94 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;backgr
 window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k-aiQJkvr8yw09bHlwlm3A1Xo8_UHSjB_fqTtdJKW1XoKhHQ/exec";
 (function(){
   var Q = new URLSearchParams(location.search);
-  var EV = (Q.get('e') || '').trim().slice(0, 80), FINO = (Q.get('f') || '').slice(0, 10), PRJ = (Q.get('p') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 20);
+  var EV = (Q.get('e') || '').trim().slice(0, 80), FINO = (Q.get('f') || '').slice(0, 10), PRJ = (Q.get('p') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 20), KEY = (Q.get('k') || '').replace(/[^a-z0-9]/g, '');
   var app = document.getElementById('app');
+  var BASE = location.origin + location.pathname;
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var DIETE = ['Mangio tutto', 'Vegetariana', 'Vegana', 'Pescetariana'];
   var ALL = ['Glutine', 'Lattosio', 'Frutta a guscio', 'Crostacei e pesce', 'Uova'];
   var dieta = 'Mangio tutto';
-  function toast(m){ var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2500); }
-  function copia(t){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function(){ toast('Link copiato'); }, function(){ var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); toast('Link copiato'); }); }
+  function toast(m){ var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2600); }
+  function copia(t, m){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function(){ toast(m || 'Copiato'); }, function(){ var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); toast(m || 'Copiato'); }); }
+  function api(fn, args){
+    return fetch(window.API_URL, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: args }) })
+      .then(function(r){ return r.json(); }).then(function(j){ if (j.err) throw new Error(j.err); return j.data; });
+  }
+  var fmt = function(iso){ return iso ? iso.split('-').reverse().join('/') : ''; };
+  // le produzioni create da questo telefono
+  function mie(){ try { return JSON.parse(localStorage.getItem('catering_mie') || '[]'); } catch (e) { return []; } }
+  function salvaMia(x){ var l = mie().filter(function(y){ return y.e !== x.e; }); l.unshift(x); try { localStorage.setItem('catering_mie', JSON.stringify(l.slice(0, 50))); } catch (e) {} }
+  var linkModulo = function(x){ return BASE + '?e=' + encodeURIComponent(x.e) + (x.f ? '&f=' + x.f : ''); };
+  var linkPrivato = function(x){ return BASE + '?e=' + encodeURIComponent(x.e) + '&k=' + x.k; };
 
-  // ── senza produzione nel link: si crea il link da mandare ──
+  // ── home dell'app: le mie produzioni ──
+  function vHome(){
+    var l = mie();
+    app.innerHTML = '<p class="eyebrow">Catering</p><h1>Le tue produzioni</h1>' +
+      (l.length ? '<div class="card list" style="padding:2px 16px">' + l.map(function(x, i){
+        return '<div class="it" data-i="' + i + '"><div class="t"><b>' + esc(x.e) + '</b><small>' + (x.f ? 'fino al ' + fmt(x.f) : 'senza data') + '</small></div><span style="color:#B9BBBF;font-size:22px">›</span></div>'; }).join('') + '</div>' :
+        '<div class="card"><p class="muted" style="margin:0">Crea una produzione: ti do il link da mandare a crew, clienti e ospiti. Le risposte arrivano qui e puoi scaricarle in PDF per il catering.</p></div>') +
+      '<button class="btn main" id="nuova">+ Nuova produzione</button>';
+    document.getElementById('nuova').onclick = vCrea;
+    Array.prototype.forEach.call(app.querySelectorAll('[data-i]'), function(el){ el.onclick = function(){ vEvento(l[Number(el.dataset.i)]); }; });
+  }
   function vCrea(){
-    app.innerHTML = '<p class="eyebrow">Catering</p><h1>Crea il link per una produzione</h1>' +
-      '<form id="crea" class="card" autocomplete="off"><div class="f"><label class="lab" for="ev">Produzione</label><input type="text" id="ev" placeholder="Es. Alain Mikli N1"></div>' +
+    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Nuova produzione</h1>' +
+      '<form id="crea" class="card" autocomplete="off"><div id="er"></div><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" placeholder="Es. Alain Mikli N1"></div>' +
       '<div class="f"><label class="lab" for="fi">Ultimo giorno</label><input type="date" id="fi"></div>' +
-      '<button class="btn main" type="submit">Crea il link</button>' +
-      '<p class="muted" style="margin:10px 0 0">Le risposte finiscono nel file "CATERING · risposte" su Drive, un foglio per produzione, e si cancellano 30 giorni dopo l\'ultimo giorno.</p></form><div id="out"></div>';
+      '<button class="btn main" type="submit">Crea</button><p class="muted" style="margin:10px 0 0">Le risposte si cancellano da sole 30 giorni dopo l\'ultimo giorno.</p></form>';
+    document.getElementById('ind').onclick = vHome;
     document.getElementById('crea').addEventListener('submit', function(e){
       e.preventDefault();
-      var ev = document.getElementById('ev').value.trim(), fi = document.getElementById('fi').value;
-      if (!ev) return toast('Scrivi il nome della produzione');
-      var link = location.origin + location.pathname + '?e=' + encodeURIComponent(ev) + (fi ? '&f=' + fi : '');
-      var msg = 'Ciao! Per ' + ev + ' ci dite cosa mangiate e se avete allergie o intolleranze? Ci vuole un minuto: ' + link;
-      document.getElementById('out').innerHTML = '<div class="card"><h2>Link pronto</h2><pre>' + esc(link) + '</pre>' +
-        '<div class="row"><button class="btn sec" id="cp">Copia link</button><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(msg) + '">WhatsApp</a></div></div>';
-      document.getElementById('cp').onclick = function(){ copia(link); };
+      var ev = document.getElementById('ev').value.trim(), fi = document.getElementById('fi').value, b = this.querySelector('button[type=submit]');
+      if (ev.length < 2) return toast('Scrivi il nome della produzione');
+      b.disabled = true; b.textContent = 'Creo…';
+      api('catCrea', [ev, fi]).then(function(r){
+        if (!r.ok) { b.disabled = false; b.textContent = 'Crea'; document.getElementById('er').innerHTML = '<div class="err">' + esc(r.msg) + '</div>'; return; }
+        var x = { e: r.e, f: r.f, k: r.k }; salvaMia(x); vEvento(x, true);
+      }).catch(function(err){ b.disabled = false; b.textContent = 'Crea'; toast(err.message); });
     });
   }
+  // ── una produzione: link da mandare, risposte, PDF ──
+  function vEvento(x, nuova){
+    var msg = 'Ciao! Per ' + x.e + ' ci dici cosa mangi e se hai allergie o intolleranze? Ci vuole un minuto: ' + linkModulo(x);
+    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Produzioni</button><button class="link" id="agg">Aggiorna</button></div>' +
+      '<p class="eyebrow">Catering' + (x.f ? ' · fino al ' + fmt(x.f) : '') + '</p><h1>' + esc(x.e) + '</h1>' +
+      '<div class="card"><h2>' + (nuova ? 'Pronta! Ora manda il link' : 'Link da mandare') + '</h2><pre>' + esc(linkModulo(x)) + '</pre>' +
+      '<div class="row"><button class="btn sec" id="cp">Copia</button><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(msg) + '">WhatsApp</a></div></div>' +
+      '<div id="ris"><div class="card"><p class="muted" style="margin:0">Carico le risposte…</p></div></div>' +
+      '<button class="btn main" id="pdf" style="margin-top:4px">Scarica il PDF per il catering</button>' +
+      '<p class="muted" style="margin:14px 4px 0">Per aprire questa pagina da un altro telefono <button class="link" id="priv" style="font-size:13px;padding:0">copia il tuo link privato</button>: non darlo a chi deve solo rispondere.</p>';
+    document.getElementById('ind').onclick = vHome;
+    document.getElementById('cp').onclick = function(){ copia(linkModulo(x), 'Link copiato'); };
+    document.getElementById('priv').onclick = function(){ copia(linkPrivato(x), 'Link privato copiato'); };
+    document.getElementById('agg').onclick = function(){ carica(x); };
+    document.getElementById('pdf').onclick = function(){ scaricaPdf(x, this); };
+    carica(x);
+  }
+  function carica(x){
+    api('catRiepilogo', [x.e, x.k]).then(function(d){
+      var r = d.risposte, c = function(t){ return r.filter(function(y){ return y.dieta === t; }).length; };
+      var es = r.filter(function(y){ return y.allergie || y.altro || y.grave; });
+      document.getElementById('ris').innerHTML = '<div class="card"><div class="nums"><div><b>' + r.length + '</b><span>risposte</span></div><div><b>' + c('Vegetariana') + '</b><span>vegetariani</span></div><div><b>' + c('Vegana') + '</b><span>vegani</span></div>' +
+        '<div><b>' + c('Pescetariana') + '</b><span>pescetariani</span></div><div><b>' + c('Mangio tutto') + '</b><span>mangiano tutto</span></div><div><b>' + es.length + '</b><span>con allergie</span></div></div></div>' +
+        (r.length ? '<div class="card list" style="padding:2px 16px">' + r.map(function(y){
+          return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(y.nome) + '</b><small>' + esc([y.dieta, y.allergie, y.altro].filter(Boolean).join(' · ')) + '</small></div>' + (y.grave ? '<span class="badge">allergia grave</span>' : '') + '</div>';
+        }).join('') + '</div>' : '<div class="card"><p class="muted" style="margin:0">Ancora nessuna risposta.</p></div>');
+    }).catch(function(err){ document.getElementById('ris').innerHTML = '<div class="err">' + esc(err.message) + '</div>'; });
+  }
+  function scaricaPdf(x, b){
+    b.disabled = true; b.textContent = 'Preparo il PDF…';
+    api('catPdf', [x.e, x.k]).then(function(r){
+      var bin = atob(r.b64), arr = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      var file = new File([arr], r.nome, { type: 'application/pdf' });
+      b.disabled = false; b.textContent = 'Scarica il PDF per il catering';
+      if (navigator.canShare && navigator.canShare({ files: [file] })) return navigator.share({ files: [file], title: r.nome }).catch(function(){});
+      var u = URL.createObjectURL(file), a = document.createElement('a'); a.href = u; a.download = r.nome; document.body.appendChild(a); a.click(); a.remove();
+    }).catch(function(err){ b.disabled = false; b.textContent = 'Scarica il PDF per il catering'; toast(err.message); });
+  }
 
-  // ── con la produzione nel link: il modulo ──
+  // ── modulo per chi risponde ──
   function vModulo(err){
     app.innerHTML = '<p class="eyebrow">Catering · ' + esc(EV) + '</p><h1>Cosa mangi sul set?</h1>' + (err ? '<div class="err">' + esc(err) + '</div>' : '') +
       '<form id="mod" autocomplete="off"><div class="card"><div class="f"><label class="lab" for="nm">Nome e cognome</label><input type="text" id="nm" autocomplete="name"></div>' +
@@ -94,10 +163,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
         altro: document.getElementById('al').value.trim(), grave: document.getElementById('gr').checked };
       if (d.nome.length < 2) return toast('Scrivi nome e cognome');
       app.innerHTML = '<div class="card fine"><div class="big">Grazie, ricevuto!</div><p class="muted" style="margin:10px 0 0">Lo giro al catering. Ci vediamo sul set.</p></div>';
-      fetch(window.API_URL, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: 'catInvia', args: [d] }) })
-        .then(function(r){ return r.json(); })
-        .then(function(j){ var r = j.data || {}; if (j.err || !r.ok) ripristina(d, j.err || r.msg); })
-        .catch(function(){ ripristina(d, 'Connessione assente: la risposta non è arrivata. Riprova.'); });
+      api('catInvia', [d]).then(function(r){ if (!r.ok) ripristina(d, r.msg); }).catch(function(err){ ripristina(d, err.message === 'Failed to fetch' ? 'Connessione assente: la risposta non è arrivata. Riprova.' : err.message); });
     });
   }
   function ripristina(d, msg){
@@ -105,7 +171,10 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     document.getElementById('nm').value = d.nome; document.getElementById('al').value = d.altro; document.getElementById('gr').checked = d.grave;
     Array.prototype.forEach.call(document.querySelectorAll('input[name=al]'), function(i){ i.checked = d.allergie.indexOf(i.value) !== -1; });
   }
-  if (EV) vModulo(); else vCrea();
+
+  if (EV && KEY) { var x = { e: EV, k: KEY, f: FINO }; salvaMia(x); vEvento(x); }
+  else if (EV) vModulo();
+  else vHome();
 })();
 </script>
 </body>
