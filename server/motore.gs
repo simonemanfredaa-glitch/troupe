@@ -56,7 +56,7 @@ function doGet(e) {
 
 // per controllare da fuori quale versione del motore è attiva
 function versione() { return VERSIONE_MOTORE; }
-const VERSIONE_MOTORE = '2026-11-17c';
+const VERSIONE_MOTORE = '2026-11-17d';
 
 function nuovoCodice_(esistenti) {
   let c;
@@ -1051,7 +1051,7 @@ function aggiornaOra(token) {
 // ═════════════════════════ CATERING LIBERO · link unico, fuori dai progetti ═════════════════════════
 // Un link per produzione (catering.html?e=Nome&f=ultimo giorno): chiunque lo apre scrive nome ed esigenze.
 // Le risposte vanno nel file "CATERING · risposte" (cartella TROUPE), un tab per produzione.
-// Non toccano il database contatti né i progetti. Si cancellano 30 giorni dopo l'ultimo giorno.
+// Non toccano il database contatti né i progetti. Si cancellano 45 giorni dopo l'inizio dello shoot.
 const CARTELLA_TROUPE = '1ytiU_TFTpA_AbWbmMxl4v3Zro_TdOWAh';
 const H_CATL = ['Quando', 'Nome', 'Cosa mangia', 'Allergie e intolleranze', 'Altro', 'Allergia grave'];
 
@@ -1062,7 +1062,7 @@ function catLiberoSS_() {
   const ss = SpreadsheetApp.create('CATERING · risposte');
   DriveApp.getFileById(ss.getId()).moveTo(DriveApp.getFolderById(CARTELLA_TROUPE));
   ss.getSheets()[0].setName('LEGGIMI').getRange(1, 1, 3, 1).setValues([['Un tab per ogni produzione, creato dal link del catering.'],
-    ['Le risposte di ogni tab si cancellano da sole 30 giorni dopo l\'ultimo giorno indicato nel link.'], ['Nel tab CONTEGGI restano solo i numeri.']]);
+    ['Le risposte di ogni tab si cancellano da sole 45 giorni dopo l\'inizio shoot indicato.'], ['Nel tab CONTEGGI restano solo i numeri.']]);
   props.setProperty('CAT_LIBERO_ID', ss.getId());
   return ss;
 }
@@ -1118,7 +1118,7 @@ function puliziaCatLibero_() {
   const ss = SpreadsheetApp.openById(id);
   ss.getSheets().forEach(sh => {
     const m = /(\d{4}-\d{2}-\d{2})/.exec(sh.getRange('H1').getDisplayValue());
-    if (!m || giorniDa_(m[1]) <= 30 || sh.getLastRow() < 2) return;
+    if (!m || giorniDa_(m[1]) <= 45 || sh.getLastRow() < 2) return;
     const v = sh.getRange(2, 1, sh.getLastRow() - 1, H_CATL.length).getDisplayValues();
     const conta = t => v.filter(r => r[2] === t).length;
     tabIn_(ss, 'CONTEGGI', ['Produzione', 'Risposte', 'Mangio tutto', 'Vegetariana', 'Vegana', 'Pescetariana', 'Con allergie', 'Cancellato il'])
@@ -1141,7 +1141,7 @@ function catCrea(e, f) {
     sh.getRange(1, 1, 1, H_CATL.length).setValues([H_CATL]).setFontWeight('bold');
     sh.setFrozenRows(1);
     const k = Utilities.getUuid().replace(/-/g, '').slice(0, 18);
-    sh.getRange('H1:H2').setValues([['Ultimo giorno: ' + (fino || '–')], ['Chiave: ' + k]]);
+    sh.getRange('H1:H2').setValues([['Inizio shoot: ' + (fino || '–')], ['Chiave: ' + k]]);
     return { ok: true, e: evento, f: fino, k: k };
   } finally { lock.releaseLock(); }
 }
@@ -1176,7 +1176,7 @@ function catPdf(e, k) {
     'tr.al td{background:#FCEDEE}tr.gr td{background:#F8D7DA}' +
     '.alg{color:#A3202A;font-weight:bold}.pill{display:inline-block;background:#A3202A;color:#fff;font-size:7.5pt;font-weight:bold;border-radius:4px;padding:1px 5px;margin-left:4px}' +
     '.leg{color:#686B70;font-size:8.5pt;margin-top:10px}</style></head><body>' +
-    '<h1>Catering · ' + es(d.e) + '</h1><p class="sub">' + r.length + ' risposte' + (d.fino ? ' · ultimo giorno ' + d.fino.split('-').reverse().join('/') : '') + ' · aggiornato al ' + oggiIt + '</p>' +
+    '<h1>Catering · ' + es(d.e) + '</h1><p class="sub">' + r.length + ' risposte' + (d.fino ? ' · inizio shoot ' + d.fino.split('-').reverse().join('/') : '') + ' · aggiornato al ' + oggiIt + '</p>' +
     '<div>' + [['Totale', r.length], ['Mangio tutto', conta('Mangio tutto')], ['Vegetariani', conta('Vegetariana')], ['Vegani', conta('Vegana')], ['Pescetariani', conta('Pescetariana')], ['Con allergie o note', conEsig.length]]
       .map(x => '<span class="box"><b>' + x[1] + '</b>' + x[0] + '</span>').join('') + '</div>' +
     '<table><colgroup><col style="width:27%"><col style="width:17%"><col style="width:30%"><col style="width:26%"></colgroup>' +
@@ -1212,7 +1212,7 @@ function catModifica(e, k, nuovo, f) {
       sh.setName(nome);
     }
     const fino = /^\d{4}-\d{2}-\d{2}$/.test(String(f || '')) ? String(f) : '';
-    sh.getRange('H1').setValue('Ultimo giorno: ' + (fino || '–'));
+    sh.getRange('H1').setValue('Inizio shoot: ' + (fino || '–'));
     return { ok: true, e: nome, f: fino };
   } finally { lock.releaseLock(); }
 }
@@ -1221,7 +1221,7 @@ function catElimina(e, k) {
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     const sh = catTabConChiave_(e, k);
-    if (!/(\d{4}-\d{2}-\d{2})/.test(sh.getRange('H1').getDisplayValue())) sh.getRange('H1').setValue('Ultimo giorno: ' + Utilities.formatDate(new Date(), 'Europe/Rome', 'yyyy-MM-dd'));
+    if (!/(\d{4}-\d{2}-\d{2})/.test(sh.getRange('H1').getDisplayValue())) sh.getRange('H1').setValue('Inizio shoot: ' + Utilities.formatDate(new Date(), 'Europe/Rome', 'yyyy-MM-dd'));
     sh.setName(('(ELIMINATO) ' + sh.getName() + ' ' + Utilities.formatDate(new Date(), 'Europe/Rome', 'dd-MM HH.mm')).slice(0, 99));
     sh.hideSheet();
     return { ok: true };

@@ -83,7 +83,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     var l = mie();
     app.innerHTML = '<p class="eyebrow">Catering</p><h1>Le tue produzioni</h1>' +
       (l.length ? '<div class="card list" style="padding:2px 16px">' + l.map(function(x, i){
-        return '<div class="it" data-i="' + i + '"><div class="t"><b>' + esc(x.e) + '</b><small>' + (x.f ? 'fino al ' + fmt(x.f) : 'senza data') + '</small></div><span style="color:#B9BBBF;font-size:22px">›</span></div>'; }).join('') + '</div>' :
+        return '<div class="it" data-i="' + i + '"><div class="t"><b>' + esc(x.e) + '</b><small>' + (x.f ? 'shoot dal ' + fmt(x.f) : 'senza data') + '</small></div><span style="color:#B9BBBF;font-size:22px">›</span></div>'; }).join('') + '</div>' :
         '<div class="card"><p class="muted" style="margin:0">Crea una produzione: ti do il link da mandare a crew, clienti e ospiti. Le risposte arrivano qui e puoi scaricarle in PDF per il catering.</p></div>') +
       '<button class="btn main" id="nuova">+ Nuova produzione</button>';
     document.getElementById('nuova').onclick = vCrea;
@@ -92,8 +92,8 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function vCrea(){
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Nuova produzione</h1>' +
       '<form id="crea" class="card" autocomplete="off"><div id="er"></div><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" placeholder="Es. Alain Mikli N1"></div>' +
-      '<div class="f"><label class="lab" for="fi">Ultimo giorno di set</label><input type="date" id="fi"></div>' +
-      '<button class="btn main" type="submit">Crea</button><p class="muted" style="margin:10px 0 0">Serve solo per la privacy: 30 giorni dopo l\'ultimo giorno di set le risposte si cancellano da sole e restano solo i numeri.</p></form>';
+      '<div class="f"><label class="lab" for="fi">Inizio shoot</label><input type="date" id="fi"></div>' +
+      '<button class="btn main" type="submit">Crea</button><p class="muted" style="margin:10px 0 0">Serve per la privacy: 45 giorni dopo l\'inizio dello shoot le risposte si cancellano da sole e restano solo i numeri.</p></form>';
     document.getElementById('ind').onclick = vHome;
     document.getElementById('crea').addEventListener('submit', function(e){
       e.preventDefault();
@@ -110,7 +110,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function vEvento(x, nuova){
     var msg = 'Ciao! Per ' + x.e + ' ci dici cosa mangi e se hai allergie o intolleranze? Ci vuole un minuto: ' + linkModulo(x);
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Produzioni</button><span><button class="link" id="mod">Modifica</button> <button class="link" id="agg">Aggiorna</button></span></div>' +
-      '<p class="eyebrow">Catering' + (x.f ? ' · fino al ' + fmt(x.f) : '') + '</p><h1>' + esc(x.e) + '</h1>' +
+      '<p class="eyebrow">Catering' + (x.f ? ' · shoot dal ' + fmt(x.f) : '') + '</p><h1>' + esc(x.e) + '</h1>' +
       '<div class="card"><h2>' + (nuova ? 'Pronta! Ora manda il link' : 'Link da mandare') + '</h2><pre>' + esc(linkModulo(x)) + '</pre>' +
       '<div class="row"><button class="btn sec" id="cp">Copia</button><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(msg) + '">WhatsApp</a></div></div>' +
       '<div id="ris"><div class="card"><p class="muted" style="margin:0">Carico le risposte…</p></div></div>' +
@@ -128,7 +128,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function vModifica(x){
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Modifica produzione</h1>' +
       '<form id="frm" class="card" autocomplete="off"><div id="er"></div><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" value="' + esc(x.e) + '"></div>' +
-      '<div class="f"><label class="lab" for="fi">Ultimo giorno di set</label><input type="date" id="fi" value="' + esc(x.f || '') + '"></div>' +
+      '<div class="f"><label class="lab" for="fi">Inizio shoot</label><input type="date" id="fi" value="' + esc(x.f || '') + '"></div>' +
       '<button class="btn main" type="submit">Salva modifiche</button><p class="muted" style="margin:10px 0 0">I link già mandati continuano a funzionare anche col nome nuovo.</p></form>' +
       '<div id="del"><button class="btn danger" id="eli">Elimina produzione</button></div>';
     document.getElementById('ind').onclick = function(){ vEvento(x); };
@@ -143,7 +143,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       }).catch(function(err){ b.disabled = false; b.textContent = 'Salva modifiche'; toast(err.message); });
     });
     document.getElementById('eli').onclick = function(){
-      document.getElementById('del').innerHTML = '<div class="card"><h2>Eliminare «' + esc(x.e) + '»?</h2><p class="muted" style="margin:0 0 12px">Il link smette di funzionare e la produzione sparisce dall\'app. Le risposte si cancellano da sole 30 giorni dopo l\'ultimo giorno.</p>' +
+      document.getElementById('del').innerHTML = '<div class="card"><h2>Eliminare «' + esc(x.e) + '»?</h2><p class="muted" style="margin:0 0 12px">Il link smette di funzionare e la produzione sparisce dall\'app. Le risposte si cancellano da sole 45 giorni dopo l\'inizio dello shoot.</p>' +
         '<div class="row"><button class="btn sec" id="no">Annulla</button><button class="btn danger" id="si">Elimina</button></div></div>';
       document.getElementById('no').onclick = function(){ vModifica(x); };
       document.getElementById('si').onclick = function(){
