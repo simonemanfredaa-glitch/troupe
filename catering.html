@@ -49,6 +49,14 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;backgr
 .badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px;background:#FBECEC;color:var(--err);white-space:nowrap}
 .link{background:none;border:none;color:var(--blue);font-weight:600;font-size:15px;padding:8px 0;cursor:pointer}
 .top{display:flex;justify-content:space-between;align-items:center;margin:0 4px 8px}
+.tot{display:flex;align-items:baseline;gap:8px;margin:0 2px 8px}.tot b{font-size:40px;line-height:1;letter-spacing:-.02em}.tot span{color:var(--muted);font-size:15px}
+.rw{display:flex;justify-content:space-between;align-items:center;padding:9px 2px;border-top:1px solid var(--soft);font-size:15px}.rw b{font-size:16px}.rw.al{color:var(--err)}.rw.sub{padding-top:0;border-top:none;font-size:13px;color:var(--err)}
+.av{width:34px;height:34px;border-radius:50%;background:var(--soft);color:#4A4C50;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}.av.r{background:#FCEDEE;color:var(--err)}
+.it .alg{display:block;color:var(--err);font-size:13px;font-weight:600;margin-top:2px}
+.dp{width:54px;text-align:center;flex:none;font-size:12px;font-weight:600;padding:4px 0;border-radius:20px;background:var(--soft);color:#4A4C50}.dp.v{background:#E3F1E6;color:#2E6B3C}
+.ib{width:38px;height:38px;border-radius:50%;border:none;background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink);margin-left:6px}
+.menu{position:absolute;right:4px;top:46px;background:#fff;border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,.12);min-width:180px;z-index:20;overflow:hidden}.menu button{display:block;width:100%;text-align:left;padding:13px 16px;border:none;background:#fff;font-size:15px;cursor:pointer}.menu button+button{border-top:1px solid var(--soft)}
+.lang{display:inline-flex;background:#fff;border-radius:20px;padding:3px}.lang button{border:none;background:none;font-size:13px;font-weight:700;padding:5px 10px;border-radius:16px;color:var(--muted);cursor:pointer}.lang button.on{background:var(--ink);color:#fff}
 .toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:50}
 </style>
 </head>
@@ -65,6 +73,19 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var DIETE = ['Mangio tutto', 'Vegetariana', 'Vegana', 'Pescetariana'];
   var ALL = ['Glutine', 'Lattosio', 'Frutta a guscio', 'Crostacei e pesce', 'Uova'];
+  var SIGLA = { 'Mangio tutto': 'Tutto', 'Vegetariana': 'Vege', 'Vegana': 'Vegan', 'Pescetariana': 'Pesce' };
+  var TX = {
+    it: { titolo: 'Cosa mangi sul set?', nome: 'Nome e cognome', eNome: 'Scrivi nome e cognome', dieta: 'La tua dieta', eDieta: 'Scegli la tua dieta', diete: DIETE,
+      all: 'Allergie o intolleranze', chips: ALL, altro: 'Altro', ph: 'Es. niente funghi', grave: 'Ho un\'allergia grave: avvisate il catering', invia: 'Invia',
+      nota: 'Le risposte vanno solo al catering di questa produzione.', grazie: 'Grazie, ricevuto!', grazie2: 'Lo giriamo al catering. Ci vediamo sul set.',
+      off: 'Link non più attivo', off2: 'Chiedi un link nuovo a chi te l\'ha mandato.', rete: 'Connessione assente', rete2: 'Controlla internet e riapri il link.', ko: 'La risposta non è arrivata. Riprova.' },
+    en: { titolo: 'What do you eat on set?', nome: 'Full name', eNome: 'Please enter your full name', dieta: 'Your diet', eDieta: 'Please choose your diet', diete: ['I eat everything', 'Vegetarian', 'Vegan', 'Pescatarian'],
+      all: 'Allergies or intolerances', chips: ['Gluten', 'Lactose', 'Tree nuts', 'Shellfish and fish', 'Eggs'], altro: 'Other', ph: 'E.g. no mushrooms', grave: 'I have a severe allergy: please tell the caterer', invia: 'Send',
+      nota: 'Your answers go only to this production\'s caterer.', grazie: 'Thanks, got it!', grazie2: 'We\'ll pass it on to the caterer. See you on set.',
+      off: 'This link is no longer active', off2: 'Ask the person who sent it for a new one.', rete: 'No connection', rete2: 'Check your internet and open the link again.', ko: 'Your answer didn\'t go through. Please try again.' }
+  };
+  var LG = (Q.get('l') === 'en' || Q.get('l') === 'it') ? Q.get('l') : (/^it/i.test(navigator.language || 'it') ? 'it' : 'en');
+  var T = function(k){ return TX[LG][k]; };
   var dieta = '';
   function toast(m){ var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2600); }
   function copia(t, m){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function(){ toast(m || 'Copiato'); }, function(){ var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); toast(m || 'Copiato'); }); }
@@ -135,7 +156,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   }
   function conta(r){
     var c = function(t){ return r.filter(function(y){ return y.dieta === t; }).length; };
-    return { totale: r.length, tutto: c('Mangio tutto'), vegetariani: c('Vegetariana'), vegani: c('Vegana'), pescetariani: c('Pescetariana'), allergie: r.filter(function(y){ return y.allergie || y.altro || y.grave; }).length };
+    return { totale: r.length, tutto: c('Mangio tutto'), vegetariani: c('Vegetariana'), vegani: c('Vegana'), pescetariani: c('Pescetariana'), allergie: r.filter(function(y){ return y.allergie || y.altro || y.grave; }).length, gravi: r.filter(function(y){ return y.grave; }).length };
   }
 
   // ── accesso ──
@@ -196,22 +217,38 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   }
   // ── una produzione ──
   function trova(id){ return PROD.filter(function(x){ return x.id === id; })[0]; }
+  var ICO_SHARE = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
+  var ICO_DOTS = '<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
+  function messaggio(x){ return 'Ciao! Per ' + x.e + ' ci dici cosa mangi e se hai allergie? / Hi! For ' + x.e + ', please tell us your diet and any allergies: ' + linkModulo(x); }
   function vEvento(id, nuova){
     var x = trova(id); if (!x) return vHome();
-    var msg = 'Ciao! Per ' + x.e + ' ci dici cosa mangi e se hai allergie o intolleranze? Ci vuole un minuto: ' + linkModulo(x);
-    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Produzioni</button><button class="link" id="mod">Modifica</button></div>' +
-      '<p class="eyebrow">Catering' + (x.f ? ' · shoot dal ' + fmt(x.f) : '') + '</p><h1>' + esc(x.e) + '</h1>' +
-      '<div class="card"><h2>' + (nuova ? 'Pronta! Ora manda il link' : 'Link da mandare') + '</h2><pre>' + esc(linkModulo(x)) + '</pre>' +
-      '<div class="row"><button class="btn sec" id="cp">Copia</button><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(msg) + '">WhatsApp</a></div></div>' +
+    app.innerHTML = '<div class="top" style="position:relative"><button class="link" id="ind">‹ Produzioni</button><span><button class="ib" id="sh" aria-label="Condividi il link">' + ICO_SHARE + '</button><button class="ib" id="mn" aria-label="Altro">' + ICO_DOTS + '</button></span></div>' +
+      '<p class="eyebrow">Catering' + (x.f ? ' · shoot dal ' + fmt(x.f) : '') + (x.da ? ' · di ' + esc(x.da) : '') + '</p><h1>' + esc(x.e) + '</h1>' +
+      '<div class="card"><h2>' + (nuova ? 'Pronta! Ora manda il modulo alla crew' : 'Manda il modulo alla crew') + '</h2>' +
+      '<a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(messaggio(x)) + '">Manda su WhatsApp</a>' +
+      '<button class="link" id="cp" style="display:block;margin:6px auto 0">Copia il link</button><p class="muted" style="margin:2px 0 0;text-align:center">Il modulo è in italiano e in inglese.</p></div>' +
       '<div id="ris"></div><button class="btn main" id="pdf" style="margin-top:4px">Scarica il PDF per il catering</button>';
     document.getElementById('ind').onclick = vHome;
     document.getElementById('cp').onclick = function(){ copia(linkModulo(x), 'Link copiato'); };
-    document.getElementById('mod').onclick = function(){ vModifica(id); };
+    document.getElementById('sh').onclick = function(){
+      if (navigator.share) navigator.share({ title: 'Catering · ' + x.e, text: messaggio(x) }).catch(function(){});
+      else copia(messaggio(x), 'Messaggio con il link copiato');
+    };
+    document.getElementById('mn').onclick = function(e){
+      e.stopPropagation();
+      var old = document.querySelector('.menu'); if (old) return old.remove();
+      var m = document.createElement('div'); m.className = 'menu';
+      m.innerHTML = '<button id="m1">Modifica</button><button id="m2" style="color:#A3202A">Elimina</button>';
+      this.parentNode.parentNode.appendChild(m);
+      document.getElementById('m1').onclick = function(){ vModifica(id); };
+      document.getElementById('m2').onclick = function(){ vModifica(id, true); };
+      setTimeout(function(){ document.addEventListener('click', function chiudi(){ m.remove(); document.removeEventListener('click', chiudi); }); }, 0);
+    };
     document.getElementById('pdf').onclick = function(){ scaricaPdf(id, this); };
     VISTA = function(){ disegnaRisposte(id); };
     disegnaRisposte(id);
   }
-  function vModifica(id){
+  function vModifica(id, eliminaSubito){
     var x = trova(id); if (!x) return vHome();
     VISTA = null;
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Modifica produzione</h1>' +
@@ -243,16 +280,23 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
           .catch(function(err){ b.disabled = false; b.textContent = 'Elimina'; toast(err.message); });
       };
     };
+    if (eliminaSubito) document.getElementById('eli').click();
   }
   function ordina(r){ var w = function(x){ return x.grave ? 0 : (x.allergie || x.altro) ? 1 : 2; }; return r.slice().sort(function(a, b){ return w(a) - w(b) || a.nome.localeCompare(b.nome, 'it'); }); }
+  function iniziali(n){ return String(n).trim().split(/\s+/).slice(0, 2).map(function(p){ return p.charAt(0).toUpperCase(); }).join(''); }
   function disegnaRisposte(id){
     var el = document.getElementById('ris'); if (!el) return;
     var x = trova(id) || {}, r = RIS[id] || [];
     var c = x.pulita && x.conteggi ? x.conteggi : conta(r);
-    el.innerHTML = '<div class="card"><div class="nums"><div><b>' + c.totale + '</b><span>risposte</span></div><div><b>' + c.vegetariani + '</b><span>vegetariani</span></div><div><b>' + c.vegani + '</b><span>vegani</span></div>' +
-      '<div><b>' + c.pescetariani + '</b><span>pescetariani</span></div><div><b>' + c.tutto + '</b><span>mangiano tutto</span></div><div><b>' + c.allergie + '</b><span>con allergie</span></div></div></div>' +
+    var righe = [['Mangiano tutto', c.tutto], ['Dieta vegetariana', c.vegetariani], ['Dieta vegana', c.vegani], ['Dieta pescetariana', c.pescetariani]].filter(function(v){ return v[1]; });
+    el.innerHTML = '<div class="card"><div class="tot"><b>' + c.totale + '</b><span>' + (c.totale === 1 ? 'persona' : 'persone') + '</span></div>' +
+      righe.map(function(v){ return '<div class="rw"><span>' + v[0] + '</span><b>' + v[1] + '</b></div>'; }).join('') +
+      (c.allergie ? '<div class="rw al"><span>Con allergie o note</span><b>' + c.allergie + '</b></div>' + (c.gravi ? '<div class="rw sub"><span>di cui allergie gravi</span><b>' + c.gravi + '</b></div>' : '') : '') + '</div>' +
       (r.length ? '<div class="card list" style="padding:2px 16px">' + ordina(r).map(function(y){
-        return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(y.nome) + '</b><small>' + esc([y.dieta, y.allergie, y.altro].filter(Boolean).join(' · ')) + '</small></div>' + (y.grave ? '<span class="badge">allergia grave</span>' : '') + '</div>';
+        var al = y.allergie || y.altro || y.grave;
+        return '<div class="it" style="cursor:default"><div class="av' + (al ? ' r' : '') + '">' + esc(iniziali(y.nome)) + '</div><div class="t"><b>' + esc(y.nome) + (y.grave ? ' <span class="badge">grave</span>' : '') + '</b>' +
+          (y.allergie ? '<span class="alg">' + esc(y.allergie) + '</span>' : '') + (y.altro ? '<small>' + esc(y.altro) + '</small>' : '') + '</div>' +
+          '<span class="dp' + (y.dieta !== 'Mangio tutto' ? ' v' : '') + '">' + esc(SIGLA[y.dieta] || y.dieta) + '</span></div>';
       }).join('') + '</div>' : '<div class="card"><p class="muted" style="margin:0">' + (x.pulita ? 'Le risposte sono state cancellate per la privacy: restano solo i numeri.' : 'Ancora nessuna risposta. Appena qualcuno compila, compare qui da solo.') + '</p></div>');
   }
 
@@ -265,12 +309,17 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     b.disabled = true; b.textContent = 'Preparo il PDF…';
     caricaPdfLib().then(function(L){
       var d = new L.jsPDF({ unit: 'pt', format: 'a4' }), oggi = new Date().toLocaleDateString('it-IT');
-      d.setFont('helvetica', 'bold'); d.setFontSize(20); d.text('Catering · ' + x.e, 40, 56);
+      d.setFont('helvetica', 'bold'); d.setFontSize(20); d.setTextColor(23, 24, 27); d.text('Catering · ' + x.e, 40, 56);
       d.setFont('helvetica', 'normal'); d.setFontSize(10); d.setTextColor(104, 107, 112);
-      d.text(c.totale + ' risposte' + (x.f ? ' · inizio shoot ' + fmt(x.f) : '') + ' · aggiornato al ' + oggi, 40, 74);
-      var box = [['Totale', c.totale], ['Mangiano tutto', c.tutto], ['Vegetariani', c.vegetariani], ['Vegani', c.vegani], ['Pescetariani', c.pescetariani], ['Allergie o note', c.allergie]], bx = 40;
-      box.forEach(function(v){ var w = d.getTextWidth(v[0]) + 20; d.setDrawColor(210); d.roundedRect(bx, 88, w, 40, 4, 4); d.setTextColor(23, 24, 27); d.setFont('helvetica', 'bold'); d.setFontSize(14); d.text(String(v[1]), bx + 10, 106); d.setFont('helvetica', 'normal'); d.setFontSize(9); d.text(v[0], bx + 10, 120); bx += w + 6; });
-      L.autoTable(d, { startY: 144, head: [['Nome', 'Dieta', 'Allergie e intolleranze', 'Note']],
+      d.text((x.f ? 'Inizio shoot ' + fmt(x.f) + ' · ' : '') + 'aggiornato al ' + oggi, 40, 74);
+      d.setFont('helvetica', 'bold'); d.setFontSize(44); d.setTextColor(23, 24, 27); d.text(String(c.totale), 40, 128);
+      var tw = d.getTextWidth(String(c.totale)); d.setFont('helvetica', 'normal'); d.setFontSize(14); d.setTextColor(104, 107, 112); d.text(c.totale === 1 ? 'persona' : 'persone', 40 + tw + 8, 128);
+      var righe = [['Mangiano tutto', c.tutto], ['Dieta vegetariana', c.vegetariani], ['Dieta vegana', c.vegani], ['Dieta pescetariana', c.pescetariani]], yy = 150;
+      righe.forEach(function(v){ d.setDrawColor(230); d.line(40, yy - 12, 300, yy - 12); d.setFontSize(11); d.setTextColor(23, 24, 27); d.setFont('helvetica', 'normal'); d.text(v[0], 40, yy + 2); d.setFont('helvetica', 'bold'); d.text(String(v[1]), 300, yy + 2, { align: 'right' }); yy += 22; });
+      d.setDrawColor(230); d.line(40, yy - 12, 300, yy - 12); d.setTextColor(163, 32, 42); d.setFont('helvetica', 'normal'); d.text('Con allergie o note', 40, yy + 2); d.setFont('helvetica', 'bold'); d.text(String(c.allergie), 300, yy + 2, { align: 'right' }); yy += 18;
+      if (c.gravi) { d.setFontSize(9.5); d.setFont('helvetica', 'normal'); d.text('di cui allergie gravi', 40, yy + 2); d.setFont('helvetica', 'bold'); d.text(String(c.gravi), 300, yy + 2, { align: 'right' }); yy += 14; }
+      var inizioTab = yy + 16;
+      L.autoTable(d, { startY: inizioTab, head: [['Nome', 'Dieta', 'Allergie e intolleranze', 'Note']],
         body: r.map(function(y){ return [y.nome + (y.grave ? '  GRAVE' : ''), y.dieta, y.allergie, y.altro]; }),
         styles: { font: 'helvetica', fontSize: 10, cellPadding: 6, textColor: [23, 24, 27], lineColor: [227, 227, 227], lineWidth: { bottom: .5 } },
         headStyles: { fillColor: false, textColor: [104, 107, 112], fontSize: 8.5, fontStyle: 'bold', lineWidth: { bottom: 1.2 }, lineColor: [23, 24, 27] },
@@ -300,8 +349,11 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Produzioni</button></div><h1>Producer</h1>' +
       '<div class="card" id="pl"><p class="muted" style="margin:0">Carico…</p></div>' +
       '<form id="pf" class="card" autocomplete="off"><h2>Aggiungi un producer</h2><div class="f"><label class="lab" for="pn">Nome</label><input type="text" id="pn" placeholder="Es. Filippo Mogno"></div>' +
-      '<div class="f"><label class="lab" for="pe">Email Google</label><input type="text" id="pe" inputmode="email" autocapitalize="off" placeholder="nome@gmail.com"></div><button class="btn main" type="submit">Aggiungi</button></form>';
+      '<div class="f"><label class="lab" for="pe">Email Google</label><input type="text" id="pe" inputmode="email" autocapitalize="off" placeholder="nome@gmail.com"></div><button class="btn main" type="submit">Aggiungi</button></form>' +
+      '<form id="imp" class="card" autocomplete="off"><h2>Porta qui le produzioni vecchie</h2><p class="muted" style="margin:0 0 10px">Copia le produzioni create prima su Google, con le loro risposte. I link già mandati continuano a funzionare e da ora scrivono qui. Serve il tuo codice Troupe.</p>' +
+      '<div class="f"><input type="password" id="ic" inputmode="numeric" placeholder="Codice Troupe" autocomplete="one-time-code"></div><button class="btn sec" type="submit">Importa</button><div id="ir"></div></form>';
     document.getElementById('ind').onclick = vHome;
+    document.getElementById('imp').addEventListener('submit', function(e){ e.preventDefault(); importa(this); });
     var lista = function(){
       F.getDocs(F.collection(F.db, 'producer')).then(function(qs){
         var el = document.getElementById('pl'); if (!el) return;
@@ -320,25 +372,66 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     });
   }
 
-  // ── modulo crew su Firebase (link ?c=…) ──
-  function vModuloFB(){
-    var F = window.FB;
-    app.innerHTML = '<div class="card"><p class="muted" style="margin:0">Un attimo…</p></div>';
-    F.getDoc(F.doc(F.db, 'produzioni', CID)).then(function(d){
-      if (!d.exists() || d.data().eliminata) { app.innerHTML = '<div class="card fine"><div class="big">Link non più attivo</div><p class="muted" style="margin:10px 0 0">Chiedi un link nuovo a chi te l\'ha mandato.</p></div>'; return; }
-      EV = d.data().nome; vModulo();
-    }).catch(function(){ app.innerHTML = '<div class="card fine"><div class="big">Connessione assente</div><p class="muted" style="margin:10px 0 0">Controlla internet e riapri il link.</p></div>'; });
+  function importa(form){
+    var F = window.FB, b = form.querySelector('button'), out = document.getElementById('ir'), code = document.getElementById('ic').value.trim();
+    if (!code) return toast('Scrivi il codice Troupe');
+    b.disabled = true; b.textContent = 'Importo…';
+    var fatte = 0, saltate = 0, risp = 0;
+    api('entra', [code]).then(function(r){
+      if (!r.ok) throw new Error(r.msg);
+      return api('catElenco', [r.token]);
+    }).then(function(l){
+      return l.reduce(function(prom, v){
+        return prom.then(function(){
+          var al = F.doc(F.db, 'alias', chiaveNome(v.e));
+          return F.getDoc(al).then(function(a){
+            if (a.exists()) { saltate++; return; }
+            var ref = F.doc(F.collection(F.db, 'produzioni'));
+            return F.setDoc(ref, { nome: String(v.e).slice(0, 80), inizio: v.f || '', creataNome: v.da || ME.nome, creataDa: ME.email, creata: F.serverTimestamp(), eliminata: false, pulita: false })
+              .then(function(){ return Promise.all((v.r || []).filter(function(y){ return y.nome && y.nome.length >= 3 && DIETE.indexOf(y.dieta) !== -1; }).map(function(y){
+                risp++; return F.addDoc(F.collection(F.db, 'produzioni', ref.id, 'risposte'), { nome: y.nome.slice(0, 80), dieta: y.dieta, allergie: String(y.allergie || '').slice(0, 300), altro: String(y.altro || '').slice(0, 300), grave: !!y.grave, quando: F.serverTimestamp() });
+              })); })
+              .then(function(){ return F.setDoc(al, { c: ref.id }); })
+              .then(function(){ fatte++; });
+          });
+        });
+      }, Promise.resolve());
+    }).then(function(){
+      b.disabled = false; b.textContent = 'Importa';
+      out.innerHTML = '<p class="muted" style="margin:10px 0 0">Fatto: ' + fatte + ' produzioni e ' + risp + ' risposte importate' + (saltate ? ', ' + saltate + ' già presenti' : '') + '.</p>';
+    }).catch(function(err){ b.disabled = false; b.textContent = 'Importa'; out.innerHTML = '<div class="err" style="margin:10px 0 0">' + esc(err.message) + '</div>'; });
   }
 
-  // ── modulo per chi risponde ──
+  // ── modulo crew su Firebase (link ?c=…) ──
+  function fine(t1, t2){ app.innerHTML = '<div class="card fine"><div class="big">' + esc(t1) + '</div><p class="muted" style="margin:10px 0 0">' + esc(t2) + '</p></div>'; }
+  function vModuloFB(){
+    var F = window.FB;
+    app.innerHTML = '<div class="card"><p class="muted" style="margin:0">…</p></div>';
+    F.getDoc(F.doc(F.db, 'produzioni', CID)).then(function(d){
+      if (!d.exists() || d.data().eliminata) return fine(T('off'), T('off2'));
+      EV = d.data().nome; vModulo();
+    }).catch(function(){ fine(T('rete'), T('rete2')); });
+  }
+  // link vecchi (?e=Nome): se la produzione è stata importata su Firebase, uso quella
+  function chiaveNome(n){ return String(n || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'x'; }
+  function vModuloVecchio(){
+    var F = window.FB;
+    if (PRJ || !F) return vModulo();
+    F.getDoc(F.doc(F.db, 'alias', chiaveNome(EV))).then(function(d){ if (d.exists() && d.data().c) { CID = d.data().c; vModuloFB(); } else vModulo(); }).catch(function(){ vModulo(); });
+  }
   function vModulo(err){
-    app.innerHTML = '<p class="eyebrow">Catering · ' + esc(EV) + '</p><h1>Cosa mangi sul set?</h1>' + (err ? '<div class="err">' + esc(err) + '</div>' : '') +
-      '<form id="mod" autocomplete="off" novalidate><div class="card"><div class="f" id="f-nm"><label class="lab" for="nm">Nome e cognome</label><input type="text" id="nm" autocomplete="name" required aria-describedby="e-nm"><p class="ferr" id="e-nm" hidden>Scrivi nome e cognome</p></div>' +
-      '<div class="f" id="f-seg"><span class="lab" id="l-seg">Cosa mangi</span><div class="seg" id="seg" role="radiogroup" aria-labelledby="l-seg">' + DIETE.map(function(t){ return '<button type="button" role="radio" aria-checked="' + (t === dieta) + '" data-d="' + t + '" class="' + (t === dieta ? 'on' : '') + '">' + t + '</button>'; }).join('') + '</div><p class="ferr" id="e-seg" hidden>Scegli cosa mangi</p></div>' +
-      '<div class="f"><span class="lab">Allergie o intolleranze</span><div class="chips">' + ALL.map(function(t){ return '<label class="chip"><input type="checkbox" name="al" value="' + t + '">' + t + '</label>'; }).join('') + '</div></div>' +
-      '<div class="f"><label class="lab" for="al">Altro</label><input type="text" id="al" placeholder="Es. niente funghi"></div>' +
-      '<label class="chk"><input type="checkbox" id="gr">Ho un\'allergia grave: avvisate il catering</label></div>' +
-      '<button class="btn main" type="submit">Invia</button><p class="muted" style="margin:10px 4px;text-align:center">Le risposte vanno solo al catering di questa produzione.</p></form>';
+    var D = T('diete'), C = T('chips');
+    app.innerHTML = '<div class="top"><p class="eyebrow" style="margin:0">Catering · ' + esc(EV) + '</p><span class="lang"><button data-l="it" class="' + (LG === 'it' ? 'on' : '') + '">IT</button><button data-l="en" class="' + (LG === 'en' ? 'on' : '') + '">EN</button></span></div>' +
+      '<h1>' + esc(T('titolo')) + '</h1>' + (err ? '<div class="err">' + esc(err) + '</div>' : '') +
+      '<form id="mod" autocomplete="off" novalidate><div class="card"><div class="f" id="f-nm"><label class="lab" for="nm">' + esc(T('nome')) + '</label><input type="text" id="nm" autocomplete="name" required aria-describedby="e-nm"><p class="ferr" id="e-nm" hidden>' + esc(T('eNome')) + '</p></div>' +
+      '<div class="f" id="f-seg"><span class="lab" id="l-seg">' + esc(T('dieta')) + '</span><div class="seg" id="seg" role="radiogroup" aria-labelledby="l-seg">' + DIETE.map(function(t, i){ return '<button type="button" role="radio" aria-checked="' + (t === dieta) + '" data-d="' + t + '" class="' + (t === dieta ? 'on' : '') + '">' + esc(D[i]) + '</button>'; }).join('') + '</div><p class="ferr" id="e-seg" hidden>' + esc(T('eDieta')) + '</p></div>' +
+      '<div class="f"><span class="lab">' + esc(T('all')) + '</span><div class="chips">' + ALL.map(function(t, i){ return '<label class="chip"><input type="checkbox" name="al" value="' + t + '">' + esc(C[i]) + '</label>'; }).join('') + '</div></div>' +
+      '<div class="f"><label class="lab" for="al">' + esc(T('altro')) + '</label><input type="text" id="al" placeholder="' + esc(T('ph')) + '"></div>' +
+      '<label class="chk"><input type="checkbox" id="gr">' + esc(T('grave')) + '</label></div>' +
+      '<button class="btn main" type="submit">' + esc(T('invia')) + '</button><p class="muted" style="margin:10px 4px;text-align:center">' + esc(T('nota')) + '</p></form>';
+    Array.prototype.forEach.call(app.querySelectorAll('[data-l]'), function(b){ b.onclick = function(){
+      var d = leggi(); LG = b.dataset.l; vModulo(); rimetti(d);
+    }; });
     document.getElementById('seg').addEventListener('click', function(e){
       var b = e.target.closest('[data-d]'); if (!b) return;
       dieta = b.dataset.d; Array.prototype.forEach.call(this.children, function(x){ x.classList.toggle('on', x === b); x.setAttribute('aria-checked', x === b); });
@@ -347,34 +440,37 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     document.getElementById('nm').addEventListener('input', function(){ if (this.value.trim().length >= 2 && /\s/.test(this.value.trim())) segna('nm', false); });
     document.getElementById('mod').addEventListener('submit', function(e){
       e.preventDefault();
-      var d = { e: EV, f: FINO, p: PRJ, nome: document.getElementById('nm').value.trim(), dieta: dieta,
-        allergie: Array.prototype.map.call(document.querySelectorAll('input[name=al]:checked'), function(i){ return i.value; }),
-        altro: document.getElementById('al').value.trim(), grave: document.getElementById('gr').checked };
+      var d = leggi();
       var okN = d.nome.length >= 2 && /\s/.test(d.nome), okD = !!d.dieta;
       segna('nm', !okN); segna('seg', !okD);
       if (!okN || !okD) { (okN ? document.getElementById('seg') : document.getElementById('nm')).scrollIntoView({ behavior: 'smooth', block: 'center' }); if (!okN) document.getElementById('nm').focus(); return; }
-      app.innerHTML = '<div class="card fine"><div class="big">Grazie, ricevuto!</div><p class="muted" style="margin:10px 0 0">Lo giro al catering. Ci vediamo sul set.</p></div>';
+      fine(T('grazie'), T('grazie2'));
       if (CID) {
         var F = window.FB;
         F.addDoc(F.collection(F.db, 'produzioni', CID, 'risposte'), { nome: d.nome.slice(0, 80), dieta: d.dieta, allergie: d.allergie.join(', '), altro: d.altro.slice(0, 300), grave: d.grave, quando: F.serverTimestamp() })
-          .catch(function(err){ ripristina(d, 'La risposta non è arrivata (' + (err.code || err.message) + '). Riprova.'); });
+          .catch(function(){ ripristina(d, T('ko')); });
         return;
       }
-      api('catInvia', [d]).then(function(r){ if (!r.ok) ripristina(d, r.msg); }).catch(function(err){ ripristina(d, err.message === 'Failed to fetch' ? 'Connessione assente: la risposta non è arrivata. Riprova.' : err.message); });
+      api('catInvia', [d]).then(function(r){ if (!r.ok) ripristina(d, r.msg); }).catch(function(){ ripristina(d, T('ko')); });
     });
+  }
+  function leggi(){
+    return { e: EV, f: FINO, p: PRJ, nome: (document.getElementById('nm') || {}).value ? document.getElementById('nm').value.trim() : '', dieta: dieta,
+      allergie: Array.prototype.map.call(document.querySelectorAll('input[name=al]:checked'), function(i){ return i.value; }),
+      altro: document.getElementById('al') ? document.getElementById('al').value.trim() : '', grave: !!(document.getElementById('gr') && document.getElementById('gr').checked) };
+  }
+  function rimetti(d){
+    document.getElementById('nm').value = d.nome; document.getElementById('al').value = d.altro; document.getElementById('gr').checked = d.grave;
+    Array.prototype.forEach.call(document.querySelectorAll('input[name=al]'), function(i){ i.checked = d.allergie.indexOf(i.value) !== -1; });
   }
   function segna(id, male){
     var f = document.getElementById('f-' + id), e = document.getElementById('e-' + id); if (!f) return;
     f.classList.toggle('bad', male); e.hidden = !male;
   }
-  function ripristina(d, msg){
-    dieta = d.dieta; vModulo(msg);
-    document.getElementById('nm').value = d.nome; document.getElementById('al').value = d.altro; document.getElementById('gr').checked = d.grave;
-    Array.prototype.forEach.call(document.querySelectorAll('input[name=al]'), function(i){ i.checked = d.allergie.indexOf(i.value) !== -1; });
-  }
+  function ripristina(d, msg){ dieta = d.dieta; vModulo(msg); rimetti(d); }
 
   if (CID) vModuloFB();
-  else if (EV && !KEY) vModulo();   // link vecchi e link dai progetti Troupe: passano ancora da Google
+  else if (EV && !KEY) vModuloVecchio();   // link vecchi e link dai progetti Troupe: passano ancora da Google
   else avvia();
 })();
 </script>
