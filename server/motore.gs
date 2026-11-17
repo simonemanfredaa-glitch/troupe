@@ -25,7 +25,7 @@ const LINK_PUBBLICO = 'https://simonemanfredaa-glitch.github.io/troupe/';
 const API_OK = ['versione', 'avvio', 'entra', 'esci', 'contatti', 'ruoli', 'sensibili', 'aggiungi', 'progetti', 'progetto', 'salvaProgetto', 'aggiungiCrew',
   'aggiornaCrew', 'togliCrew', 'chiediConferma', 'sblocca', 'sensibiliCrew', 'confermaLeggi', 'confermaInvia', 'datiPersona', 'confermaAdmin',
   'chiediCatering', 'catering', 'fileCatering', 'rilevamento', 'salvaMandato', 'mandato', 'chiudiProgetto', 'archivio', 'accessi',
-  'creaProducer', 'cambiaAccesso', 'eliminaProgetto', 'aggiornaOra', 'catInvia', 'catCrea', 'catRiepilogo', 'catPdf'];
+  'creaProducer', 'cambiaAccesso', 'eliminaProgetto', 'aggiornaOra', 'catInvia', 'catCrea', 'catRiepilogo', 'catPdf', 'catModifica', 'catElimina'];
 function doPost(e) {
   let out;
   try {
@@ -56,7 +56,7 @@ function doGet(e) {
 
 // per controllare da fuori quale versione del motore è attiva
 function versione() { return VERSIONE_MOTORE; }
-const VERSIONE_MOTORE = '2026-11-17b';
+const VERSIONE_MOTORE = '2026-11-17c';
 
 function nuovoCodice_(esistenti) {
   let c;
@@ -1100,8 +1100,8 @@ function catInvia(d) {
   const lock = LockService.getScriptLock(); lock.waitLock(20000);
   try {
     const ss = catLiberoSS_();
-    const sh = ss.getSheetByName(evento);
-    if (!sh || ['LEGGIMI', 'CONTEGGI'].indexOf(evento.toUpperCase()) !== -1) return { ok: false, msg: 'Questo link non è più attivo: chiedine uno nuovo a chi te l\'ha mandato' };
+    const sh = catTrova_(ss, evento);
+    if (!sh || sh.isSheetHidden() || ['LEGGIMI', 'CONTEGGI'].indexOf(evento.toUpperCase()) !== -1) return { ok: false, msg: 'Questo link non è più attivo: chiedine uno nuovo a chi te l\'ha mandato' };
     const all = [].concat(d.allergie || []).map(x => pul(x, 40)).filter(Boolean).slice(0, 10).join(', ');
     // stessa persona che rimanda: aggiorno la sua riga invece di aggiungerne una
     const righe = sh.getLastRow() > 1 ? sh.getRange(2, 2, sh.getLastRow() - 1, 1).getDisplayValues() : [];
@@ -1146,8 +1146,8 @@ function catCrea(e, f) {
   } finally { lock.releaseLock(); }
 }
 function catTabConChiave_(e, k) {
-  const sh = catLiberoSS_().getSheetByName(String(e || ''));
-  if (!sh || !k || sh.getRange('H2').getDisplayValue() !== 'Chiave: ' + k) throw new Error('Link non valido');
+  const sh = catTrova_(catLiberoSS_(), String(e || ''));
+  if (!sh || sh.isSheetHidden() || !k || sh.getRange('H2').getDisplayValue() !== 'Chiave: ' + k) throw new Error('Link non valido');
   return sh;
 }
 function catRiepilogo(e, k) {
@@ -1188,4 +1188,42 @@ function catPdf(e, k) {
   const nome = 'Catering_' + d.e.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') + '_' + Utilities.formatDate(new Date(), 'Europe/Rome', 'yyyy-MM-dd') + '.pdf';
   const pdf = Utilities.newBlob(html, 'text/html', 'catering.html').getAs('application/pdf').setName(nome);
   return { nome: nome, b64: Utilities.base64Encode(pdf.getBytes()) };
+}
+
+// tab di una produzione: col nome attuale o con un nome di prima (così i link già mandati continuano a funzionare)
+function catTrova_(ss, nome) {
+  const sh = ss.getSheetByName(nome); if (sh) return sh;
+  const k = chiave_(nome);
+  return ss.getSheets().find(x => String(x.getRange('H3').getDisplayValue()).replace(/^Nomi precedenti: /, '').split(' | ').some(n => n && chiave_(n) === k)) || null;
+}
+// rinomina e cambia l'ultimo giorno
+function catModifica(e, k, nuovo, f) {
+  const pul = s => String(s || '').replace(/[\u0000-\u001f]/g, ' ').replace(/[\[\]\*\?\/\\:]/g, ' ').trim().slice(0, 80);
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const ss = catLiberoSS_(), sh = catTabConChiave_(e, k), vecchio = sh.getName(), nome = pul(nuovo);
+    if (nome.length < 2) return { ok: false, msg: 'Scrivi il nome della produzione' };
+    if (nome !== vecchio) {
+      const altro = ss.getSheetByName(nome);
+      if ((altro && altro.getSheetId() !== sh.getSheetId()) || ['LEGGIMI', 'CONTEGGI'].indexOf(nome.toUpperCase()) !== -1) return { ok: false, msg: 'Esiste già una produzione con questo nome: aggiungi qualcosa, per esempio la data' };
+      const prima = String(sh.getRange('H3').getDisplayValue()).replace(/^Nomi precedenti: /, '').split(' | ').filter(Boolean);
+      prima.push(vecchio);
+      sh.getRange('H3').setValue('Nomi precedenti: ' + prima.join(' | '));
+      sh.setName(nome);
+    }
+    const fino = /^\d{4}-\d{2}-\d{2}$/.test(String(f || '')) ? String(f) : '';
+    sh.getRange('H1').setValue('Ultimo giorno: ' + (fino || '–'));
+    return { ok: true, e: nome, f: fino };
+  } finally { lock.releaseLock(); }
+}
+// elimina: il link smette di funzionare, il tab viene nascosto e rinominato; le risposte si cancellano con la pulizia (30 giorni dopo l'ultimo giorno)
+function catElimina(e, k) {
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const sh = catTabConChiave_(e, k);
+    if (!/(\d{4}-\d{2}-\d{2})/.test(sh.getRange('H1').getDisplayValue())) sh.getRange('H1').setValue('Ultimo giorno: ' + Utilities.formatDate(new Date(), 'Europe/Rome', 'yyyy-MM-dd'));
+    sh.setName(('(ELIMINATO) ' + sh.getName() + ' ' + Utilities.formatDate(new Date(), 'Europe/Rome', 'dd-MM HH.mm')).slice(0, 99));
+    sh.hideSheet();
+    return { ok: true };
+  } finally { lock.releaseLock(); }
 }

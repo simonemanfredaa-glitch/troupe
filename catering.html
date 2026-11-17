@@ -35,6 +35,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,58,138,.12)}
 .chk{display:flex;align-items:center;gap:10px;font-size:14px;margin-top:12px;cursor:pointer}
 .chk input{width:20px;height:20px;margin:0;accent-color:var(--ink)}
 .ferr{color:#A3202A;font-size:13px;font-weight:600;margin:6px 2px 0}.bad input[type=text]{border-color:#A3202A}.bad .seg{box-shadow:0 0 0 1.5px #A3202A}
+.btn.danger{background:#fff;color:#A3202A;border:1.5px solid #E7C3C6;margin-top:12px}.row .btn.danger{margin-top:0;background:#A3202A;color:#fff;border:none}
 .btn{display:flex;align-items:center;justify-content:center;width:100%;height:50px;border-radius:14px;border:none;font-weight:600;font-size:16px;cursor:pointer;text-decoration:none}
 .main{background:var(--ink);color:#fff}.sec{background:#fff;border:1px solid var(--line);color:var(--ink)}.wa{background:var(--wa);color:#fff}
 .row{display:flex;gap:10px}.row>*{flex:1}
@@ -73,7 +74,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   var fmt = function(iso){ return iso ? iso.split('-').reverse().join('/') : ''; };
   // le produzioni create da questo telefono
   function mie(){ try { return JSON.parse(localStorage.getItem('catering_mie') || '[]'); } catch (e) { return []; } }
-  function salvaMia(x){ var l = mie().filter(function(y){ return y.e !== x.e; }); l.unshift(x); try { localStorage.setItem('catering_mie', JSON.stringify(l.slice(0, 50))); } catch (e) {} }
+  function salvaMia(x){ var l = mie().filter(function(y){ return y.k !== x.k && !(y.e === x.e && !y.k); }); l.unshift(x); try { localStorage.setItem('catering_mie', JSON.stringify(l.slice(0, 50))); } catch (e) {} }
   var linkModulo = function(x){ return BASE + '?e=' + encodeURIComponent(x.e) + (x.f ? '&f=' + x.f : ''); };
   var linkPrivato = function(x){ return BASE + '?e=' + encodeURIComponent(x.e) + '&k=' + x.k; };
 
@@ -108,7 +109,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   // ── una produzione: link da mandare, risposte, PDF ──
   function vEvento(x, nuova){
     var msg = 'Ciao! Per ' + x.e + ' ci dici cosa mangi e se hai allergie o intolleranze? Ci vuole un minuto: ' + linkModulo(x);
-    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Produzioni</button><button class="link" id="agg">Aggiorna</button></div>' +
+    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Produzioni</button><span><button class="link" id="mod">Modifica</button> <button class="link" id="agg">Aggiorna</button></span></div>' +
       '<p class="eyebrow">Catering' + (x.f ? ' · fino al ' + fmt(x.f) : '') + '</p><h1>' + esc(x.e) + '</h1>' +
       '<div class="card"><h2>' + (nuova ? 'Pronta! Ora manda il link' : 'Link da mandare') + '</h2><pre>' + esc(linkModulo(x)) + '</pre>' +
       '<div class="row"><button class="btn sec" id="cp">Copia</button><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(msg) + '">WhatsApp</a></div></div>' +
@@ -119,9 +120,40 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     document.getElementById('cp').onclick = function(){ copia(linkModulo(x), 'Link copiato'); };
     document.getElementById('priv').onclick = function(){ copia(linkPrivato(x), 'Link privato copiato'); };
     document.getElementById('agg').onclick = function(){ carica(x); };
+    document.getElementById('mod').onclick = function(){ vModifica(x); };
     document.getElementById('pdf').onclick = function(){ scaricaPdf(x, this); };
     carica(x);
   }
+  // ── rinomina, cambia data, elimina ──
+  function vModifica(x){
+    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Modifica produzione</h1>' +
+      '<form id="frm" class="card" autocomplete="off"><div id="er"></div><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" value="' + esc(x.e) + '"></div>' +
+      '<div class="f"><label class="lab" for="fi">Ultimo giorno</label><input type="date" id="fi" value="' + esc(x.f || '') + '"></div>' +
+      '<button class="btn main" type="submit">Salva modifiche</button><p class="muted" style="margin:10px 0 0">I link già mandati continuano a funzionare anche col nome nuovo.</p></form>' +
+      '<div id="del"><button class="btn danger" id="eli">Elimina produzione</button></div>';
+    document.getElementById('ind').onclick = function(){ vEvento(x); };
+    document.getElementById('frm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var ev = document.getElementById('ev').value.trim(), fi = document.getElementById('fi').value, b = this.querySelector('button[type=submit]');
+      if (ev.length < 2) return toast('Scrivi il nome della produzione');
+      b.disabled = true; b.textContent = 'Salvo…';
+      api('catModifica', [x.e, x.k, ev, fi]).then(function(r){
+        if (!r.ok) { b.disabled = false; b.textContent = 'Salva modifiche'; document.getElementById('er').innerHTML = '<div class="err">' + esc(r.msg) + '</div>'; return; }
+        var n = { e: r.e, f: r.f, k: x.k }; salvaMia(n); toast('Modifiche salvate'); vEvento(n);
+      }).catch(function(err){ b.disabled = false; b.textContent = 'Salva modifiche'; toast(err.message); });
+    });
+    document.getElementById('eli').onclick = function(){
+      document.getElementById('del').innerHTML = '<div class="card"><h2>Eliminare «' + esc(x.e) + '»?</h2><p class="muted" style="margin:0 0 12px">Il link smette di funzionare e la produzione sparisce dall\'app. Le risposte si cancellano da sole 30 giorni dopo l\'ultimo giorno.</p>' +
+        '<div class="row"><button class="btn sec" id="no">Annulla</button><button class="btn danger" id="si">Elimina</button></div></div>';
+      document.getElementById('no').onclick = function(){ vModifica(x); };
+      document.getElementById('si').onclick = function(){
+        var b = this; b.disabled = true; b.textContent = 'Elimino…';
+        api('catElimina', [x.e, x.k]).then(function(){ togliMia(x); toast('Produzione eliminata'); vHome(); })
+          .catch(function(err){ if (/Link non valido/.test(err.message)) { togliMia(x); vHome(); return; } b.disabled = false; b.textContent = 'Elimina'; toast(err.message); });
+      };
+    };
+  }
+  function togliMia(x){ try { localStorage.setItem('catering_mie', JSON.stringify(mie().filter(function(y){ return y.k !== x.k; }))); } catch (e) {} }
   function carica(x){
     api('catRiepilogo', [x.e, x.k]).then(function(d){
       var r = d.risposte, c = function(t){ return r.filter(function(y){ return y.dieta === t; }).length; };
