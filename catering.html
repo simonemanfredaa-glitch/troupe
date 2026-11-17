@@ -78,6 +78,11 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   var linkModulo = function(x){ return BASE + '?e=' + encodeURIComponent(x.e) + (x.f ? '&f=' + x.f : ''); };
   var linkPrivato = function(x){ return BASE + '?e=' + encodeURIComponent(x.e) + '&k=' + x.k; };
 
+  // ── memoria sul telefono: mostro subito l'ultima versione, poi aggiorno da Google ──
+  var MEM = { el: null, r: {} };
+  try { MEM = JSON.parse(localStorage.getItem('catering_mem') || 'null') || MEM; } catch (e) {}
+  function salvaMem(){ try { localStorage.setItem('catering_mem', JSON.stringify(MEM)); } catch (e) {} }
+
   // ── accesso con il codice Troupe ──
   var TOKEN = '', NOME = '';
   try { var ses = JSON.parse(localStorage.getItem('catering_t') || 'null'); if (ses) { TOKEN = ses.t; NOME = ses.n; } } catch (e) {}
@@ -98,7 +103,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       }).catch(function(err){ vLogin(err.message); });
     });
   }
-  function esci(){ api('esci', [TOKEN]).catch(function(){}); TOKEN = ''; try { localStorage.removeItem('catering_t'); } catch (e) {} vLogin(); }
+  function esci(){ api('esci', [TOKEN]).catch(function(){}); TOKEN = ''; MEM = { el: null, r: {} }; try { localStorage.removeItem('catering_t'); localStorage.removeItem('catering_mem'); } catch (e) {} vLogin(); }
 
   // ── home: tutte le produzioni ──
   function vHome(){
@@ -108,14 +113,20 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       '<button class="btn main" id="nuova">+ Nuova produzione</button>';
     document.getElementById('nuova').onclick = vCrea;
     document.getElementById('out').onclick = esci;
+    if (MEM.el) disegnaElenco(MEM.el);
     api('catElenco', [TOKEN]).then(function(l){
-      var el = document.getElementById('lst'); if (!el) return;
-      el.innerHTML = l.length ? '<div class="card list" style="padding:2px 16px">' + l.map(function(x, i){
-        var info = [x.f ? 'shoot dal ' + fmt(x.f) : 'senza data', x.n + (x.n === 1 ? ' risposta' : ' risposte'), x.da ? 'di ' + x.da : ''].filter(Boolean).join(' · ');
-        return '<div class="it" data-i="' + i + '"><div class="t"><b>' + esc(x.e) + '</b><small>' + esc(info) + '</small></div><span style="color:#B9BBBF;font-size:22px">›</span></div>'; }).join('') + '</div>' :
-        '<div class="card"><p class="muted" style="margin:0">Nessuna produzione. Creane una: ti do il link da mandare a crew, clienti e ospiti, e le risposte arrivano qui.</p></div>';
-      Array.prototype.forEach.call(el.querySelectorAll('[data-i]'), function(it){ it.onclick = function(){ vEvento(l[Number(it.dataset.i)]); }; });
-    }).catch(function(err){ if (sessioneScaduta(err)) return; var el = document.getElementById('lst'); if (el) el.innerHTML = '<div class="err">' + esc(err.message) + '</div>'; });
+      MEM.el = l.map(function(x){ return { e: x.e, f: x.f, k: x.k, da: x.da, n: x.n }; });
+      l.forEach(function(x){ MEM.r[x.k] = x.r; });
+      salvaMem(); disegnaElenco(MEM.el);
+    }).catch(function(err){ if (sessioneScaduta(err)) return; if (MEM.el) return; var el = document.getElementById('lst'); if (el) el.innerHTML = '<div class="err">' + esc(err.message) + '</div>'; });
+  }
+  function disegnaElenco(l){
+    var el = document.getElementById('lst'); if (!el) return;
+    el.innerHTML = l.length ? '<div class="card list" style="padding:2px 16px">' + l.map(function(x, i){
+      var info = [x.f ? 'shoot dal ' + fmt(x.f) : 'senza data', x.n + (x.n === 1 ? ' risposta' : ' risposte'), x.da ? 'di ' + x.da : ''].filter(Boolean).join(' · ');
+      return '<div class="it" data-i="' + i + '"><div class="t"><b>' + esc(x.e) + '</b><small>' + esc(info) + '</small></div><span style="color:#B9BBBF;font-size:22px">›</span></div>'; }).join('') + '</div>' :
+      '<div class="card"><p class="muted" style="margin:0">Nessuna produzione. Creane una: ti do il link da mandare a crew, clienti e ospiti, e le risposte arrivano qui.</p></div>';
+    Array.prototype.forEach.call(el.querySelectorAll('[data-i]'), function(it){ it.onclick = function(){ vEvento(l[Number(it.dataset.i)]); }; });
   }
   function vCrea(){
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Nuova produzione</h1>' +
@@ -181,17 +192,25 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       };
     };
   }
-  function togliMia(x){ try { localStorage.setItem('catering_mie', JSON.stringify(mie().filter(function(y){ return y.k !== x.k; }))); } catch (e) {} }
+  function togliMia(x){ if (MEM.el) { MEM.el = MEM.el.filter(function(y){ return y.k !== x.k; }); delete MEM.r[x.k]; salvaMem(); } try { localStorage.setItem('catering_mie', JSON.stringify(mie().filter(function(y){ return y.k !== x.k; }))); } catch (e) {} }
   function carica(x){
+    if (MEM.r[x.k]) disegnaRisposte(MEM.r[x.k]);
     api('catRiepilogo', [x.e, x.k]).then(function(d){
-      var r = d.risposte, c = function(t){ return r.filter(function(y){ return y.dieta === t; }).length; };
+      if (TOKEN) { MEM.r[x.k] = d.risposte; salvaMem(); }
+      disegnaRisposte(d.risposte);
+    }).catch(function(err){ if (MEM.r[x.k]) return toast('Non riesco ad aggiornare: ' + err.message); var el = document.getElementById('ris'); if (el) el.innerHTML = '<div class="err">' + esc(err.message) + '</div>'; });
+  }
+  function disegnaRisposte(r){
+    var el = document.getElementById('ris'); if (!el) return;
+    {
+      var c = function(t){ return r.filter(function(y){ return y.dieta === t; }).length; };
       var es = r.filter(function(y){ return y.allergie || y.altro || y.grave; });
-      document.getElementById('ris').innerHTML = '<div class="card"><div class="nums"><div><b>' + r.length + '</b><span>risposte</span></div><div><b>' + c('Vegetariana') + '</b><span>vegetariani</span></div><div><b>' + c('Vegana') + '</b><span>vegani</span></div>' +
+      el.innerHTML = '<div class="card"><div class="nums"><div><b>' + r.length + '</b><span>risposte</span></div><div><b>' + c('Vegetariana') + '</b><span>vegetariani</span></div><div><b>' + c('Vegana') + '</b><span>vegani</span></div>' +
         '<div><b>' + c('Pescetariana') + '</b><span>pescetariani</span></div><div><b>' + c('Mangio tutto') + '</b><span>mangiano tutto</span></div><div><b>' + es.length + '</b><span>con allergie</span></div></div></div>' +
         (r.length ? '<div class="card list" style="padding:2px 16px">' + r.slice().sort(function(a, b){ var w = function(x){ return x.grave ? 0 : (x.allergie || x.altro) ? 1 : 2; }; return w(a) - w(b) || a.nome.localeCompare(b.nome, 'it'); }).map(function(y){
           return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(y.nome) + '</b><small>' + esc([y.dieta, y.allergie, y.altro].filter(Boolean).join(' · ')) + '</small></div>' + (y.grave ? '<span class="badge">allergia grave</span>' : '') + '</div>';
         }).join('') + '</div>' : '<div class="card"><p class="muted" style="margin:0">Ancora nessuna risposta.</p></div>');
-    }).catch(function(err){ document.getElementById('ris').innerHTML = '<div class="err">' + esc(err.message) + '</div>'; });
+    }
   }
   function scaricaPdf(x, b){
     b.disabled = true; b.textContent = 'Preparo il PDF…';

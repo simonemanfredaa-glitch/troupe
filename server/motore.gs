@@ -56,7 +56,7 @@ function doGet(e) {
 
 // per controllare da fuori quale versione del motore è attiva
 function versione() { return VERSIONE_MOTORE; }
-const VERSIONE_MOTORE = '2026-11-17e';
+const VERSIONE_MOTORE = '2026-11-17f';
 
 function nuovoCodice_(esistenti) {
   let c;
@@ -1238,6 +1238,7 @@ function catElenco(token) {
     const h = i => String((v[i] || [])[7] || '');
     if (!/^Chiave: /.test(h(1))) return null;
     return { e: sh.getName(), f: (/(\d{4}-\d{2}-\d{2})/.exec(h(0)) || [])[1] || '', k: h(1).replace('Chiave: ', ''),
-      da: h(3).replace(/^Creata da: /, ''), n: v.slice(1).filter(r => r[1]).length };
+      da: h(3).replace(/^Creata da: /, ''), n: v.slice(1).filter(r => r[1]).length,
+      r: v.slice(1).filter(r => r[1]).map(r => ({ quando: r[0], nome: r[1], dieta: r[2], allergie: r[3], altro: r[4], grave: r[5] === 'SÌ' })) };
   }).filter(Boolean).sort((a, b) => (b.f || '9').localeCompare(a.f || '9') || a.e.localeCompare(b.e, 'it'));
 }
