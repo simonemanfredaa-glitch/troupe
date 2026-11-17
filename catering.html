@@ -54,6 +54,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;backgr
 </head>
 <body>
 <div class="app" id="app"></div>
+<script src="fb-catering.js"></script>
 <script>
 window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k-aiQJkvr8yw09bHlwlm3A1Xo8_UHSjB_fqTtdJKW1XoKhHQ/exec";
 (function(){
@@ -72,163 +73,261 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       .then(function(r){ return r.json(); }).then(function(j){ if (j.err) throw new Error(j.err); return j.data; });
   }
   var fmt = function(iso){ return iso ? iso.split('-').reverse().join('/') : ''; };
-  // le produzioni create da questo telefono
-  function mie(){ try { return JSON.parse(localStorage.getItem('catering_mie') || '[]'); } catch (e) { return []; } }
-  function salvaMia(x){ var l = mie().filter(function(y){ return y.k !== x.k && !(y.e === x.e && !y.k); }); l.unshift(x); try { localStorage.setItem('catering_mie', JSON.stringify(l.slice(0, 50))); } catch (e) {} }
-  var linkModulo = function(x){ return BASE + '?e=' + encodeURIComponent(x.e) + (x.f ? '&f=' + x.f : ''); };
-  var linkPrivato = function(x){ return BASE + '?e=' + encodeURIComponent(x.e) + '&k=' + x.k; };
+  var CID = (Q.get('c') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 40);
+  var ADMIN = 'simonemanfredaa@gmail.com';
+  var linkModulo = function(x){ return BASE + '?c=' + x.id; };
+  var giorniDa = function(iso){ return Math.floor((Date.now() - new Date(iso + 'T12:00:00').getTime()) / 864e5); };
+  var isoDi = function(ts){ try { var d = ts && ts.toDate ? ts.toDate() : new Date(); return d.toISOString().slice(0, 10); } catch (e) { return ''; } };
 
-  // ── memoria sul telefono: mostro subito l'ultima versione, poi aggiorno da Google ──
-  var MEM = { el: null, r: {} };
-  try { MEM = JSON.parse(localStorage.getItem('catering_mem') || 'null') || MEM; } catch (e) {}
-  function salvaMem(){ try { localStorage.setItem('catering_mem', JSON.stringify(MEM)); } catch (e) {} }
+  // ── stato in tempo reale (Firebase) ──
+  var U = null, ME = null, PROD = [], RIS = {}, VISTA = null, STOP = [];
+  function ferma(){ STOP.forEach(function(f){ try { f(); } catch (e) {} }); STOP = []; }
+  function ridisegna(){ if (VISTA) VISTA(); }
 
-  // ── accesso con il codice Troupe ──
-  var TOKEN = '', NOME = '';
-  try { var ses = JSON.parse(localStorage.getItem('catering_t') || 'null'); if (ses) { TOKEN = ses.t; NOME = ses.n; } } catch (e) {}
-  function sessioneScaduta(err){ if (err && err.message === 'SESSIONE') { TOKEN = ''; try { localStorage.removeItem('catering_t'); } catch (e) {} vLogin('Accesso scaduto: inserisci di nuovo il codice'); return true; } return false; }
-  function vLogin(msg){
-    app.innerHTML = '<p class="eyebrow">Catering</p><h1>Accedi</h1>' +
-      '<form id="lg" class="card" autocomplete="off">' + (msg ? '<div class="err">' + esc(msg) + '</div>' : '') +
-      '<div class="f"><label class="lab" for="cd">Il tuo codice Troupe</label><input type="password" id="cd" inputmode="numeric" autocomplete="one-time-code"></div>' +
-      '<button class="btn main" type="submit">Entra</button><p class="muted" style="margin:10px 0 0">Lo stesso codice che usi per Troupe. Se non ce l\'hai chiedilo a Simone.</p></form>';
-    var cd = document.getElementById('cd'); cd.focus();
-    document.getElementById('lg').addEventListener('submit', function(e){
-      e.preventDefault(); var b = this.querySelector('button'); if (!cd.value.trim()) return;
-      b.disabled = true; b.textContent = 'Controllo…';
-      api('entra', [cd.value.trim()]).then(function(r){
-        if (!r.ok) return vLogin(r.msg);
-        TOKEN = r.token; NOME = r.nome; try { localStorage.setItem('catering_t', JSON.stringify({ t: TOKEN, n: NOME })); } catch (e) {}
-        vHome();
-      }).catch(function(err){ vLogin(err.message); });
+  function avvia(){
+    var F = window.FB;
+    app.innerHTML = '<div class="card"><p class="muted" style="margin:0">Un attimo…</p></div>';
+    F.onAuthStateChanged(F.auth, function(u){
+      ferma(); U = u; ME = null;
+      if (!u) return vLogin();
+      var email = (u.email || '').toLowerCase();
+      var entra = function(nome, admin){
+        ME = { email: email, nome: nome || u.displayName || email, admin: admin };
+        ascolta(); vHome();
+      };
+      if (email === ADMIN) return entra(u.displayName || 'Simone Manfreda', true);
+      F.getDoc(F.doc(F.db, 'producer', email)).then(function(d){
+        if (!d.exists()) return vNonAbilitato(email);
+        entra(d.data().nome, false);
+      }).catch(function(){ vNonAbilitato(email); });
     });
   }
-  function esci(){ api('esci', [TOKEN]).catch(function(){}); TOKEN = ''; MEM = { el: null, r: {} }; try { localStorage.removeItem('catering_t'); localStorage.removeItem('catering_mem'); } catch (e) {} vLogin(); }
+  function ascolta(){
+    var F = window.FB;
+    STOP.push(F.onSnapshot(F.query(F.collection(F.db, 'produzioni'), F.where('eliminata', '==', false)), function(qs){
+      PROD = qs.docs.map(function(d){ var v = d.data(); return { id: d.id, e: v.nome, f: v.inizio || '', da: v.creataNome || '', creata: v.creata, pulita: !!v.pulita, conteggi: v.conteggi || null }; })
+        .sort(function(a, b){ return (b.f || '9').localeCompare(a.f || '9') || a.e.localeCompare(b.e, 'it'); });
+      pulizia(); ridisegna();
+    }, function(err){ mostraErrore(err); }));
+    STOP.push(F.onSnapshot(F.collectionGroup(F.db, 'risposte'), function(qs){
+      RIS = {};
+      qs.docs.forEach(function(d){ var p = d.ref.parent.parent.id, v = d.data(); (RIS[p] = RIS[p] || []).push({ id: d.id, nome: v.nome || '', dieta: v.dieta || '', allergie: v.allergie || '', altro: v.altro || '', grave: !!v.grave }); });
+      ridisegna();
+    }, function(err){ mostraErrore(err); }));
+  }
+  function mostraErrore(err){ console.warn(err); toast(/permission/i.test(err && err.code || '') ? 'Accesso non permesso' : 'Problema di connessione: riprovo da solo'); }
+
+  // privacy: 45 giorni dopo l'inizio (o dalla creazione se manca la data) restano solo i numeri
+  var PULITE = {};
+  function pulizia(){
+    var F = window.FB;
+    PROD.forEach(function(x){
+      var rif = x.f || isoDi(x.creata);
+      if (x.pulita || PULITE[x.id] || !rif || giorniDa(rif) <= 45) return;
+      PULITE[x.id] = 1;
+      F.getDocs(F.collection(F.db, 'produzioni', x.id, 'risposte')).then(function(qs){
+        var r = qs.docs.map(function(d){ return d.data(); }), c = conta(r), b = F.writeBatch(F.db);
+        qs.docs.forEach(function(d){ b.delete(d.ref); });
+        b.update(F.doc(F.db, 'produzioni', x.id), { pulita: true, conteggi: c });
+        return b.commit();
+      }).catch(function(e){ console.warn('pulizia', e); });
+    });
+  }
+  function conta(r){
+    var c = function(t){ return r.filter(function(y){ return y.dieta === t; }).length; };
+    return { totale: r.length, tutto: c('Mangio tutto'), vegetariani: c('Vegetariana'), vegani: c('Vegana'), pescetariani: c('Pescetariana'), allergie: r.filter(function(y){ return y.allergie || y.altro || y.grave; }).length };
+  }
+
+  // ── accesso ──
+  function vLogin(msg){
+    VISTA = null;
+    app.innerHTML = '<p class="eyebrow">Catering</p><h1>Accedi</h1><div class="card">' + (msg ? '<div class="err">' + esc(msg) + '</div>' : '') +
+      '<button class="btn main" id="gg">Accedi con Google</button><p class="muted" style="margin:10px 0 0">Usa l\'account Google che Simone ha abilitato.</p></div>';
+    document.getElementById('gg').onclick = function(){
+      var F = window.FB, b = this; b.disabled = true; b.textContent = 'Apro Google…';
+      F.signInWithPopup(F.auth, new F.GoogleAuthProvider()).catch(function(e){
+        b.disabled = false; b.textContent = 'Accedi con Google';
+        if (!/popup-closed|cancelled-popup/.test(e.code || '')) vLogin('Accesso non riuscito (' + (e.code || e.message) + '). Riprova.');
+      });
+    };
+  }
+  function vNonAbilitato(email){
+    VISTA = null;
+    app.innerHTML = '<p class="eyebrow">Catering</p><h1>Account non abilitato</h1><div class="card"><p style="margin:0 0 12px">L\'account <b>' + esc(email) + '</b> non è ancora tra i producer.</p><p class="muted" style="margin:0 0 14px">Chiedi a Simone di aggiungerlo, poi riapri l\'app.</p><button class="btn sec" id="out">Usa un altro account</button></div>';
+    document.getElementById('out').onclick = esci;
+  }
+  function esci(){ ferma(); PROD = []; RIS = {}; window.FB.signOut(window.FB.auth); }
 
   // ── home: tutte le produzioni ──
   function vHome(){
-    if (!TOKEN) return vLogin();
-    app.innerHTML = '<div class="top"><span class="muted">' + esc(NOME) + '</span><button class="link" id="out">Esci</button></div><p class="eyebrow">Catering</p><h1>Produzioni</h1>' +
-      '<div id="lst"><div class="card"><p class="muted" style="margin:0">Carico le produzioni…</p></div></div>' +
-      '<button class="btn main" id="nuova">+ Nuova produzione</button>';
+    VISTA = disegnaHome;
+    app.innerHTML = '<div class="top"><span class="muted">' + esc(ME.nome) + '</span><span>' + (ME.admin ? '<button class="link" id="team">Producer</button> ' : '') + '<button class="link" id="out">Esci</button></span></div><p class="eyebrow">Catering</p><h1>Produzioni</h1>' +
+      '<div id="lst"></div><button class="btn main" id="nuova">+ Nuova produzione</button>';
     document.getElementById('nuova').onclick = vCrea;
     document.getElementById('out').onclick = esci;
-    if (MEM.el) disegnaElenco(MEM.el);
-    api('catElenco', [TOKEN]).then(function(l){
-      MEM.el = l.map(function(x){ return { e: x.e, f: x.f, k: x.k, da: x.da, n: x.n }; });
-      l.forEach(function(x){ MEM.r[x.k] = x.r; });
-      salvaMem(); disegnaElenco(MEM.el);
-    }).catch(function(err){ if (sessioneScaduta(err)) return; if (MEM.el) return; var el = document.getElementById('lst'); if (el) el.innerHTML = '<div class="err">' + esc(err.message) + '</div>'; });
+    if (ME.admin) document.getElementById('team').onclick = vProducer;
+    disegnaHome();
   }
-  function disegnaElenco(l){
+  function disegnaHome(){
     var el = document.getElementById('lst'); if (!el) return;
-    el.innerHTML = l.length ? '<div class="card list" style="padding:2px 16px">' + l.map(function(x, i){
-      var info = [x.f ? 'shoot dal ' + fmt(x.f) : 'senza data', x.n + (x.n === 1 ? ' risposta' : ' risposte'), x.da ? 'di ' + x.da : ''].filter(Boolean).join(' · ');
+    el.innerHTML = PROD.length ? '<div class="card list" style="padding:2px 16px">' + PROD.map(function(x, i){
+      var n = x.pulita && x.conteggi ? x.conteggi.totale : (RIS[x.id] || []).length;
+      var info = [x.f ? 'shoot dal ' + fmt(x.f) : 'senza data', n + (n === 1 ? ' risposta' : ' risposte'), x.da ? 'di ' + x.da : ''].filter(Boolean).join(' · ');
       return '<div class="it" data-i="' + i + '"><div class="t"><b>' + esc(x.e) + '</b><small>' + esc(info) + '</small></div><span style="color:#B9BBBF;font-size:22px">›</span></div>'; }).join('') + '</div>' :
       '<div class="card"><p class="muted" style="margin:0">Nessuna produzione. Creane una: ti do il link da mandare a crew, clienti e ospiti, e le risposte arrivano qui.</p></div>';
-    Array.prototype.forEach.call(el.querySelectorAll('[data-i]'), function(it){ it.onclick = function(){ vEvento(l[Number(it.dataset.i)]); }; });
+    Array.prototype.forEach.call(el.querySelectorAll('[data-i]'), function(it){ it.onclick = function(){ vEvento(PROD[Number(it.dataset.i)].id); }; });
   }
   function vCrea(){
+    VISTA = null;
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Nuova produzione</h1>' +
-      '<form id="crea" class="card" autocomplete="off"><div id="er"></div><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" placeholder="Es. Alain Mikli N1"></div>' +
+      '<form id="crea" class="card" autocomplete="off"><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" placeholder="Es. Alain Mikli N1"></div>' +
       '<div class="f"><label class="lab" for="fi">Inizio shoot</label><input type="date" id="fi"></div>' +
       '<button class="btn main" type="submit">Crea</button><p class="muted" style="margin:10px 0 0">Serve per la privacy: 45 giorni dopo l\'inizio dello shoot le risposte si cancellano da sole e restano solo i numeri.</p></form>';
     document.getElementById('ind').onclick = vHome;
     document.getElementById('crea').addEventListener('submit', function(e){
       e.preventDefault();
-      var ev = document.getElementById('ev').value.trim(), fi = document.getElementById('fi').value, b = this.querySelector('button[type=submit]');
+      var F = window.FB, ev = document.getElementById('ev').value.trim().slice(0, 80), fi = document.getElementById('fi').value;
       if (ev.length < 2) return toast('Scrivi il nome della produzione');
-      b.disabled = true; b.textContent = 'Creo…';
-      api('catCrea', [ev, fi, TOKEN]).then(function(r){
-        if (!r.ok) { b.disabled = false; b.textContent = 'Crea'; document.getElementById('er').innerHTML = '<div class="err">' + esc(r.msg) + '</div>'; return; }
-        var x = { e: r.e, f: r.f, k: r.k }; salvaMia(x); vEvento(x, true);
-      }).catch(function(err){ if (sessioneScaduta(err)) return; b.disabled = false; b.textContent = 'Crea'; toast(err.message); });
+      var ref = F.doc(F.collection(F.db, 'produzioni'));
+      F.setDoc(ref, { nome: ev, inizio: fi, creataNome: ME.nome, creataDa: ME.email, creata: F.serverTimestamp(), eliminata: false, pulita: false }).catch(function(err){ toast('Non salvata: ' + err.message); });
+      PROD.unshift({ id: ref.id, e: ev, f: fi, da: ME.nome });
+      vEvento(ref.id, true);
     });
   }
-  // ── una produzione: link da mandare, risposte, PDF ──
-  function vEvento(x, nuova){
+  // ── una produzione ──
+  function trova(id){ return PROD.filter(function(x){ return x.id === id; })[0]; }
+  function vEvento(id, nuova){
+    var x = trova(id); if (!x) return vHome();
     var msg = 'Ciao! Per ' + x.e + ' ci dici cosa mangi e se hai allergie o intolleranze? Ci vuole un minuto: ' + linkModulo(x);
-    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Produzioni</button><span><button class="link" id="mod">Modifica</button> <button class="link" id="agg">Aggiorna</button></span></div>' +
+    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Produzioni</button><button class="link" id="mod">Modifica</button></div>' +
       '<p class="eyebrow">Catering' + (x.f ? ' · shoot dal ' + fmt(x.f) : '') + '</p><h1>' + esc(x.e) + '</h1>' +
       '<div class="card"><h2>' + (nuova ? 'Pronta! Ora manda il link' : 'Link da mandare') + '</h2><pre>' + esc(linkModulo(x)) + '</pre>' +
       '<div class="row"><button class="btn sec" id="cp">Copia</button><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(msg) + '">WhatsApp</a></div></div>' +
-      '<div id="ris"><div class="card"><p class="muted" style="margin:0">Carico le risposte…</p></div></div>' +
-      '<button class="btn main" id="pdf" style="margin-top:4px">Scarica il PDF per il catering</button>' +
-      '<button class="btn sec" id="priv" style="margin-top:28px">Copia il link per i producer</button>';
+      '<div id="ris"></div><button class="btn main" id="pdf" style="margin-top:4px">Scarica il PDF per il catering</button>';
     document.getElementById('ind').onclick = vHome;
     document.getElementById('cp').onclick = function(){ copia(linkModulo(x), 'Link copiato'); };
-    document.getElementById('priv').onclick = function(){ copia(linkPrivato(x), 'Link per i producer copiato'); };
-    document.getElementById('agg').onclick = function(){ carica(x); };
-    document.getElementById('mod').onclick = function(){ vModifica(x); };
-    document.getElementById('pdf').onclick = function(){ scaricaPdf(x, this); };
-    carica(x);
+    document.getElementById('mod').onclick = function(){ vModifica(id); };
+    document.getElementById('pdf').onclick = function(){ scaricaPdf(id, this); };
+    VISTA = function(){ disegnaRisposte(id); };
+    disegnaRisposte(id);
   }
-  // ── rinomina, cambia data, elimina ──
-  function vModifica(x){
+  function vModifica(id){
+    var x = trova(id); if (!x) return vHome();
+    VISTA = null;
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Modifica produzione</h1>' +
-      '<form id="frm" class="card" autocomplete="off"><div id="er"></div><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" value="' + esc(x.e) + '"></div>' +
+      '<form id="frm" class="card" autocomplete="off"><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" value="' + esc(x.e) + '"></div>' +
       '<div class="f"><label class="lab" for="fi">Inizio shoot</label><input type="date" id="fi" value="' + esc(x.f || '') + '"></div>' +
-      '<button class="btn main" type="submit">Salva modifiche</button><p class="muted" style="margin:10px 0 0">I link già mandati continuano a funzionare anche col nome nuovo.</p></form>' +
+      '<button class="btn main" type="submit">Salva modifiche</button><p class="muted" style="margin:10px 0 0">Il link già mandato continua a funzionare.</p></form>' +
       '<div id="del"><button class="btn danger" id="eli">Elimina produzione</button></div>';
-    document.getElementById('ind').onclick = function(){ vEvento(x); };
+    document.getElementById('ind').onclick = function(){ vEvento(id); };
     document.getElementById('frm').addEventListener('submit', function(e){
       e.preventDefault();
-      var ev = document.getElementById('ev').value.trim(), fi = document.getElementById('fi').value, b = this.querySelector('button[type=submit]');
+      var F = window.FB, ev = document.getElementById('ev').value.trim().slice(0, 80), fi = document.getElementById('fi').value;
       if (ev.length < 2) return toast('Scrivi il nome della produzione');
-      b.disabled = true; b.textContent = 'Salvo…';
-      api('catModifica', [x.e, x.k, ev, fi]).then(function(r){
-        if (!r.ok) { b.disabled = false; b.textContent = 'Salva modifiche'; document.getElementById('er').innerHTML = '<div class="err">' + esc(r.msg) + '</div>'; return; }
-        var n = { e: r.e, f: r.f, k: x.k }; salvaMia(n); toast('Modifiche salvate'); vEvento(n);
-      }).catch(function(err){ b.disabled = false; b.textContent = 'Salva modifiche'; toast(err.message); });
+      F.updateDoc(F.doc(F.db, 'produzioni', id), { nome: ev, inizio: fi }).catch(function(err){ toast('Non salvata: ' + err.message); });
+      x.e = ev; x.f = fi; toast('Modifiche salvate'); vEvento(id);
     });
     document.getElementById('eli').onclick = function(){
-      document.getElementById('del').innerHTML = '<div class="card"><h2>Eliminare «' + esc(x.e) + '»?</h2><p class="muted" style="margin:0 0 12px">Il link smette di funzionare e la produzione sparisce dall\'app. Le risposte si cancellano da sole 45 giorni dopo l\'inizio dello shoot.</p>' +
+      document.getElementById('del').innerHTML = '<div class="card"><h2>Eliminare «' + esc(x.e) + '»?</h2><p class="muted" style="margin:0 0 12px">Il link smette di funzionare e le risposte vengono cancellate subito. Non si può annullare.</p>' +
         '<div class="row"><button class="btn sec" id="no">Annulla</button><button class="btn danger" id="si">Elimina</button></div></div>';
-      document.getElementById('no').onclick = function(){ vModifica(x); };
+      document.getElementById('no').onclick = function(){ vModifica(id); };
       document.getElementById('si').onclick = function(){
-        var b = this; b.disabled = true; b.textContent = 'Elimino…';
-        api('catElimina', [x.e, x.k]).then(function(){ togliMia(x); toast('Produzione eliminata'); vHome(); })
-          .catch(function(err){ if (/Link non valido/.test(err.message)) { togliMia(x); vHome(); return; } b.disabled = false; b.textContent = 'Elimina'; toast(err.message); });
+        var F = window.FB, b = this; b.disabled = true; b.textContent = 'Elimino…';
+        var r = RIS[id] || [], c = conta(r);
+        F.getDocs(F.collection(F.db, 'produzioni', id, 'risposte')).then(function(qs){
+          var bt = F.writeBatch(F.db);
+          qs.docs.forEach(function(d){ bt.delete(d.ref); });
+          bt.update(F.doc(F.db, 'produzioni', id), { eliminata: true, pulita: true, conteggi: c });
+          return bt.commit();
+        }).then(function(){ toast('Produzione eliminata'); vHome(); })
+          .catch(function(err){ b.disabled = false; b.textContent = 'Elimina'; toast(err.message); });
       };
     };
   }
-  function togliMia(x){ if (MEM.el) { MEM.el = MEM.el.filter(function(y){ return y.k !== x.k; }); delete MEM.r[x.k]; salvaMem(); } try { localStorage.setItem('catering_mie', JSON.stringify(mie().filter(function(y){ return y.k !== x.k; }))); } catch (e) {} }
-  function carica(x){
-    if (MEM.r[x.k]) disegnaRisposte(MEM.r[x.k]);
-    api('catRiepilogo', [x.e, x.k]).then(function(d){
-      if (TOKEN) { MEM.r[x.k] = d.risposte; salvaMem(); }
-      disegnaRisposte(d.risposte);
-    }).catch(function(err){ if (MEM.r[x.k]) return toast('Non riesco ad aggiornare: ' + err.message); var el = document.getElementById('ris'); if (el) el.innerHTML = '<div class="err">' + esc(err.message) + '</div>'; });
-  }
-  function disegnaRisposte(r){
+  function ordina(r){ var w = function(x){ return x.grave ? 0 : (x.allergie || x.altro) ? 1 : 2; }; return r.slice().sort(function(a, b){ return w(a) - w(b) || a.nome.localeCompare(b.nome, 'it'); }); }
+  function disegnaRisposte(id){
     var el = document.getElementById('ris'); if (!el) return;
-    {
-      var c = function(t){ return r.filter(function(y){ return y.dieta === t; }).length; };
-      var es = r.filter(function(y){ return y.allergie || y.altro || y.grave; });
-      el.innerHTML = '<div class="card"><div class="nums"><div><b>' + r.length + '</b><span>risposte</span></div><div><b>' + c('Vegetariana') + '</b><span>vegetariani</span></div><div><b>' + c('Vegana') + '</b><span>vegani</span></div>' +
-        '<div><b>' + c('Pescetariana') + '</b><span>pescetariani</span></div><div><b>' + c('Mangio tutto') + '</b><span>mangiano tutto</span></div><div><b>' + es.length + '</b><span>con allergie</span></div></div></div>' +
-        (r.length ? '<div class="card list" style="padding:2px 16px">' + r.slice().sort(function(a, b){ var w = function(x){ return x.grave ? 0 : (x.allergie || x.altro) ? 1 : 2; }; return w(a) - w(b) || a.nome.localeCompare(b.nome, 'it'); }).map(function(y){
-          return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(y.nome) + '</b><small>' + esc([y.dieta, y.allergie, y.altro].filter(Boolean).join(' · ')) + '</small></div>' + (y.grave ? '<span class="badge">allergia grave</span>' : '') + '</div>';
-        }).join('') + '</div>' : '<div class="card"><p class="muted" style="margin:0">Ancora nessuna risposta.</p></div>');
-    }
+    var x = trova(id) || {}, r = RIS[id] || [];
+    var c = x.pulita && x.conteggi ? x.conteggi : conta(r);
+    el.innerHTML = '<div class="card"><div class="nums"><div><b>' + c.totale + '</b><span>risposte</span></div><div><b>' + c.vegetariani + '</b><span>vegetariani</span></div><div><b>' + c.vegani + '</b><span>vegani</span></div>' +
+      '<div><b>' + c.pescetariani + '</b><span>pescetariani</span></div><div><b>' + c.tutto + '</b><span>mangiano tutto</span></div><div><b>' + c.allergie + '</b><span>con allergie</span></div></div></div>' +
+      (r.length ? '<div class="card list" style="padding:2px 16px">' + ordina(r).map(function(y){
+        return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(y.nome) + '</b><small>' + esc([y.dieta, y.allergie, y.altro].filter(Boolean).join(' · ')) + '</small></div>' + (y.grave ? '<span class="badge">allergia grave</span>' : '') + '</div>';
+      }).join('') + '</div>' : '<div class="card"><p class="muted" style="margin:0">' + (x.pulita ? 'Le risposte sono state cancellate per la privacy: restano solo i numeri.' : 'Ancora nessuna risposta. Appena qualcuno compila, compare qui da solo.') + '</p></div>');
   }
-  function scaricaPdf(x, b){
+
+  // ── PDF fatto sul telefono ──
+  function caricaPdfLib(){
+    return window.PDFLIB ? Promise.resolve(window.PDFLIB) : new Promise(function(ok, ko){ var s = document.createElement('script'); s.src = 'pdf-catering.js'; s.onload = function(){ ok(window.PDFLIB); }; s.onerror = ko; document.head.appendChild(s); });
+  }
+  function scaricaPdf(id, b){
+    var x = trova(id), r = ordina(RIS[id] || []), c = x.pulita && x.conteggi ? x.conteggi : conta(RIS[id] || []);
     b.disabled = true; b.textContent = 'Preparo il PDF…';
-    api('catPdf', [x.e, x.k]).then(function(r){
-      var bin = atob(r.b64), arr = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-      var file = new File([arr], r.nome, { type: 'application/pdf' }), u = URL.createObjectURL(file);
+    caricaPdfLib().then(function(L){
+      var d = new L.jsPDF({ unit: 'pt', format: 'a4' }), oggi = new Date().toLocaleDateString('it-IT');
+      d.setFont('helvetica', 'bold'); d.setFontSize(20); d.text('Catering · ' + x.e, 40, 56);
+      d.setFont('helvetica', 'normal'); d.setFontSize(10); d.setTextColor(104, 107, 112);
+      d.text(c.totale + ' risposte' + (x.f ? ' · inizio shoot ' + fmt(x.f) : '') + ' · aggiornato al ' + oggi, 40, 74);
+      var box = [['Totale', c.totale], ['Mangiano tutto', c.tutto], ['Vegetariani', c.vegetariani], ['Vegani', c.vegani], ['Pescetariani', c.pescetariani], ['Allergie o note', c.allergie]], bx = 40;
+      box.forEach(function(v){ var w = d.getTextWidth(v[0]) + 20; d.setDrawColor(210); d.roundedRect(bx, 88, w, 40, 4, 4); d.setTextColor(23, 24, 27); d.setFont('helvetica', 'bold'); d.setFontSize(14); d.text(String(v[1]), bx + 10, 106); d.setFont('helvetica', 'normal'); d.setFontSize(9); d.text(v[0], bx + 10, 120); bx += w + 6; });
+      L.autoTable(d, { startY: 144, head: [['Nome', 'Dieta', 'Allergie e intolleranze', 'Note']],
+        body: r.map(function(y){ return [y.nome + (y.grave ? '  GRAVE' : ''), y.dieta, y.allergie, y.altro]; }),
+        styles: { font: 'helvetica', fontSize: 10, cellPadding: 6, textColor: [23, 24, 27], lineColor: [227, 227, 227], lineWidth: { bottom: .5 } },
+        headStyles: { fillColor: false, textColor: [104, 107, 112], fontSize: 8.5, fontStyle: 'bold', lineWidth: { bottom: 1.2 }, lineColor: [23, 24, 27] },
+        columnStyles: { 0: { cellWidth: 140 }, 1: { cellWidth: 90 }, 2: { cellWidth: 160, textColor: [163, 32, 42], fontStyle: 'bold' }, 3: { cellWidth: 125 } },
+        didParseCell: function(h){ if (h.section !== 'body') return; var y = r[h.row.index]; if (y.grave) h.cell.styles.fillColor = [248, 215, 218]; else if (y.allergie || y.altro) h.cell.styles.fillColor = [252, 237, 238]; }
+      });
+      if (c.allergie) { d.setFontSize(8.5); d.setTextColor(104, 107, 112); d.text('In rosso chi ha allergie, intolleranze o note: sono in cima all\'elenco. GRAVE = allergia grave.', 40, d.lastAutoTable.finalY + 18); }
+      var nome = 'Catering_' + x.e.replace(/[^\w\-]+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
+      var file = new File([d.output('blob')], nome, { type: 'application/pdf' }), u = URL.createObjectURL(file);
       var puo = navigator.canShare && navigator.canShare({ files: [file] });
-      var box = document.createElement('div'); box.className = 'card'; box.id = 'pdfbox';
-      box.innerHTML = '<h2 style="margin-bottom:4px">PDF pronto</h2><p class="muted" style="margin:0 0 10px">' + esc(r.nome) + '</p>' +
-        '<div class="row"><a class="btn main" id="sv" href="' + u + '" download="' + esc(r.nome) + '">Salva il PDF</a>' +
-        (puo ? '<button class="btn sec" id="sh">Invia…</button>' : '') + '</div>' +
+      var bx2 = document.createElement('div'); bx2.className = 'card'; bx2.id = 'pdfbox';
+      bx2.innerHTML = '<h2 style="margin-bottom:4px">PDF pronto</h2><p class="muted" style="margin:0 0 10px">' + esc(nome) + '</p>' +
+        '<div class="row"><a class="btn main" id="sv" href="' + u + '" download="' + esc(nome) + '">Salva il PDF</a>' + (puo ? '<button class="btn sec" id="sh">Invia…</button>' : '') + '</div>' +
         '<p class="muted" style="margin:10px 0 0">Salvalo e allegalo alla mail o al messaggio per il catering.' + (puo ? ' Con «Invia…» lo mandi subito da Mail, WhatsApp o Messaggi.' : '') + '</p>';
       var old = document.getElementById('pdfbox'); if (old) old.remove();
-      b.parentNode.insertBefore(box, b);
+      b.parentNode.insertBefore(bx2, b);
       b.disabled = false; b.textContent = 'Rifai il PDF con le ultime risposte'; b.className = 'btn sec';
-      if (puo) document.getElementById('sh').onclick = function(){ navigator.share({ files: [file], title: r.nome }).catch(function(){}); };
-      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }).catch(function(err){ b.disabled = false; b.textContent = 'Scarica il PDF per il catering'; toast(err.message); });
+      if (puo) document.getElementById('sh').onclick = function(){ navigator.share({ files: [file], title: nome }).catch(function(){}); };
+      bx2.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }).catch(function(err){ b.disabled = false; b.textContent = 'Scarica il PDF per il catering'; toast('PDF non riuscito: ' + (err && err.message || 'connessione')); });
+  }
+
+  // ── producer abilitati (solo admin) ──
+  function vProducer(){
+    var F = window.FB;
+    VISTA = null;
+    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Produzioni</button></div><h1>Producer</h1>' +
+      '<div class="card" id="pl"><p class="muted" style="margin:0">Carico…</p></div>' +
+      '<form id="pf" class="card" autocomplete="off"><h2>Aggiungi un producer</h2><div class="f"><label class="lab" for="pn">Nome</label><input type="text" id="pn" placeholder="Es. Filippo Mogno"></div>' +
+      '<div class="f"><label class="lab" for="pe">Email Google</label><input type="text" id="pe" inputmode="email" autocapitalize="off" placeholder="nome@gmail.com"></div><button class="btn main" type="submit">Aggiungi</button></form>';
+    document.getElementById('ind').onclick = vHome;
+    var lista = function(){
+      F.getDocs(F.collection(F.db, 'producer')).then(function(qs){
+        var el = document.getElementById('pl'); if (!el) return;
+        el.className = 'card list'; el.style.padding = '2px 16px';
+        el.innerHTML = '<div class="it" style="cursor:default"><div class="t"><b>' + esc(ME.nome) + '</b><small>' + esc(ADMIN) + ' · admin</small></div></div>' +
+          qs.docs.map(function(d){ return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(d.data().nome) + '</b><small>' + esc(d.id) + '</small></div><button class="link" style="color:#A3202A" data-del="' + esc(d.id) + '">Togli</button></div>'; }).join('');
+        Array.prototype.forEach.call(el.querySelectorAll('[data-del]'), function(b){ b.onclick = function(){ F.deleteDoc(F.doc(F.db, 'producer', b.dataset.del)).then(function(){ toast('Tolto'); lista(); }); }; });
+      }).catch(function(err){ toast(err.message); });
+    };
+    lista();
+    document.getElementById('pf').addEventListener('submit', function(e){
+      e.preventDefault();
+      var n = document.getElementById('pn').value.trim(), m = document.getElementById('pe').value.trim().toLowerCase();
+      if (n.length < 2 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m)) return toast('Scrivi nome ed email');
+      F.setDoc(F.doc(F.db, 'producer', m), { nome: n }).then(function(){ toast('Aggiunto: ora può accedere con Google'); vProducer(); }).catch(function(err){ toast(err.message); });
+    });
+  }
+
+  // ── modulo crew su Firebase (link ?c=…) ──
+  function vModuloFB(){
+    var F = window.FB;
+    app.innerHTML = '<div class="card"><p class="muted" style="margin:0">Un attimo…</p></div>';
+    F.getDoc(F.doc(F.db, 'produzioni', CID)).then(function(d){
+      if (!d.exists() || d.data().eliminata) { app.innerHTML = '<div class="card fine"><div class="big">Link non più attivo</div><p class="muted" style="margin:10px 0 0">Chiedi un link nuovo a chi te l\'ha mandato.</p></div>'; return; }
+      EV = d.data().nome; vModulo();
+    }).catch(function(){ app.innerHTML = '<div class="card fine"><div class="big">Connessione assente</div><p class="muted" style="margin:10px 0 0">Controlla internet e riapri il link.</p></div>'; });
   }
 
   // ── modulo per chi risponde ──
@@ -255,6 +354,12 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       segna('nm', !okN); segna('seg', !okD);
       if (!okN || !okD) { (okN ? document.getElementById('seg') : document.getElementById('nm')).scrollIntoView({ behavior: 'smooth', block: 'center' }); if (!okN) document.getElementById('nm').focus(); return; }
       app.innerHTML = '<div class="card fine"><div class="big">Grazie, ricevuto!</div><p class="muted" style="margin:10px 0 0">Lo giro al catering. Ci vediamo sul set.</p></div>';
+      if (CID) {
+        var F = window.FB;
+        F.addDoc(F.collection(F.db, 'produzioni', CID, 'risposte'), { nome: d.nome.slice(0, 80), dieta: d.dieta, allergie: d.allergie.join(', '), altro: d.altro.slice(0, 300), grave: d.grave, quando: F.serverTimestamp() })
+          .catch(function(err){ ripristina(d, 'La risposta non è arrivata (' + (err.code || err.message) + '). Riprova.'); });
+        return;
+      }
       api('catInvia', [d]).then(function(r){ if (!r.ok) ripristina(d, r.msg); }).catch(function(err){ ripristina(d, err.message === 'Failed to fetch' ? 'Connessione assente: la risposta non è arrivata. Riprova.' : err.message); });
     });
   }
@@ -268,9 +373,9 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     Array.prototype.forEach.call(document.querySelectorAll('input[name=al]'), function(i){ i.checked = d.allergie.indexOf(i.value) !== -1; });
   }
 
-  if (EV && KEY) { var x = { e: EV, k: KEY, f: FINO }; salvaMia(x); vEvento(x); }
-  else if (EV) vModulo();
-  else vHome();
+  if (CID) vModuloFB();
+  else if (EV && !KEY) vModulo();   // link vecchi e link dai progetti Troupe: passano ancora da Google
+  else avvia();
 })();
 </script>
 </body>
