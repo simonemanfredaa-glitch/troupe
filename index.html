@@ -1033,9 +1033,9 @@ var ALIAS = {
   // ───── catering nel progetto ─────
   function vCat(){
     var p = S.pr, cat = S.catD || [];
-    var crew = p.crew.filter(function(c){ return c.conf !== 'non disponibile'; });
+    var crew = p.crew.filter(function(c){ return c.conf !== 'non disponibile'; }).concat(fuoriCrew(p, cat));
     var di = function(c){ return cat.filter(function(x){ return x.r === c.r; })[0]; };
-    var risp = crew.filter(di), mancano = crew.filter(function(c){ return !di(c); });
+    var risp = crew.filter(di), mancano = crew.filter(function(c){ return !di(c) && !c.fuori; });
     var giorniL = [], x = pd(p.dal), y = pd(p.al);
     for (var t = Date.UTC(x.y, x.m - 1, x.d); t <= Date.UTC(y.y, y.m - 1, y.d); t += 864e5) giorniL.push(new Date(t).toISOString().slice(0, 10));
     var gruppi = [];
@@ -1059,12 +1059,13 @@ var ALIAS = {
       '<div class="dep">Esigenze</div><div class="card" style="padding:4px 12px">' + (esig || '<p class="muted">Nessuna esigenza particolare finora.</p>') + '</div>' +
       (mancano.length ? '<div class="dep">Non hanno ancora risposto</div><div class="card" style="padding:4px 12px">' + mancano.map(function(c){
         return '<div class="res"><div class="t"><b>' + esc(nomeDi(c)) + '</b><small>' + esc(c.q) + '</small></div><button class="btn sec mini" data-act="catChiedi" data-r="' + c.r + '"' + (waNum(c.tel) ? '' : ' disabled') + '>Chiedi</button></div>'; }).join('') + '</div>' : '') +
+      '<div class="card" style="margin-top:12px"><h2>Per chi non è in crew</h2><p class="muted" style="margin:0 0 10px">Cliente, agenzia, ospiti: un link solo per il catering. Le risposte compaiono qui come "Fuori crew".</p><button class="btn sec" data-act="linkCat">Manda il link catering</button></div>' +
       '<div class="row" style="margin-top:12px"><button class="btn sec" data-act="copiaCat">Copia testo</button><button class="btn main" data-act="fileCat">File per il catering</button></div>' +
       '<p class="muted" style="margin:10px 4px">Le risposte restano solo in questo progetto e si cancellano 30 giorni dopo l\'ultimo giorno di riprese.</p>';
   }
   function testoCat(){
     var p = S.pr, cat = S.catD || [];
-    var crew = p.crew.filter(function(c){ return c.conf !== 'non disponibile'; });
+    var crew = p.crew.filter(function(c){ return c.conf !== 'non disponibile'; }).concat(fuoriCrew(p, cat));
     var di = function(c){ return cat.filter(function(x){ return x.r === c.r; })[0]; };
     var t = 'CATERING · ' + p.titolo + '\n' + [fmtRange(p.dal, p.al), p.luogo].filter(Boolean).join(' · ') + '\n\n';
     var x = pd(p.dal), y = pd(p.al);
@@ -1110,6 +1111,7 @@ var ALIAS = {
       return true;
     }
     if (a === 'copiaCat') { copia(testoCat()); return true; }
+    if (a === 'linkCat') { linkCatProgetto(); return true; }
     if (a === 'fileCat') {
       b.disabled = true; b.textContent = 'Creo il file…';
       call('fileCatering', [S.token, S.pr.id], function(r){ b.disabled = false; b.textContent = 'File per il catering'; foglioLink('File per il catering pronto', 'È nella cartella del progetto. Da Google Sheets puoi scaricarlo in PDF o Excel e mandarlo al catering.', r.url); },
@@ -1182,6 +1184,18 @@ var ALIAS = {
       '<a class="btn main" href="' + esc(url) + '" target="_blank">Apri il file</a><button class="link" style="width:100%;margin-top:6px" data-f="chiudi">Chiudi</button></div>';
     o.addEventListener('click', function(e){ if (e.target === o || e.target.closest('[data-f]')) chiudiFoglio(); });
     document.body.appendChild(o);
+  }
+
+  // persone fuori crew che hanno risposto dal link catering del progetto
+  function fuoriCrew(p, cat){
+    return cat.filter(function(x){ return typeof x.r === 'string'; }).map(function(x){
+      return { r: x.r, nome: x.persona, cognome: '', q: 'Fuori crew', dal: p.dal, al: p.al, conf: '', tel: '', fuori: true };
+    });
+  }
+  function linkCatProgetto(){
+    var p = S.pr;
+    var link = 'https://simonemanfredaa-glitch.github.io/troupe/catering.html?e=' + encodeURIComponent(p.titolo) + '&f=' + p.al + '&p=' + p.id;
+    foglioWA('Link catering · ' + p.titolo, 'Ciao! Per ' + p.titolo + ' ci dici cosa mangi e se hai allergie o intolleranze? Ci vuole un minuto: ' + link, '');
   }
 
   // ═════════ ACCESSI (admin) ═════════

@@ -694,7 +694,8 @@ function confermaAdmin(token, id, r, d) {
 // ───── catering ─────
 function catTab_(p) { return memo_('cat_' + p.foglio, () => tabIn_(apri_(p.foglio), 'CATERING', H_CAT)); }
 function leggiCatering_(p) {
-  return righe_(catTab_(p), H_CAT.length).map((r, i) => ({ row: i + 2, r: Number(r[0]), persona: r[1], dieta: r[2], allergie: r[3], altro: r[4], grave: r[5] === 'sì', agg: r[6] }))
+  // le righe "fuori crew" (dal link catering libero) hanno come riga 'x:nome'
+  return righe_(catTab_(p), H_CAT.length).map((r, i) => ({ row: i + 2, r: /^x:/.test(r[0]) ? r[0] : Number(r[0]), persona: r[1], dieta: r[2], allergie: r[3], altro: r[4], grave: r[5] === 'sì', agg: r[6] }))
     .filter(x => x.r);
 }
 function leggiCateringDi_(p, r) {
@@ -720,14 +721,15 @@ function chiediCatering(token, id, r) {
 function catering(token, id) {
   const u = chi_(token);
   const p = progettoPer_(u, id);
-  return leggiCatering_(p).map(x => ({ r: x.r, dieta: x.dieta, allergie: x.allergie, altro: x.altro, grave: x.grave }));
+  return leggiCatering_(p).map(x => ({ r: x.r, persona: x.persona, dieta: x.dieta, allergie: x.allergie, altro: x.altro, grave: x.grave }));
 }
 function fileCatering(token, id) {
   bump_();
   const u = chi_(token);
   const p = progettoPer_(u, id);
-  const crew = leggiCrew_(p).filter(c => c.conf !== 'non disponibile');
   const cat = leggiCatering_(p);
+  const crew = leggiCrew_(p).filter(c => c.conf !== 'non disponibile')
+    .concat(cat.filter(x => typeof x.r === 'string').map(x => ({ r: x.r, persona: x.persona, q: 'Fuori crew', dal: p.dal, al: p.al })));
   const nome = 'Catering · ' + p.titolo;
   const dir = DriveApp.getFolderById(p.cartella);
   const it = dir.getFilesByName(nome);
@@ -1118,6 +1120,23 @@ function catInvia(d) {
   const nome = pul(d.nome, 80);
   if (!evento) return { ok: false, msg: 'Link non completo: chiedi di nuovo il link a chi te l\'ha mandato' };
   if (nome.length < 2) return { ok: false, msg: 'Scrivi nome e cognome' };
+  // link catering di un progetto (catering.html?p=ID): la risposta va nel catering di quel progetto
+  if (d.p) {
+    const p = leggiProgetti_().find(x => x.id === String(d.p));
+    if (p && p.stato !== 'chiuso' && p.stato !== 'eliminato') {
+      bump_();
+      const lock = LockService.getScriptLock(); lock.waitLock(20000);
+      try {
+        const sh = catTab_(p);
+        const all = [].concat(d.allergie || []).map(x => pul(x, 40)).filter(Boolean).slice(0, 10).join(', ');
+        const riga = ['x:' + nome, nome, pul(d.dieta, 30) || 'Mangio tutto', all, pul(d.altro, 200), d.grave ? 'sì' : 'no', oggi_()];
+        const es = leggiCatering_(p).find(x => (typeof x.r === 'string' && chiave_(x.persona) === chiave_(nome)));
+        if (es) sh.getRange(es.row, 1, 1, H_CAT.length).setValues([riga]);
+        else sh.getRange(sh.getLastRow() + 1, 1, 1, H_CAT.length).setNumberFormat('@').setValues([riga]);
+        return { ok: true };
+      } finally { lock.releaseLock(); }
+    }
+  }
   const fino = /^\d{4}-\d{2}-\d{2}$/.test(String(d.f || '')) ? String(d.f) : '';
   // freno anti-abuso: massimo 300 risposte all'ora per tutto il catering
   const c = CacheService.getScriptCache(), n = Number(c.get('catl_n') || 0);

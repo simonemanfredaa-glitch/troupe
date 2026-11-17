@@ -46,7 +46,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;backgr
 window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k-aiQJkvr8yw09bHlwlm3A1Xo8_UHSjB_fqTtdJKW1XoKhHQ/exec";
 (function(){
   var Q = new URLSearchParams(location.search);
-  var EV = (Q.get('e') || '').trim().slice(0, 80), FINO = (Q.get('f') || '').slice(0, 10);
+  var EV = (Q.get('e') || '').trim().slice(0, 80), FINO = (Q.get('f') || '').slice(0, 10), PRJ = (Q.get('p') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 20);
   var app = document.getElementById('app');
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var DIETE = ['Mangio tutto', 'Vegetariana', 'Vegana', 'Pescetariana'];
@@ -89,7 +89,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     });
     document.getElementById('mod').addEventListener('submit', function(e){
       e.preventDefault();
-      var d = { e: EV, f: FINO, nome: document.getElementById('nm').value.trim(), dieta: dieta,
+      var d = { e: EV, f: FINO, p: PRJ, nome: document.getElementById('nm').value.trim(), dieta: dieta,
         allergie: Array.prototype.map.call(document.querySelectorAll('input[name=al]:checked'), function(i){ return i.value; }),
         altro: document.getElementById('al').value.trim(), grave: document.getElementById('gr').checked };
       if (d.nome.length < 2) return toast('Scrivi nome e cognome');
