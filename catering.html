@@ -136,10 +136,18 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     b.disabled = true; b.textContent = 'Preparo il PDF…';
     api('catPdf', [x.e, x.k]).then(function(r){
       var bin = atob(r.b64), arr = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-      var file = new File([arr], r.nome, { type: 'application/pdf' });
-      b.disabled = false; b.textContent = 'Scarica il PDF per il catering';
-      if (navigator.canShare && navigator.canShare({ files: [file] })) return navigator.share({ files: [file], title: r.nome }).catch(function(){});
-      var u = URL.createObjectURL(file), a = document.createElement('a'); a.href = u; a.download = r.nome; document.body.appendChild(a); a.click(); a.remove();
+      var file = new File([arr], r.nome, { type: 'application/pdf' }), u = URL.createObjectURL(file);
+      var puo = navigator.canShare && navigator.canShare({ files: [file] });
+      var box = document.createElement('div'); box.className = 'card'; box.id = 'pdfbox';
+      box.innerHTML = '<h2 style="margin-bottom:4px">PDF pronto</h2><p class="muted" style="margin:0 0 10px">' + esc(r.nome) + '</p>' +
+        '<div class="row"><a class="btn main" id="sv" href="' + u + '" download="' + esc(r.nome) + '">Salva il PDF</a>' +
+        (puo ? '<button class="btn sec" id="sh">Invia…</button>' : '') + '</div>' +
+        '<p class="muted" style="margin:10px 0 0">Salvalo e allegalo alla mail o al messaggio per il catering.' + (puo ? ' Con «Invia…» lo mandi subito da Mail, WhatsApp o Messaggi.' : '') + '</p>';
+      var old = document.getElementById('pdfbox'); if (old) old.remove();
+      b.parentNode.insertBefore(box, b);
+      b.disabled = false; b.textContent = 'Rifai il PDF con le ultime risposte'; b.className = 'btn sec';
+      if (puo) document.getElementById('sh').onclick = function(){ navigator.share({ files: [file], title: r.nome }).catch(function(){}); };
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }).catch(function(err){ b.disabled = false; b.textContent = 'Scarica il PDF per il catering'; toast(err.message); });
   }
 
