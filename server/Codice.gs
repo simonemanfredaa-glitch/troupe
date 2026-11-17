@@ -31,12 +31,15 @@ function doPost(e) {
   try {
     const q = JSON.parse(e.postData.contents);
     if (API_OK.indexOf(q.fn) === -1) throw new Error('Funzione non disponibile');
-    out = { data: globalThis[q.fn].apply(null, q.args || []) };
+    out = { data: fnPerNome_(q.fn).apply(null, q.args || []) };
   } catch (err) {
     out = { err: String(err && err.message || err) };
   }
   return ContentService.createTextOutput(JSON.stringify(out)).setMimeType(ContentService.MimeType.JSON);
 }
+
+// trova una funzione per nome, anche quando il motore è caricato da GitHub dall'avviatore
+function fnPerNome_(n) { return eval(n); }
 
 // ───────────────────────── Pagina ─────────────────────────
 function doGet(e) {
@@ -53,7 +56,7 @@ function doGet(e) {
 
 // per controllare da fuori quale versione del motore è attiva
 function versione() { return VERSIONE_MOTORE; }
-const VERSIONE_MOTORE = '2026-11-17a';
+const VERSIONE_MOTORE = '2026-11-17b';
 
 function nuovoCodice_(esistenti) {
   let c;
@@ -1032,66 +1035,17 @@ function avvio(token) {
   chi_(token);
   return { contatti: contatti(token), ruoli: ruoli(token), progetti: progetti(token) };
 }
+// ═════════════════════════ AGGIORNAMENTI ═════════════════════════
+// Il motore sta su GitHub (server/motore.gs). Nello script c'è solo un piccolo "avviatore" che lo scarica,
+// lo tiene in memoria per 10 minuti e lo usa. Quindi ogni modifica pubblicata su GitHub arriva da sola, entro 10 minuti.
 
-// ═════════════════════════ AGGIORNAMENTI AUTOMATICI DA GITHUB ═════════════════════════
-// Troupe si aggiorna da sola: ogni 10 minuti controlla se su GitHub c'è un codice nuovo
-// (server/Codice.gs nel repository troupe). Se sì, lo copia qui, crea una versione e la pubblica.
-const URL_CODICE = 'https://raw.githubusercontent.com/simonemanfredaa-glitch/troupe/main/server/Codice.gs';
-
-// Da eseguire UNA volta dall'editor: autorizza, attiva il controllo ogni 10 minuti e fa il primo aggiornamento.
-function attivaAggiornamenti() {
-  if (!ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === 'aggiornaDaGitHub')) {
-    ScriptApp.newTrigger('aggiornaDaGitHub').timeBased().everyMinutes(10).create();
-  }
-  installaPulizia_();
-  const r = aggiornaDaGitHub(true);
-  Logger.log(r);
-}
-
-function aggiornaDaGitHub(forza) {
-  const lock = LockService.getScriptLock();
-  if (!lock.tryLock(1000)) return 'Aggiornamento già in corso';
-  try {
-    const props = PropertiesService.getScriptProperties();
-    const res = UrlFetchApp.fetch(URL_CODICE + '?t=' + Date.now(), { muteHttpExceptions: true, headers: { 'Cache-Control': 'no-cache' } });
-    if (res.getResponseCode() !== 200) return 'GitHub non risponde (' + res.getResponseCode() + ')';
-    const nuovo = res.getContentText();
-    if (nuovo.indexOf('function doPost') === -1 || nuovo.indexOf('URL_CODICE') === -1) return 'Il file su GitHub non sembra Troupe: non aggiorno';
-    const hash = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, nuovo));
-    if (!forza && props.getProperty('hash_codice') === hash) return 'Già aggiornata';
-
-    const id = ScriptApp.getScriptId();
-    const api = 'https://script.googleapis.com/v1/projects/' + id;
-    const opt = (method, body) => ({ method: method, contentType: 'application/json', muteHttpExceptions: true,
-      headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, payload: body ? JSON.stringify(body) : undefined });
-    const chk = (r, cosa) => { if (r.getResponseCode() >= 300) throw new Error(cosa + ': ' + r.getContentText().slice(0, 300)); return JSON.parse(r.getContentText() || '{}'); };
-
-    // 1. sostituisco il codice (il manifest appsscript.json resta quello che c'è)
-    const cont = chk(UrlFetchApp.fetch(api + '/content', opt('get')), 'Lettura progetto');
-    const manifest = cont.files.filter(f => f.type === 'JSON');
-    chk(UrlFetchApp.fetch(api + '/content', opt('put', { files: manifest.concat([{ name: 'Codice', type: 'SERVER_JS', source: nuovo }]) })), 'Scrittura codice');
-    // 2. nuova versione
-    const ver = chk(UrlFetchApp.fetch(api + '/versions', opt('post', { description: 'Da GitHub ' + Utilities.formatDate(new Date(), 'Europe/Rome', 'dd/MM HH:mm') })), 'Nuova versione');
-    // 3. la pubblico sull'app web già esistente (stesso link)
-    const deps = chk(UrlFetchApp.fetch(api + '/deployments', opt('get')), 'Elenco deployment').deployments || [];
-    const dep = deps.find(d => (d.entryPoints || []).some(e => e.entryPointType === 'WEB_APP' && e.webApp && e.webApp.url && e.webApp.url.indexOf(LINK_APP.split('/macros/s/')[1].split('/')[0]) !== -1));
-    if (!dep) throw new Error('Non trovo il deployment dell\'app web');
-    chk(UrlFetchApp.fetch(api + '/deployments/' + dep.deploymentId, opt('put', { deploymentConfig: {
-      scriptId: id, versionNumber: ver.versionNumber, manifestFileName: 'appsscript', description: 'Troupe · versione ' + ver.versionNumber } })), 'Pubblicazione');
-    props.setProperty('hash_codice', hash);
-    try { registra_('aggiornamento automatico', '', 'Troupe aggiornata alla versione ' + ver.versionNumber); } catch (e) {}
-    return 'Aggiornata alla versione ' + ver.versionNumber;
-  } catch (e) {
-    try { registra_('aggiornamento automatico', '', 'ERRORE: ' + String(e.message).slice(0, 200)); } catch (x) {}
-    return 'Errore: ' + e.message;
-  } finally { lock.releaseLock(); }
-}
-
-// dall'app (solo admin): "Aggiorna ora"
+// dall'app (solo admin): "Aggiorna ora" → svuoto la memoria, la prossima richiesta scarica il codice nuovo
 function aggiornaOra(token) {
   const u = chi_(token);
   if (!u.admin) throw new Error('Solo l\'admin');
-  return aggiornaDaGitHub(false);
+  const c = CacheService.getScriptCache();
+  c.remove('motore_n');
+  return 'Fatto: dalla prossima azione Troupe usa il codice più recente';
 }
 
 // ═════════════════════════ CATERING LIBERO · link unico, fuori dai progetti ═════════════════════════
@@ -1120,6 +1074,7 @@ function catInvia(d) {
   const nome = pul(d.nome, 80);
   if (!evento) return { ok: false, msg: 'Link non completo: chiedi di nuovo il link a chi te l\'ha mandato' };
   if (nome.length < 2) return { ok: false, msg: 'Scrivi nome e cognome' };
+  if (['Mangio tutto', 'Vegetariana', 'Vegana', 'Pescetariana'].indexOf(String(d.dieta || '')) === -1) return { ok: false, msg: 'Scegli cosa mangi' };
   // link catering di un progetto (catering.html?p=ID): la risposta va nel catering di quel progetto
   if (d.p) {
     const p = leggiProgetti_().find(x => x.id === String(d.p));
@@ -1208,20 +1163,27 @@ function catPdf(e, k) {
   const conta = t => r.filter(x => x.dieta === t).length;
   const conEsig = r.filter(x => x.allergie || x.altro || x.grave);
   const oggiIt = Utilities.formatDate(new Date(), 'Europe/Rome', 'dd/MM/yyyy');
+  // un solo elenco: prima le allergie gravi, poi chi ha allergie o note, poi gli altri; dentro ogni gruppo in ordine di nome
+  const peso = x => x.grave ? 0 : (x.allergie || x.altro) ? 1 : 2;
+  const lista = r.slice().sort((a, b) => peso(a) - peso(b) || a.nome.localeCompare(b.nome, 'it'));
   const html = '<html><head><meta charset="utf-8"><style>' +
-    'body{font-family:Helvetica,Arial,sans-serif;color:#17181B;font-size:11pt;margin:28px}' +
-    'h1{font-size:20pt;margin:0 0 4px}.sub{color:#686B70;margin:0 0 18px}' +
-    'h2{font-size:12pt;margin:20px 0 8px;border-bottom:1px solid #ccc;padding-bottom:4px}' +
-    'table{border-collapse:collapse;width:100%}td,th{border-bottom:1px solid #e3e3e3;padding:6px 8px;text-align:left;vertical-align:top}th{font-size:9pt;color:#686B70}' +
-    '.box{display:inline-block;border:1px solid #ccc;border-radius:6px;padding:8px 14px;margin:0 8px 8px 0}.box b{font-size:16pt;display:block}' +
-    '.grave{color:#A3202A;font-weight:bold}</style></head><body>' +
+    'body{font-family:Helvetica,Arial,sans-serif;color:#17181B;font-size:10.5pt;margin:28px}' +
+    'h1{font-size:20pt;margin:0 0 4px}.sub{color:#686B70;margin:0 0 16px}' +
+    '.box{display:inline-block;border:1px solid #ccc;border-radius:6px;padding:7px 12px;margin:0 6px 8px 0}.box b{font-size:15pt;display:block}' +
+    'table{border-collapse:collapse;width:100%;table-layout:fixed;margin-top:10px}' +
+    'td,th{border-bottom:1px solid #e3e3e3;padding:7px 8px;text-align:left;vertical-align:top;word-wrap:break-word}' +
+    'th{font-size:8.5pt;color:#686B70;border-bottom:1.5px solid #17181B}' +
+    'tr.al td{background:#FCEDEE}tr.gr td{background:#F8D7DA}' +
+    '.alg{color:#A3202A;font-weight:bold}.pill{display:inline-block;background:#A3202A;color:#fff;font-size:7.5pt;font-weight:bold;border-radius:4px;padding:1px 5px;margin-left:4px}' +
+    '.leg{color:#686B70;font-size:8.5pt;margin-top:10px}</style></head><body>' +
     '<h1>Catering · ' + es(d.e) + '</h1><p class="sub">' + r.length + ' risposte' + (d.fino ? ' · ultimo giorno ' + d.fino.split('-').reverse().join('/') : '') + ' · aggiornato al ' + oggiIt + '</p>' +
-    '<div>' + [['Totale', r.length], ['Mangio tutto', conta('Mangio tutto')], ['Vegetariani', conta('Vegetariana')], ['Vegani', conta('Vegana')], ['Pescetariani', conta('Pescetariana')], ['Con allergie', conEsig.length]]
+    '<div>' + [['Totale', r.length], ['Mangio tutto', conta('Mangio tutto')], ['Vegetariani', conta('Vegetariana')], ['Vegani', conta('Vegana')], ['Pescetariani', conta('Pescetariana')], ['Con allergie o note', conEsig.length]]
       .map(x => '<span class="box"><b>' + x[1] + '</b>' + x[0] + '</span>').join('') + '</div>' +
-    (conEsig.length ? '<h2>Allergie ed esigenze</h2><table><tr><th>Nome</th><th>Dieta</th><th>Allergie e intolleranze</th><th>Note</th></tr>' +
-      conEsig.map(x => '<tr><td>' + es(x.nome) + (x.grave ? ' <span class="grave">· ALLERGIA GRAVE</span>' : '') + '</td><td>' + es(x.dieta) + '</td><td>' + es(x.allergie) + '</td><td>' + es(x.altro) + '</td></tr>').join('') + '</table>' : '') +
-    '<h2>Tutte le risposte</h2><table><tr><th>Nome</th><th>Dieta</th><th>Allergie</th><th>Note</th></tr>' +
-    r.map(x => '<tr><td>' + es(x.nome) + '</td><td>' + es(x.dieta) + '</td><td>' + es(x.allergie) + (x.grave ? ' <span class="grave">(grave)</span>' : '') + '</td><td>' + es(x.altro) + '</td></tr>').join('') + '</table>' +
+    '<table><colgroup><col style="width:27%"><col style="width:17%"><col style="width:30%"><col style="width:26%"></colgroup>' +
+    '<tr><th>Nome</th><th>Dieta</th><th>Allergie e intolleranze</th><th>Note</th></tr>' +
+    lista.map(x => '<tr class="' + (x.grave ? 'gr' : (x.allergie || x.altro) ? 'al' : '') + '"><td>' + es(x.nome) + (x.grave ? '<span class="pill">GRAVE</span>' : '') + '</td><td>' + es(x.dieta) + '</td>' +
+      '<td class="alg">' + es(x.allergie) + '</td><td>' + es(x.altro) + '</td></tr>').join('') + '</table>' +
+    (conEsig.length ? '<p class="leg">In rosso chi ha allergie, intolleranze o note: sono in cima all\'elenco. GRAVE = allergia grave, da gestire con attenzione.</p>' : '') +
     '</body></html>';
   const nome = 'Catering_' + d.e.replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') + '_' + Utilities.formatDate(new Date(), 'Europe/Rome', 'yyyy-MM-dd') + '.pdf';
   const pdf = Utilities.newBlob(html, 'text/html', 'catering.html').getAs('application/pdf').setName(nome);

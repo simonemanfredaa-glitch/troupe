@@ -34,6 +34,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,58,138,.12)}
 .chip:has(input:checked){background:var(--ink);color:#fff;border-color:var(--ink)}
 .chk{display:flex;align-items:center;gap:10px;font-size:14px;margin-top:12px;cursor:pointer}
 .chk input{width:20px;height:20px;margin:0;accent-color:var(--ink)}
+.ferr{color:#A3202A;font-size:13px;font-weight:600;margin:6px 2px 0}.bad input[type=text]{border-color:#A3202A}.bad .seg{box-shadow:0 0 0 1.5px #A3202A}
 .btn{display:flex;align-items:center;justify-content:center;width:100%;height:50px;border-radius:14px;border:none;font-weight:600;font-size:16px;cursor:pointer;text-decoration:none}
 .main{background:var(--ink);color:#fff}.sec{background:#fff;border:1px solid var(--line);color:var(--ink)}.wa{background:var(--wa);color:#fff}
 .row{display:flex;gap:10px}.row>*{flex:1}
@@ -62,7 +63,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
   var DIETE = ['Mangio tutto', 'Vegetariana', 'Vegana', 'Pescetariana'];
   var ALL = ['Glutine', 'Lattosio', 'Frutta a guscio', 'Crostacei e pesce', 'Uova'];
-  var dieta = 'Mangio tutto';
+  var dieta = '';
   function toast(m){ var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2600); }
   function copia(t, m){ (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function(){ toast(m || 'Copiato'); }, function(){ var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); toast(m || 'Copiato'); }); }
   function api(fn, args){
@@ -127,7 +128,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       var es = r.filter(function(y){ return y.allergie || y.altro || y.grave; });
       document.getElementById('ris').innerHTML = '<div class="card"><div class="nums"><div><b>' + r.length + '</b><span>risposte</span></div><div><b>' + c('Vegetariana') + '</b><span>vegetariani</span></div><div><b>' + c('Vegana') + '</b><span>vegani</span></div>' +
         '<div><b>' + c('Pescetariana') + '</b><span>pescetariani</span></div><div><b>' + c('Mangio tutto') + '</b><span>mangiano tutto</span></div><div><b>' + es.length + '</b><span>con allergie</span></div></div></div>' +
-        (r.length ? '<div class="card list" style="padding:2px 16px">' + r.map(function(y){
+        (r.length ? '<div class="card list" style="padding:2px 16px">' + r.slice().sort(function(a, b){ var w = function(x){ return x.grave ? 0 : (x.allergie || x.altro) ? 1 : 2; }; return w(a) - w(b) || a.nome.localeCompare(b.nome, 'it'); }).map(function(y){
           return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(y.nome) + '</b><small>' + esc([y.dieta, y.allergie, y.altro].filter(Boolean).join(' · ')) + '</small></div>' + (y.grave ? '<span class="badge">allergia grave</span>' : '') + '</div>';
         }).join('') + '</div>' : '<div class="card"><p class="muted" style="margin:0">Ancora nessuna risposta.</p></div>');
     }).catch(function(err){ document.getElementById('ris').innerHTML = '<div class="err">' + esc(err.message) + '</div>'; });
@@ -154,25 +155,33 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   // ── modulo per chi risponde ──
   function vModulo(err){
     app.innerHTML = '<p class="eyebrow">Catering · ' + esc(EV) + '</p><h1>Cosa mangi sul set?</h1>' + (err ? '<div class="err">' + esc(err) + '</div>' : '') +
-      '<form id="mod" autocomplete="off"><div class="card"><div class="f"><label class="lab" for="nm">Nome e cognome</label><input type="text" id="nm" autocomplete="name"></div>' +
-      '<div class="f"><span class="lab">Cosa mangi</span><div class="seg" id="seg">' + DIETE.map(function(t){ return '<button type="button" data-d="' + t + '" class="' + (t === dieta ? 'on' : '') + '">' + t + '</button>'; }).join('') + '</div></div>' +
+      '<form id="mod" autocomplete="off" novalidate><div class="card"><div class="f" id="f-nm"><label class="lab" for="nm">Nome e cognome</label><input type="text" id="nm" autocomplete="name" required aria-describedby="e-nm"><p class="ferr" id="e-nm" hidden>Scrivi nome e cognome</p></div>' +
+      '<div class="f" id="f-seg"><span class="lab" id="l-seg">Cosa mangi</span><div class="seg" id="seg" role="radiogroup" aria-labelledby="l-seg">' + DIETE.map(function(t){ return '<button type="button" role="radio" aria-checked="' + (t === dieta) + '" data-d="' + t + '" class="' + (t === dieta ? 'on' : '') + '">' + t + '</button>'; }).join('') + '</div><p class="ferr" id="e-seg" hidden>Scegli cosa mangi</p></div>' +
       '<div class="f"><span class="lab">Allergie o intolleranze</span><div class="chips">' + ALL.map(function(t){ return '<label class="chip"><input type="checkbox" name="al" value="' + t + '">' + t + '</label>'; }).join('') + '</div></div>' +
       '<div class="f"><label class="lab" for="al">Altro</label><input type="text" id="al" placeholder="Es. niente funghi"></div>' +
       '<label class="chk"><input type="checkbox" id="gr">Ho un\'allergia grave: avvisate il catering</label></div>' +
       '<button class="btn main" type="submit">Invia</button><p class="muted" style="margin:10px 4px;text-align:center">Le risposte vanno solo al catering di questa produzione.</p></form>';
     document.getElementById('seg').addEventListener('click', function(e){
       var b = e.target.closest('[data-d]'); if (!b) return;
-      dieta = b.dataset.d; Array.prototype.forEach.call(this.children, function(x){ x.classList.toggle('on', x === b); });
+      dieta = b.dataset.d; Array.prototype.forEach.call(this.children, function(x){ x.classList.toggle('on', x === b); x.setAttribute('aria-checked', x === b); });
+      segna('seg', false);
     });
+    document.getElementById('nm').addEventListener('input', function(){ if (this.value.trim().length >= 2 && /\s/.test(this.value.trim())) segna('nm', false); });
     document.getElementById('mod').addEventListener('submit', function(e){
       e.preventDefault();
       var d = { e: EV, f: FINO, p: PRJ, nome: document.getElementById('nm').value.trim(), dieta: dieta,
         allergie: Array.prototype.map.call(document.querySelectorAll('input[name=al]:checked'), function(i){ return i.value; }),
         altro: document.getElementById('al').value.trim(), grave: document.getElementById('gr').checked };
-      if (d.nome.length < 2) return toast('Scrivi nome e cognome');
+      var okN = d.nome.length >= 2 && /\s/.test(d.nome), okD = !!d.dieta;
+      segna('nm', !okN); segna('seg', !okD);
+      if (!okN || !okD) { (okN ? document.getElementById('seg') : document.getElementById('nm')).scrollIntoView({ behavior: 'smooth', block: 'center' }); if (!okN) document.getElementById('nm').focus(); return; }
       app.innerHTML = '<div class="card fine"><div class="big">Grazie, ricevuto!</div><p class="muted" style="margin:10px 0 0">Lo giro al catering. Ci vediamo sul set.</p></div>';
       api('catInvia', [d]).then(function(r){ if (!r.ok) ripristina(d, r.msg); }).catch(function(err){ ripristina(d, err.message === 'Failed to fetch' ? 'Connessione assente: la risposta non è arrivata. Riprova.' : err.message); });
     });
+  }
+  function segna(id, male){
+    var f = document.getElementById('f-' + id), e = document.getElementById('e-' + id); if (!f) return;
+    f.classList.toggle('bad', male); e.hidden = !male;
   }
   function ripristina(d, msg){
     dieta = d.dieta; vModulo(msg);
