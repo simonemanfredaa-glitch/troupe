@@ -108,6 +108,8 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   }
   var fmt = function(iso){ return iso ? iso.split('-').reverse().join('/') : ''; };
   var CID = (Q.get('c') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 40);
+  var INV = (Q.get('invito') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 40);
+  var codice = function(){ var a = new Uint8Array(18), c = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789', o = ''; crypto.getRandomValues(a); for (var i = 0; i < a.length; i++) o += c[a[i] % c.length]; return o; };
   var ADMIN = 'simonemanfredaa@gmail.com';
   var linkModulo = function(x){ return BASE + '?c=' + x.id; };
   var giorniDa = function(iso){ return Math.floor((Date.now() - new Date(iso + 'T12:00:00').getTime()) / 864e5); };
@@ -132,35 +134,46 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       if (email === ADMIN) return entra(u.displayName || 'Simone Manfreda', true);
       F.getDoc(F.doc(F.db, 'producer', email)).then(function(d){
         if (d.exists()) return entra(d.data().nome, false);
-        // non è producer: vedo se qualcuno gli ha condiviso una produzione
-        return F.getDocs(F.query(F.collection(F.db, 'produzioni'), F.where('collab', 'array-contains', email))).then(function(qs){
+        // non è producer: se arriva da un link di invito lo aggiungo alla produzione, poi vedo a quali è invitato
+        return usaInvito(email, u.displayName).then(function(){
+          return F.getDocs(F.query(F.collectionGroup(F.db, 'membri'), F.where('email', '==', email)));
+        }).then(function(qs){
           if (qs.empty) return vNonAbilitato(email);
-          ME = { email: email, nome: u.displayName || email, admin: false, collab: true };
+          ME = { email: email, nome: u.displayName || email, admin: false, collab: true, prod: qs.docs.map(function(d){ return d.ref.parent.parent.id; }) };
           ascolta(); vHome();
         });
-      }).catch(function(){ vNonAbilitato(email); });
+      }).catch(function(e){ console.warn(e); vNonAbilitato(email, INV ? 'Il link di invito non è valido o è stato disattivato.' : ''); });
     });
+  }
+  function usaInvito(email, nome){
+    var F = window.FB; if (!INV) return Promise.resolve();
+    return F.getDoc(F.doc(F.db, 'inviti', INV)).then(function(d){
+      if (!d.exists()) throw new Error('invito');
+      return F.setDoc(F.doc(F.db, 'produzioni', d.data().p, 'membri', email), { email: email, nome: (nome || email).slice(0, 80), invito: INV, quando: F.serverTimestamp() });
+    }).then(function(){ INV = ''; try { history.replaceState(null, '', BASE); } catch (e) {} });
   }
   var SUB = {};
   function ascolta(){
     var F = window.FB; SUB = {};
-    var q = ME.collab ? F.query(F.collection(F.db, 'produzioni'), F.where('collab', 'array-contains', ME.email)) : F.query(F.collection(F.db, 'produzioni'), F.where('eliminata', '==', false));
-    STOP.push(F.onSnapshot(q, function(qs){
-      PROD = qs.docs.map(function(d){ var v = d.data(); return { id: d.id, e: v.nome, f: v.inizio || '', da: v.creataNome || '', creata: v.creata, pulita: !!v.pulita, conteggi: v.conteggi || null, collab: v.collab || [], eliminata: !!v.eliminata }; })
-        .filter(function(x){ return !x.eliminata; })
-        .sort(function(a, b){ return (b.f || '9').localeCompare(a.f || '9') || a.e.localeCompare(b.e, 'it'); });
-      if (ME.collab) PROD.forEach(function(x){   // i collaboratori leggono le risposte produzione per produzione
-        if (SUB[x.id]) return;
-        SUB[x.id] = 1;
-        STOP.push(F.onSnapshot(F.collection(F.db, 'produzioni', x.id, 'risposte'), function(qs2){
-          RIS[x.id] = qs2.docs.map(function(d){ var v = d.data(); return { id: d.id, nome: v.nome || '', dieta: v.dieta || '', allergie: v.allergie || '', altro: v.altro || '', grave: !!v.grave }; });
+    var mappa = function(d){ var v = d.data(); return { id: d.id, e: v.nome, f: v.inizio || '', da: v.creataNome || '', creata: v.creata, pulita: !!v.pulita, conteggi: v.conteggi || null, eliminata: !!v.eliminata }; };
+    var ordinaP = function(){ PROD.sort(function(a, b){ return (b.f || '9').localeCompare(a.f || '9') || a.e.localeCompare(b.e, 'it'); }); };
+    if (ME.collab) {   // collaboratori: solo le produzioni a cui sono invitati, una per una
+      var tutte = {};
+      ME.prod.forEach(function(pid){
+        STOP.push(F.onSnapshot(F.doc(F.db, 'produzioni', pid), function(d){
+          if (d.exists()) tutte[pid] = mappa(d); else delete tutte[pid];
+          PROD = Object.keys(tutte).map(function(k){ return tutte[k]; }).filter(function(x){ return !x.eliminata; }); ordinaP(); ridisegna();
+        }));
+        STOP.push(F.onSnapshot(F.collection(F.db, 'produzioni', pid, 'risposte'), function(qs2){
+          RIS[pid] = qs2.docs.map(function(d){ var v = d.data(); return { id: d.id, nome: v.nome || '', dieta: v.dieta || '', allergie: v.allergie || '', altro: v.altro || '', grave: !!v.grave }; });
           ridisegna();
         }, function(err){ mostraErrore(err); }));
       });
-      else pulizia();
-      ridisegna();
+      return;
+    }
+    STOP.push(F.onSnapshot(F.query(F.collection(F.db, 'produzioni'), F.where('eliminata', '==', false)), function(qs){
+      PROD = qs.docs.map(mappa); ordinaP(); pulizia(); ridisegna();
     }, function(err){ mostraErrore(err); }));
-    if (ME.collab) return;
     STOP.push(F.onSnapshot(F.collectionGroup(F.db, 'risposte'), function(qs){
       RIS = {};
       qs.docs.forEach(function(d){ var p = d.ref.parent.parent.id, v = d.data(); (RIS[p] = RIS[p] || []).push({ id: d.id, nome: v.nome || '', dieta: v.dieta || '', allergie: v.allergie || '', altro: v.altro || '', grave: !!v.grave }); });
@@ -193,7 +206,8 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   // ── accesso ──
   function vLogin(msg){
     VISTA = null;
-    app.innerHTML = '<p class="eyebrow">Catering</p><h1>Accedi</h1><div class="card">' + (msg ? '<div class="err">' + esc(msg) + '</div>' : '') +
+    app.innerHTML = '<p class="brand">Catering<span>.</span></p><h1>' + (INV ? 'Hai un invito per una produzione' : 'Accedi') + '</h1><div class="card">' + (msg ? '<div class="err">' + esc(msg) + '</div>' : '') +
+      (INV ? '<p style="margin:0 0 12px">Entra con il tuo account Google: vedrai le risposte della crew e potrai mandare il modulo.</p>' : '') +
       '<button class="btn main" id="gg">Accedi con Google</button><p class="muted" style="margin:10px 0 0">Usa l\'account Google che Simone ha abilitato.</p></div>';
     document.getElementById('gg').onclick = function(){
       var F = window.FB, b = this; b.disabled = true; b.textContent = 'Apro Google…';
@@ -203,9 +217,9 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       });
     };
   }
-  function vNonAbilitato(email){
+  function vNonAbilitato(email, motivo){
     VISTA = null;
-    app.innerHTML = '<p class="eyebrow">Catering</p><h1>Account non abilitato</h1><div class="card"><p style="margin:0 0 12px">L\'account <b>' + esc(email) + '</b> non è ancora tra i producer.</p><p class="muted" style="margin:0 0 14px">Chiedi a Simone di aggiungerlo, poi riapri l\'app.</p><button class="btn sec" id="out">Usa un altro account</button></div>';
+    app.innerHTML = '<p class="eyebrow">Catering</p><h1>Account non abilitato</h1><div class="card">' + (motivo ? '<div class="err">' + esc(motivo) + '</div>' : '') + '<p style="margin:0 0 12px">L\'account <b>' + esc(email) + '</b> non è ancora tra i producer.</p><p class="muted" style="margin:0 0 14px">Chiedi un link di invito a chi segue la produzione, oppure chiedi a Simone di aggiungerti.</p><button class="btn sec" id="out">Usa un altro account</button></div>';
     document.getElementById('out').onclick = esci;
   }
   function esci(){ ferma(); PROD = []; RIS = {}; window.FB.signOut(window.FB.auth); }
@@ -228,7 +242,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       var n = x.pulita && x.conteggi ? x.conteggi.totale : (RIS[x.id] || []).length;
       var info = [x.f ? 'shoot dal ' + fmt(x.f) : 'senza data', n + (n === 1 ? ' risposta' : ' risposte'), x.da ? 'di ' + x.da : ''].filter(Boolean).join(' · ');
       return '<div class="it" data-i="' + i + '"><div class="t"><b>' + esc(x.e) + '</b><small>' + esc(info) + '</small></div><span style="color:#B9BBBF;font-size:22px">›</span></div>'; }).join('') + '</div>' :
-      '<div class="card"><p class="muted" style="margin:0">Nessuna produzione. Creane una: ti do il link da mandare a crew, clienti e ospiti, e le risposte arrivano qui.</p></div>';
+      '<div class="card"><p class="muted" style="margin:0">' + (ME.collab ? 'Nessuna produzione condivisa con te, per ora.' : 'Nessuna produzione. Creane una: ti do il link da mandare a crew, clienti e ospiti, e le risposte arrivano qui.') + '</p></div>';
     Array.prototype.forEach.call(el.querySelectorAll('[data-i]'), function(it){ it.onclick = function(){ vEvento(PROD[Number(it.dataset.i)].id); }; });
   }
   function vCrea(){
@@ -284,70 +298,32 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     disegnaRisposte(id);
   }
 
-  // ── condividi la produzione con un collaboratore ──
+  // ── condividi la produzione con un collaboratore: link di invito ──
   function vCondividi(id){
     var x = trova(id); if (!x) return vHome();
-    var F = window.FB;
-    VISTA = function(){ var y = trova(id); if (y && document.getElementById('cl')) disegnaCollab(y); };
-    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ ' + esc(x.e) + '</button></div><h1>Condividi la produzione</h1>' +
-      '<p class="muted" style="margin:-6px 4px 14px">Chi aggiungi vede questa produzione e le risposte, e può mandare il modulo alla crew. Entra con il suo account Google.</p>' +
-      '<div id="cl"></div>' +
-      '<form id="cf" class="card" autocomplete="off"><div class="f"><label class="lab" for="ce">Email Google del collaboratore</label><input type="text" id="ce" inputmode="email" autocapitalize="off" placeholder="nome@gmail.com"></div><button class="btn main" type="submit">Aggiungi e invia l\'invito</button></form>';
-    document.getElementById('ind').onclick = function(){ vEvento(id); };
-    disegnaCollab(x);
-    document.getElementById('cf').addEventListener('submit', function(e){
-      e.preventDefault();
-      var m = document.getElementById('ce').value.trim().toLowerCase();
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m)) return toast('Scrivi un\'email valida');
-      F.updateDoc(F.doc(F.db, 'produzioni', id), { collab: F.arrayUnion(m) }).catch(function(err){ toast('Non salvato: ' + err.message); });
-      if (x.collab.indexOf(m) === -1) x.collab.push(m);
-      document.getElementById('ce').value = ''; disegnaCollab(x);
-      var inv = 'Ciao! Ti ho dato accesso al catering di ' + x.e + '. Apri ' + BASE + ' e accedi con Google (' + m + '): trovi le risposte e il link da mandare alla crew.';
-      if (navigator.share) navigator.share({ title: 'Catering · ' + x.e, text: inv }).catch(function(){});
-      else copia(inv, 'Aggiunto. Invito copiato: incollalo dove vuoi');
-    });
-  }
-  function disegnaCollab(x){
-    var F = window.FB, el = document.getElementById('cl'); if (!el) return;
-    el.innerHTML = x.collab.length ? '<div class="card list" style="padding:2px 16px">' + x.collab.map(function(m){ return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(m) + '</b></div><button class="link" style="color:#A3202A" data-m="' + esc(m) + '">Togli</button></div>'; }).join('') + '</div>' : '';
-    Array.prototype.forEach.call(el.querySelectorAll('[data-m]'), function(b){ b.onclick = function(){
-      F.updateDoc(F.doc(F.db, 'produzioni', x.id), { collab: F.arrayRemove(b.dataset.m) }).catch(function(err){ toast(err.message); });
-      x.collab = x.collab.filter(function(m){ return m !== b.dataset.m; }); disegnaCollab(x); toast('Tolto');
-    }; });
-  }
-  function vModifica(id, eliminaSubito){
-    var x = trova(id); if (!x) return vHome();
+    var F = window.FB, link = '';
     VISTA = null;
-    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Modifica produzione</h1>' +
-      '<form id="frm" class="card" autocomplete="off"><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" value="' + esc(x.e) + '"></div>' +
-      '<div class="f"><label class="lab" for="fi">Inizio shoot</label><input type="date" id="fi" value="' + esc(x.f || '') + '"></div>' +
-      '<button class="btn main" type="submit">Salva modifiche</button><p class="muted" style="margin:10px 0 0">Il link già mandato continua a funzionare.</p></form>' +
-      '<div id="del"><button class="btn danger" id="eli">Elimina produzione</button></div>';
+    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ ' + esc(x.e) + '</button></div><h1>Condividi la produzione</h1>' +
+      '<p class="muted" style="margin:-6px 4px 14px">Chi apre il link ed entra con Google vede questa produzione e le risposte, e può mandare il modulo alla crew. Non può modificarla né eliminarla.</p>' +
+      '<div class="card cent" id="lk"><button class="btn main" id="crea">Crea il link di invito</button></div>' +
+      '<p class="sez">Hanno accesso</p><div id="cl"><div class="card"><p class="muted" style="margin:0">Nessuno, per ora.</p></div></div>';
     document.getElementById('ind').onclick = function(){ vEvento(id); };
-    document.getElementById('frm').addEventListener('submit', function(e){
-      e.preventDefault();
-      var F = window.FB, ev = document.getElementById('ev').value.trim().slice(0, 80), fi = document.getElementById('fi').value;
-      if (ev.length < 2) return toast('Scrivi il nome della produzione');
-      F.updateDoc(F.doc(F.db, 'produzioni', id), { nome: ev, inizio: fi }).catch(function(err){ toast('Non salvata: ' + err.message); });
-      x.e = ev; x.f = fi; toast('Modifiche salvate'); vEvento(id);
-    });
-    document.getElementById('eli').onclick = function(){
-      document.getElementById('del').innerHTML = '<div class="card"><h2>Eliminare «' + esc(x.e) + '»?</h2><p class="muted" style="margin:0 0 12px">Il link smette di funzionare e le risposte vengono cancellate subito. Non si può annullare.</p>' +
-        '<div class="row"><button class="btn sec" id="no">Annulla</button><button class="btn danger" id="si">Elimina</button></div></div>';
-      document.getElementById('no').onclick = function(){ vModifica(id); };
-      document.getElementById('si').onclick = function(){
-        var F = window.FB, b = this; b.disabled = true; b.textContent = 'Elimino…';
-        var r = RIS[id] || [], c = conta(r);
-        F.getDocs(F.collection(F.db, 'produzioni', id, 'risposte')).then(function(qs){
-          var bt = F.writeBatch(F.db);
-          qs.docs.forEach(function(d){ bt.delete(d.ref); });
-          bt.update(F.doc(F.db, 'produzioni', id), { eliminata: true, pulita: true, conteggi: c });
-          return bt.commit();
-        }).then(function(){ toast('Produzione eliminata'); vHome(); })
-          .catch(function(err){ b.disabled = false; b.textContent = 'Elimina'; toast(err.message); });
-      };
+    document.getElementById('crea').onclick = function(){
+      var t = codice();
+      F.setDoc(F.doc(F.db, 'inviti', t), { p: id, creato: F.serverTimestamp(), da: ME.email }).catch(function(err){ toast('Non creato: ' + err.message); });
+      link = BASE + '?invito=' + t;
+      var msg = 'Ciao! Ti invito a seguire il catering di ' + x.e + '. Apri il link ed entra con Google: ' + link;
+      document.getElementById('lk').innerHTML = '<h2>Link pronto</h2><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(msg) + '">Manda su WhatsApp</a>' +
+        '<button class="link" id="cpi" style="display:block;margin:8px auto 0">Copia il link</button>' +
+        '<p class="muted" style="margin:8px 0 0">Mandalo solo a chi deve vedere la produzione: chiunque lo apra può entrare.</p>';
+      document.getElementById('cpi').onclick = function(){ copia(link, 'Link di invito copiato'); };
     };
-    if (eliminaSubito) document.getElementById('eli').click();
+    STOP.push(F.onSnapshot(F.collection(F.db, 'produzioni', id, 'membri'), function(qs){
+      var el = document.getElementById('cl'); if (!el) return;
+      el.innerHTML = !qs.docs.length ? '<div class="card"><p class="muted" style="margin:0">Nessuno, per ora.</p></div>' :
+        '<div class="card list" style="padding:2px 16px">' + qs.docs.map(function(d){ var v = d.data(); return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(v.nome || v.email) + '</b><small>' + esc(v.email) + '</small></div><button class="link" style="color:#A3202A" data-m="' + esc(d.id) + '">Togli</button></div>'; }).join('') + '</div>';
+      Array.prototype.forEach.call(el.querySelectorAll('[data-m]'), function(b){ b.onclick = function(){ F.deleteDoc(F.doc(F.db, 'produzioni', id, 'membri', b.dataset.m)).then(function(){ toast('Accesso tolto'); }).catch(function(err){ toast(err.message); }); }; });
+    }, function(err){ mostraErrore(err); }));
   }
   function ordina(r){ var w = function(x){ return x.grave ? 0 : (x.allergie || x.altro) ? 1 : 2; }; return r.slice().sort(function(a, b){ return w(a) - w(b) || a.nome.localeCompare(b.nome, 'it'); }); }
   function iniziali(n){ return String(n).trim().split(/\s+/).slice(0, 2).map(function(p){ return p.charAt(0).toUpperCase(); }).join(''); }
@@ -550,6 +526,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function ripristina(d, msg){ dieta = d.dieta; vModulo(msg); rimetti(d); }
 
   if (CID) vModuloFB();
+  else if (INV) avvia();
   else if (EV && !KEY) vModuloVecchio();   // link vecchi e link dai progetti Troupe: passano ancora da Google
   else avvia();
 })();
