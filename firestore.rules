@@ -17,10 +17,11 @@ service cloud.firestore {
     }
     function testo(v, max) { return v is string && v.size() <= max; }
 
-    // elenco dei producer abilitati: lo gestisce solo l'admin
+    // elenco dei producer: hanno tutti gli stessi poteri dell'admin
     match /producer/{email} {
       allow read: if producer();
-      allow write: if admin() && request.resource.data.keys().hasOnly(['nome']) && testo(request.resource.data.nome, 80);
+      allow create, update: if producer() && request.resource.data.keys().hasOnly(['nome']) && testo(request.resource.data.nome, 80);
+      allow delete: if producer();
     }
 
     // produzioni: chiunque abbia il link legge solo nome e data della sua; i producer vedono e gestiscono tutto

@@ -133,7 +133,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       };
       if (email === ADMIN) return entra(u.displayName || 'Simone Manfreda', true);
       F.getDoc(F.doc(F.db, 'producer', email)).then(function(d){
-        if (d.exists()) return entra(d.data().nome, false);
+        if (d.exists()) return entra(d.data().nome, true);   // i producer aggiunti dall'ingranaggio hanno gli stessi poteri dell'admin
         // non è producer: se arriva da un link di invito lo aggiungo alla produzione, poi vedo a quali è invitato
         return usaInvito(email, u.displayName).then(function(){
           return F.getDocs(F.query(F.collectionGroup(F.db, 'membri'), F.where('email', '==', email)));
@@ -391,7 +391,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     VISTA = null;
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Produzioni</button></div><h1>Producer</h1>' +
       '<div class="card" id="pl"><p class="muted" style="margin:0">Carico…</p></div>' +
-      '<form id="pf" class="card" autocomplete="off"><h2>Aggiungi un producer</h2><div class="f"><label class="lab" for="pn">Nome</label><input type="text" id="pn" placeholder="Es. Filippo Mogno"></div>' +
+      '<form id="pf" class="card" autocomplete="off"><h2>Aggiungi un producer</h2><p class="muted" style="margin:-4px 0 10px">Vede e gestisce tutte le produzioni, come te. Per far vedere una sola produzione usa il link di invito dentro la produzione.</p><div class="f"><label class="lab" for="pn">Nome</label><input type="text" id="pn" placeholder="Es. Filippo Mogno"></div>' +
       '<div class="f"><label class="lab" for="pe">Email Google</label><input type="text" id="pe" inputmode="email" autocapitalize="off" placeholder="nome@gmail.com"></div><button class="btn main" type="submit">Aggiungi</button></form>' +
       '<form id="imp" class="card" autocomplete="off"><h2>Porta qui le produzioni vecchie</h2><p class="muted" style="margin:0 0 10px">Copia le produzioni create prima su Google, con le loro risposte. I link già mandati continuano a funzionare e da ora scrivono qui. Serve il tuo codice Troupe.</p>' +
       '<div class="f"><input type="password" id="ic" inputmode="numeric" placeholder="Codice Troupe" autocomplete="one-time-code"></div><button class="btn sec" type="submit">Importa</button><div id="ir"></div></form>';
@@ -401,7 +401,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       F.getDocs(F.collection(F.db, 'producer')).then(function(qs){
         var el = document.getElementById('pl'); if (!el) return;
         el.className = 'card list'; el.style.padding = '2px 16px';
-        el.innerHTML = '<div class="it" style="cursor:default"><div class="t"><b>' + esc(ME.nome) + '</b><small>' + esc(ADMIN) + ' · admin</small></div></div>' +
+        el.innerHTML = '<div class="it" style="cursor:default"><div class="t"><b>Simone Manfreda</b><small>' + esc(ADMIN) + ' · admin</small></div></div>' +
           qs.docs.map(function(d){ return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(d.data().nome) + '</b><small>' + esc(d.id) + '</small></div><button class="link" style="color:#A3202A" data-del="' + esc(d.id) + '">Togli</button></div>'; }).join('');
         Array.prototype.forEach.call(el.querySelectorAll('[data-del]'), function(b){ b.onclick = function(){ F.deleteDoc(F.doc(F.db, 'producer', b.dataset.del)).then(function(){ toast('Tolto'); lista(); }); }; });
       }).catch(function(err){ toast(err.message); });
