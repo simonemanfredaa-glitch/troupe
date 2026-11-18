@@ -89,6 +89,8 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;backgr
 .calg{display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px;text-align:center}.calh{font-size:11px;font-weight:700;color:var(--muted)}
 .cg{height:38px;border:none;background:none;font:inherit;font-size:15px;font-weight:500;color:var(--ink);border-radius:10px;cursor:pointer}.cg.pass{color:#B9BBBF}.cg.oggi{box-shadow:inset 0 0 0 1.5px var(--line)}
 .cg.s{background:var(--ink);color:#fff;font-weight:800}.cg.in{background:#E3E2DD;border-radius:0}
+.ocr{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--soft)}.ocr:first-child{border-top:none}.ocr.off{opacity:.45}
+.ocr2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}.ocr2 input[type=text]{height:38px;font-size:15px;padding:0 10px}
 .toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:50}
 </style>
 </head>
@@ -425,7 +427,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     }
     document.getElementById('pdf').onclick = function(){ scaricaPdf(id, this); };
     STOPV.push(F.onSnapshot(F.collection(F.db, 'produzioni', id, 'crew'), function(qs){
-      CREW[id] = qs.docs.map(function(d){ var v = d.data(); return { id: d.id, n: v.nome || '', c: v.cognome || '', tel: v.tel || '', g: v.giorni || [], stato: v.stato || 'da', mandato: v.mandato || null }; });
+      CREW[id] = qs.docs.map(function(d){ var v = d.data(); return { id: d.id, n: v.nome || '', c: v.cognome || '', tel: v.tel || '', ruolo: v.ruolo || '', g: v.giorni || [], stato: v.stato || 'da', mandato: v.mandato || null }; });
       disegnaRisposte(id);
     }, function(err){ mostraErrore(err); }));
     VISTA = function(){ disegnaRisposte(id); };
@@ -489,7 +491,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
         var gg = p && p.g.length && giorniU.length > 1 ? (p.g.length === giorniU.length ? 'tutti i giorni' : p.g.map(nomeGiorno).join(', ')) : '';
         var act = !ME.collab || true ? (v.stato === 'da' ? '<a class="act wa" data-wa="' + i + '" href="' + waHref(p.tel, msgPersona(x, p)) + '">WhatsApp</a>' : v.stato === 'mandato' ? '<a class="act ric" data-wa="' + i + '" href="' + waHref(p.tel, msgPersona(x, p)) + '">Ricorda</a>' : '') : '';
         return '<div class="it" data-v="' + i + '">' + (conLista ? '<span class="sd" style="background:' + { ok: '#3E9B58', mandato: '#E0A800', da: '#C9C8C3' }[v.stato] + '"></span>' : '') +
-          '<div class="t"><b>' + esc(nomeVoce(v)) + (y && y.grave ? ' <span class="badge">grave</span>' : '') + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + (gg ? '<small>' + esc(gg) + '</small>' : '') + (!p && conLista ? '<small>dal link crew</small>' : '') + '</div>' +
+          '<div class="t"><b>' + esc(nomeVoce(v)) + (y && y.grave ? ' <span class="badge">grave</span>' : '') + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + (p && p.ruolo ? '<small>' + esc(p.ruolo) + '</small>' : '') + (gg ? '<small>' + esc(gg) + '</small>' : '') + (!p && conLista ? '<small>dal link crew</small>' : '') + '</div>' +
           (y ? '<span class="dp' + (y.dieta !== 'Mangio tutto' ? ' v' : '') + '">' + esc(SIGLA[y.dieta] || y.dieta) + '</span>' : act) + '</div>';
       }).join('') + '</div>' : '<div class="card"><p class="muted" style="margin:0">' + (x.pulita ? 'Le risposte sono state cancellate per la privacy: restano solo i numeri.' : SEL.filtro ? 'Nessuno in questo gruppo.' : 'Ancora nessuno. Aggiungi la crew oppure manda il link crew: chi compila compare qui da solo.') + '</p></div>');
     Array.prototype.forEach.call(el.querySelectorAll('[data-f]'), function(b){ b.onclick = function(){ SEL.filtro = SEL.filtro === b.dataset.f ? '' : b.dataset.f; disegnaRisposte(id); }; });
@@ -512,7 +514,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       riga('Stato', v.stato === 'ok' ? 'ha risposto' : v.stato === 'mandato' ? 'mandato, in attesa' : 'da mandare') +
       (giorniU.length > 1 ? riga('Presente', esc(pasti) || 'tutti i giorni') : '') +
       (y ? riga('Dieta', esc(y.dieta)) + riga('Allergie', esc(y.allergie), true) + riga('Note', esc(y.altro)) : '') +
-      (p ? riga('Telefono', esc(p.tel)) : '') + '</div>' +
+      (p ? riga('Ruolo', esc(p.ruolo)) + riga('Telefono', esc(p.tel)) : '') + '</div>' +
       (ME.collab ? '' : '<button class="add" id="ed">' + (y ? 'Correggi' : 'Compila tu') + '</button>' + (p ? '<button class="add" id="rm" style="color:var(--err);padding-top:0">Togli dalla crew</button>' : '')) +
       '<button class="btn sec" id="ch" style="margin-top:6px">Chiudi</button>');
     o.querySelector('#ch').onclick = chiudiFoglio;
@@ -555,15 +557,19 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function aggiungiCrew(id, tab){
     tab = tab || 'file';
     var x = trova(id), F = window.FB, giorniU = servizi(x).map(function(s){ return s.d; }).filter(function(d, i, a){ return a.indexOf(d) === i; });
-    var o = foglio('<h2>Aggiungi persone in crew</h2><div class="tabs"><button type="button" data-t="file" class="' + (tab === 'file' ? 'on' : '') + '">Da file</button><button type="button" data-t="mano" class="' + (tab === 'mano' ? 'on' : '') + '">A mano</button></div><div id="tb"></div>');
+    var o = foglio('<h2>Aggiungi persone in crew</h2><div class="tabs"><button type="button" data-t="file" class="' + (tab === 'file' ? 'on' : '') + '">Da file</button><button type="button" data-t="foto" class="' + (tab === 'foto' ? 'on' : '') + '">Da foto</button><button type="button" data-t="mano" class="' + (tab === 'mano' ? 'on' : '') + '">A mano</button></div><div id="tb"></div>');
     Array.prototype.forEach.call(o.querySelectorAll('[data-t]'), function(b){ b.onclick = function(){ aggiungiCrew(id, b.dataset.t); }; });
     var tb = o.querySelector('#tb');
     var salva = function(lista){
       var bt = F.writeBatch(F.db);
-      lista.forEach(function(p){ bt.set(F.doc(F.collection(F.db, 'produzioni', id, 'crew')), { nome: p.n.slice(0, 60), cognome: p.c.slice(0, 60), tel: p.tel.slice(0, 30), giorni: p.g, stato: 'da', aggiunto: F.serverTimestamp() }); });
+      lista.forEach(function(p){ bt.set(F.doc(F.collection(F.db, 'produzioni', id, 'crew')), { nome: p.n.slice(0, 60), cognome: p.c.slice(0, 60), tel: p.tel.slice(0, 30), ruolo: String(p.ruolo || '').slice(0, 60), giorni: p.g, stato: 'da', aggiunto: F.serverTimestamp() }); });
       return bt.commit();
     };
-    if (tab === 'file') {
+    if (tab === 'foto') {
+      tb.innerHTML = '<div class="card"><p class="muted" style="margin:0">Carica uno screenshot o una foto della crew list: leggo nomi, telefoni, ruoli e giorni. Prima di aggiungere puoi controllare e correggere tutto.</p></div>' +
+        '<label class="btn main" style="margin-bottom:8px">Scegli la foto<input type="file" id="ff" accept="image/*" hidden></label><div id="pv"></div>';
+      tb.querySelector('#ff').onchange = function(){ var f = this.files[0]; if (f) leggiFoto(id, f, giorniU, tb.querySelector('#pv'), salva); };
+    } else if (tab === 'file') {
       var esempio = ['Nome', 'Cognome', 'Telefono'].concat(giorniU.length > 1 ? giorniU.map(nomeGiorno) : []);
       tb.innerHTML = '<div class="card"><p class="muted" style="margin:0 0 8px">Carica un Excel o CSV con le colonne <b>' + esempio.join(', ') + '</b>' + (giorniU.length > 1 ? ': nelle colonne dei giorni metti una <b>x</b> dove la persona c\'è (se non ci sono, vale per tutti i giorni)' : '') + '. Va bene anche la tua crew list, basta che abbia queste intestazioni.</p></div>' +
         '<label class="btn main" style="margin-bottom:8px">Scegli il file<input type="file" id="fi" accept=".xlsx,.xls,.csv" hidden></label><div id="pv"></div>';
@@ -588,11 +594,109 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       };
     }
   }
+  // Legge le righe riconosciute da una foto di crew list: nome, telefono, ruolo, giorni.
+  function leggiCrewDaRighe(lines, anno){
+    var MESI = { gen: 0, feb: 1, mar: 2, apr: 3, mag: 4, giu: 5, lug: 6, ago: 7, set: 8, ott: 9, nov: 10, dic: 11 };
+    var reMese = /(gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic)/i;
+    var righe = lines.map(function(ws){
+      ws = ws.filter(function(w){ return w.t && w.t.trim(); }).sort(function(a, b){ return a.b.x0 - b.b.x0; });
+      if (!ws.length) return null;
+      var h = ws.map(function(w){ return w.b.y1 - w.b.y0; }).sort(function(a, b){ return a - b; })[Math.floor(ws.length / 2)] || 20;
+      var celle = [], cur = null;
+      ws.forEach(function(w){
+        if (cur && w.b.x0 - cur.x1 < h * 1.3) { cur.t += ' ' + w.t; cur.x1 = w.b.x1; }
+        else { cur = { t: w.t, x0: w.b.x0, x1: w.b.x1 }; celle.push(cur); }
+      });
+      celle.forEach(function(c){
+        var s = c.t.trim();
+        c.tipo = /@/.test(s) ? 'mail' : /^\+?[\d\s.\/-]{8,}$/.test(s) && (s.match(/\d/g) || []).length >= 8 ? 'tel' : /\d/.test(s) && reMese.test(s) && s.length < 25 ? 'data' : 'testo';
+      });
+      // telefono spezzato in più celle ("+39" "3381399560")
+      for (var i = 0; i < celle.length - 1; i++) if (/^\+?\d{2,4}$/.test(celle[i].t.trim()) && celle[i + 1].tipo === 'tel') { celle[i + 1].t = celle[i].t + ' ' + celle[i + 1].t; celle[i + 1].x0 = celle[i].x0; celle.splice(i, 1); i--; }
+      return { celle: celle, h: h };
+    }).filter(Boolean);
+    // colonna dei nomi: la cella prima del telefono, nelle righe che ce l'hanno
+    var xs = [];
+    righe.forEach(function(r){ var i = r.celle.findIndex(function(c){ return c.tipo === 'tel'; }); if (i > 0 && r.celle[i - 1].tipo === 'testo') xs.push(r.celle[i - 1].x0); });
+    if (!xs.length) return [];
+    xs.sort(function(a, b){ return a - b; }); var xN = xs[Math.floor(xs.length / 2)];
+    var titolo = function(s){ return /[a-zà-ÿ]/.test(s) ? s : s.toLowerCase().replace(/(^|[\s'’-])(\p{L})/gu, function(m, a, b){ return a + b.toUpperCase(); }); };
+    var out = [];
+    righe.forEach(function(r){
+      var iN = r.celle.findIndex(function(c){ return c.tipo === 'testo' && Math.abs(c.x0 - xN) < r.h * 3; });
+      if (iN === -1) return;
+      var nome = r.celle[iN].t.replace(/[|_]/g, '').replace(/['’`´]{2,}/g, '’').replace(/\s+/g, ' ').trim();
+      if (!/\p{L}{2,}/u.test(nome)) return;
+      var tel = (r.celle.filter(function(c){ return c.tipo === 'tel'; })[0] || {}).t || '';
+      var ruolo = r.celle.slice(0, iN).filter(function(c){ return c.tipo === 'testo'; }).map(function(c){ return c.t; }).join(' ').replace(/\s+-\s*|\s*-\s+/g, ' - ').trim();
+      var dataT = r.celle.filter(function(c){ return c.tipo === 'data'; }).map(function(c){ return c.t; }).join(' ');
+      var giorni = [], m, re = /(\d{1,2}(?:\s*\/\s*\d{1,2})*)\s*(gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic)/gi;
+      while ((m = re.exec(dataT))) m[1].split('/').forEach(function(n){ var d = new Date(anno, MESI[m[2].toLowerCase()], +n); giorni.push(d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2)); });
+      var parti = titolo(nome).split(/\s+/);
+      out.push({ n: parti.length > 1 ? parti.slice(0, -1).join(' ') : parti[0], c: parti.length > 1 ? parti[parti.length - 1] : '', tel: tel.replace(/\s+/g, ' ').trim(), ruolo: ruolo, giorni: giorni });
+    });
+    return out;
+  }
+
+  // ── lettura di una foto o screenshot, tutta sul telefono ──
+  function caricaOcr(){ return window.Tesseract ? Promise.resolve(window.Tesseract) : new Promise(function(ok, ko){ var s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js'; s.onload = function(){ ok(window.Tesseract); }; s.onerror = ko; document.head.appendChild(s); }); }
+  function preparaFoto(file){
+    return new Promise(function(ok, ko){
+      var img = new Image(); img.onload = function(){
+        var k = Math.min(2, 3000 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+        cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+        var cx = cv.getContext('2d'); cx.drawImage(img, 0, 0, cv.width, cv.height);
+        var id = cx.getImageData(0, 0, cv.width, cv.height), px = id.data, ist = new Array(256).fill(0), n = px.length / 4;
+        for (var i = 0; i < px.length; i += 4) { var g = Math.round(.299 * px[i] + .587 * px[i + 1] + .114 * px[i + 2]); px[i] = g; ist[g]++; }
+        // testo scuro su fondo chiaro: le celle colorate (verdi, gialle) diventano bianche; uno screenshot scuro viene prima invertito
+        var media = 0; for (var t = 0; t < 256; t++) media += t * ist[t]; media /= n;
+        if (media < 110) for (i = 0; i < px.length; i += 4) px[i] = 255 - px[i];
+        var soglia = 150;
+        for (i = 0; i < px.length; i += 4) { var b = px[i] > soglia ? 255 : 0; px[i] = px[i + 1] = px[i + 2] = b; }
+        cx.putImageData(id, 0, 0); URL.revokeObjectURL(img.src); ok(cv);
+      };
+      img.onerror = ko; img.src = URL.createObjectURL(file);
+    });
+  }
+  function leggiFoto(id, file, giorniU, pv, salva){
+    pv.innerHTML = '<p class="muted" id="ocrp">Preparo la lettura… (la prima volta scarica circa 10 MB)</p>';
+    var anno = giorniU.length ? dataDi(giorniU[0]).getFullYear() : new Date().getFullYear();
+    Promise.all([caricaOcr(), preparaFoto(file)]).then(function(r){
+      return r[0].createWorker('ita', 1, { logger: function(m){ var el = document.getElementById('ocrp'); if (el && m.status === 'recognizing text') el.textContent = 'Leggo la foto… ' + Math.round(m.progress * 100) + '%'; } })
+        .then(function(w){ return w.recognize(r[1]).then(function(res){ w.terminate(); return res.data; }); });
+    }).then(function(data){
+      var lines = (data.lines || []).map(function(l){ return l.words.map(function(w){ return { t: w.text, b: w.bbox }; }); });
+      var trovati = leggiCrewDaRighe(lines, anno).map(function(p){
+        var g = p.giorni.filter(function(d){ return giorniU.indexOf(d) !== -1; });
+        return { n: p.n, c: p.c, tel: p.tel, ruolo: p.ruolo, g: g.length ? g : giorniU, ok: true };
+      });
+      if (!trovati.length) { pv.innerHTML = '<div class="err">Non ho trovato nomi in questa immagine. Funziona meglio con uno screenshot nitido della tabella, con nomi e telefoni in colonne.</div>'; return; }
+      var gia = (CREW[id] || []).map(function(p){ return (p.n + ' ' + p.c).toLowerCase(); });
+      trovati.forEach(function(p){ if (gia.indexOf((p.n + ' ' + p.c).toLowerCase()) !== -1) p.ok = false; });
+      var disegna = function(){
+        pv.innerHTML = '<p class="sez" style="margin-top:4px">Controlla e correggi</p><div class="card list" style="padding:2px 12px">' + trovati.map(function(p, i){
+          return '<div class="ocr' + (p.ok ? '' : ' off') + '"><label class="chk" style="margin:0"><input type="checkbox" data-i="' + i + '"' + (p.ok ? ' checked' : '') + '></label><div style="flex:1;min-width:0">' +
+            '<div class="ocr2"><input type="text" data-k="n" data-i="' + i + '" value="' + esc(p.n) + '" placeholder="Nome"><input type="text" data-k="c" data-i="' + i + '" value="' + esc(p.c) + '" placeholder="Cognome"></div>' +
+            '<div class="ocr2"><input type="text" data-k="tel" data-i="' + i + '" value="' + esc(p.tel) + '" placeholder="Telefono" inputmode="tel"><span class="muted" style="font-size:12px;align-self:center">' + esc([p.ruolo, giorniU.length > 1 ? (p.g.length === giorniU.length ? 'tutti i giorni' : p.g.map(nomeGiorno).join(', ')) : ''].filter(Boolean).join(' · ')) + '</span></div></div></div>';
+        }).join('') + '</div><button class="btn main" id="imp2">Aggiungi ' + trovati.filter(function(p){ return p.ok; }).length + ' alla crew</button>' +
+          '<p class="muted" style="margin:8px 4px 0;text-align:center">Chi è già in crew è tolto in automatico. La foto non lascia il telefono.</p>';
+        Array.prototype.forEach.call(pv.querySelectorAll('input[type=checkbox][data-i]'), function(c){ c.onchange = function(){ trovati[+c.dataset.i].ok = c.checked; disegna(); }; });
+        Array.prototype.forEach.call(pv.querySelectorAll('input[type=text][data-i]'), function(t){ t.oninput = function(){ trovati[+t.dataset.i][t.dataset.k] = t.value; }; });
+        pv.querySelector('#imp2').onclick = function(){
+          var sel = trovati.filter(function(p){ return p.ok && p.n.trim().length >= 2; });
+          if (!sel.length) return toast('Nessuna persona selezionata');
+          salva(sel.map(function(p){ return { n: p.n.trim(), c: p.c.trim(), tel: p.tel.trim(), ruolo: p.ruolo, g: p.g }; })).catch(function(err){ toast('Non salvato: ' + err.message); });
+          chiudiFoglio(); toast(sel.length + ' persone aggiunte');
+        };
+      };
+      disegna();
+    }).catch(function(e){ console.warn(e); pv.innerHTML = '<div class="err">Non riesco a leggere la foto: controlla la connessione e riprova.</div>'; });
+  }
   function anteprimaFile(id, rows, giorniU, pv, salva){
     var norm = function(s){ return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); };
     var h = (rows[0] || []).map(norm);
     var trovaCol = function(nomi){ for (var i = 0; i < h.length; i++) if (nomi.indexOf(h[i]) !== -1) return i; return -1; };
-    var iN = trovaCol(['nome', 'name', 'first name']), iC = trovaCol(['cognome', 'surname', 'last name']), iT = trovaCol(['telefono', 'tel', 'cellulare', 'phone', 'mobile']);
+    var iN = trovaCol(['nome', 'name', 'first name']), iC = trovaCol(['cognome', 'surname', 'last name']), iT = trovaCol(['telefono', 'tel', 'cellulare', 'phone', 'mobile']), iR = trovaCol(['ruolo', 'role', 'reparto', 'mansione']);
     if (iN === -1) { pv.innerHTML = '<div class="err">Manca la colonna «Nome» nella prima riga.</div>'; return; }
     // colonne dei giorni: "Gio 26", "26/11", "26/11/2026", "2026-11-26"
     var colG = giorniU.map(function(d){
@@ -606,7 +710,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       if (!n) return;
       if (gia.indexOf(norm(n + ' ' + c)) !== -1 || nuovi.some(function(p){ return norm(p.n + ' ' + p.c) === norm(n + ' ' + c); })) { doppi++; return; }
       var g = giorniU.filter(function(d, i){ return colG[i] > -1 && String(r[colG[i]]).trim(); });
-      nuovi.push({ n: n, c: c, tel: iT > -1 ? String(r[iT] || '').trim() : '', g: g.length ? g : giorniU });
+      nuovi.push({ n: n, c: c, tel: iT > -1 ? String(r[iT] || '').trim() : '', ruolo: iR > -1 ? String(r[iR] || '').trim() : '', g: g.length ? g : giorniU });
     });
     pv.innerHTML = '<div class="card"><b>' + nuovi.length + (nuovi.length === 1 ? ' persona trovata' : ' persone trovate') + '</b>' + (doppi ? '<span class="muted"> · ' + doppi + ' già in crew, saltate</span>' : '') +
       '<div style="margin-top:6px">' + nuovi.map(function(p){ return '<div class="rw"><span>' + esc(p.n + ' ' + p.c) + '</span><span class="muted">' + (giorniU.length > 1 ? (p.g.length === giorniU.length ? 'tutti i giorni' : p.g.map(nomeGiorno).join(', ')) : esc(p.tel)) + '</span></div>'; }).join('') + '</div></div>' +

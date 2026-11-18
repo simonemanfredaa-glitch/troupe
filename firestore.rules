@@ -72,9 +72,9 @@ service cloud.firestore {
       match /crew/{u} {
         allow get: if true;
         allow list: if producer() || collab(p);
-        allow create: if producer() && request.resource.data.keys().hasOnly(['nome', 'cognome', 'tel', 'giorni', 'stato', 'aggiunto', 'mandato'])
+        allow create: if producer() && request.resource.data.keys().hasOnly(['nome', 'cognome', 'tel', 'ruolo', 'giorni', 'stato', 'aggiunto', 'mandato'])
           && testo(request.resource.data.nome, 60) && testo(request.resource.data.cognome, 60) && testo(request.resource.data.tel, 30);
-        allow update: if (producer() && request.resource.data.keys().hasOnly(['nome', 'cognome', 'tel', 'giorni', 'stato', 'aggiunto', 'mandato'])
+        allow update: if (producer() && request.resource.data.keys().hasOnly(['nome', 'cognome', 'tel', 'ruolo', 'giorni', 'stato', 'aggiunto', 'mandato'])
             && testo(request.resource.data.nome, 60) && testo(request.resource.data.cognome, 60) && testo(request.resource.data.tel, 30))
           || (collab(p) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stato', 'mandato']));
         allow delete: if producer();
