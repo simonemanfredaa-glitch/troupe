@@ -29,12 +29,12 @@ service cloud.firestore {
       allow get: if true;
       allow list: if producer();
       allow create: if producer()
-        && request.resource.data.keys().hasOnly(['nome', 'inizio', 'creataNome', 'creataDa', 'creata', 'eliminata', 'pulita', 'conteggi'])
+        && request.resource.data.keys().hasOnly(['nome', 'inizio', 'fine', 'giorni', 'creataNome', 'creataDa', 'creata', 'eliminata', 'pulita', 'conteggi'])
         && testo(request.resource.data.nome, 80) && request.resource.data.nome.size() >= 2
         && request.resource.data.creataDa == request.auth.token.email
         && request.resource.data.eliminata == false;
       allow update: if producer()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'inizio', 'eliminata', 'pulita', 'conteggi'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome', 'inizio', 'fine', 'giorni', 'eliminata', 'pulita', 'conteggi'])
         && testo(request.resource.data.nome, 80);
 
       // chi ha accesso grazie a un link di invito
@@ -53,7 +53,9 @@ service cloud.firestore {
       // risposte della crew: chi ha il link può solo aggiungere la sua, mai leggere quelle degli altri
       match /risposte/{r} {
         allow create: if get(/databases/$(database)/documents/produzioni/$(p)).data.eliminata == false
-          && request.resource.data.keys().hasOnly(['nome', 'dieta', 'allergie', 'altro', 'grave', 'quando'])
+          && request.resource.data.keys().hasOnly(['nome', 'dieta', 'allergie', 'altro', 'grave', 'quando', 'crew', 'pasti'])
+          && (!('crew' in request.resource.data) || (request.resource.data.crew is string && r == 'u_' + request.resource.data.crew))
+          && (!('pasti' in request.resource.data) || (request.resource.data.pasti is list && request.resource.data.pasti.size() <= 62))
           && testo(request.resource.data.nome, 80) && request.resource.data.nome.size() >= 3
           && request.resource.data.dieta in ['Mangio tutto', 'Vegetariana', 'Vegana', 'Pescetariana']
           && testo(request.resource.data.allergie, 300) && testo(request.resource.data.altro, 300)
@@ -61,7 +63,21 @@ service cloud.firestore {
           && request.resource.data.quando == request.time;
         allow read: if producer() || collab(p);
         allow delete: if producer();
-        allow update: if false;
+        allow update: if producer()
+          && request.resource.data.keys().hasOnly(['nome', 'dieta', 'allergie', 'altro', 'grave', 'quando', 'crew', 'pasti'])
+          && testo(request.resource.data.nome, 80) && request.resource.data.dieta in ['Mangio tutto', 'Vegetariana', 'Vegana', 'Pescetariana'];
+      }
+
+      // crew list: chi ha il proprio link legge solo la sua scheda (nome e giorni), i producer gestiscono tutto
+      match /crew/{u} {
+        allow get: if true;
+        allow list: if producer() || collab(p);
+        allow create: if producer() && request.resource.data.keys().hasOnly(['nome', 'cognome', 'tel', 'giorni', 'stato', 'aggiunto', 'mandato'])
+          && testo(request.resource.data.nome, 60) && testo(request.resource.data.cognome, 60) && testo(request.resource.data.tel, 30);
+        allow update: if (producer() && request.resource.data.keys().hasOnly(['nome', 'cognome', 'tel', 'giorni', 'stato', 'aggiunto', 'mandato'])
+            && testo(request.resource.data.nome, 60) && testo(request.resource.data.cognome, 60) && testo(request.resource.data.tel, 30))
+          || (collab(p) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stato', 'mandato']));
+        allow delete: if producer();
       }
     }
 

@@ -72,6 +72,22 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;backgr
 .sep{width:40px;height:4px;border-radius:2px;background:#C9C8C3;margin:6px auto 14px}
 .az{display:grid;grid-template-columns:1fr 1fr;gap:8px}.az .btn{height:48px;font-size:15px}
 .cent{text-align:center}.cent h2{margin-bottom:10px}
+.chips2{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:7px 12px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink)}.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.it .chip{margin-left:6px}
+.pills{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+.pill{border:none;border-radius:20px;padding:6px 10px;font:inherit;font-size:12.5px;font-weight:700;background:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:5px}.pill.on{outline:2px solid var(--ink)}
+.pd{width:8px;height:8px;border-radius:50%}.sd{width:11px;height:11px;border-radius:50%;flex:none;margin-right:2px}
+.act{border:none;border-radius:10px;padding:8px 11px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;text-decoration:none;flex:none}.act.wa{background:#3E7F4E;color:#fff}.act.ric{background:none;color:#2F4FA0;padding:8px 2px}
+.add{display:block;width:100%;background:none;border:none;color:#2F4FA0;font:inherit;font-weight:700;font-size:15px;padding:12px;cursor:pointer}
+.ov{position:fixed;inset:0;background:rgba(23,24,27,.35);display:flex;align-items:flex-end;justify-content:center;z-index:30}
+.shb{background:var(--bg);width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:16px 14px calc(18px + env(safe-area-inset-bottom));max-height:88vh;overflow:auto}
+.shb h2{font-size:20px;margin:0 4px 10px}
+.tabs{display:flex;background:#fff;border-radius:12px;padding:3px;margin-bottom:10px}.tabs button{flex:1;border:none;background:none;padding:9px;border-radius:10px;font:inherit;font-weight:700;font-size:14px;cursor:pointer;color:var(--muted)}.tabs button.on{background:var(--ink);color:#fff}
+.calt{display:flex;justify-content:space-between;align-items:center;margin:2px 2px 8px}.calt .link{font-size:22px;padding:0 10px}
+.calg{display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px;text-align:center}.calh{font-size:11px;font-weight:700;color:var(--muted)}
+.cg{height:38px;border:none;background:none;font:inherit;font-size:15px;font-weight:500;color:var(--ink);border-radius:10px;cursor:pointer}.cg.pass{color:#B9BBBF}.cg.oggi{box-shadow:inset 0 0 0 1.5px var(--line)}
+.cg.s{background:var(--ink);color:#fff;font-weight:800}.cg.in{background:#E3E2DD;border-radius:0}
 .toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-size:14px;z-index:50}
 </style>
 </head>
@@ -91,11 +107,11 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   var CHEV = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
   var SIGLA = { 'Mangio tutto': 'Tutto', 'Vegetariana': 'Vege', 'Vegana': 'Vegan', 'Pescetariana': 'Pesce' };
   var TX = {
-    it: { titolo: 'Cosa mangi sul set?', nome: 'Nome', eNome: 'Scrivi il nome', cognome: 'Cognome', eCognome: 'Scrivi il cognome', dieta: 'La tua dieta', eDieta: 'Scegli la tua dieta', diete: DIETE, scegli: 'Scegli', nessuna: 'Nessuna',
+    it: { titolo: 'Cosa mangi sul set?', nome: 'Nome', eNome: 'Scrivi il nome', cognome: 'Cognome', eCognome: 'Scrivi il cognome', dieta: 'La tua dieta', eDieta: 'Scegli la tua dieta', diete: DIETE, scegli: 'Scegli', nessuna: 'Nessuna', ciao: 'Ciao', quando: 'Quando sei sul set?', eQuando: 'Scegli almeno un giorno', pranzo: 'pranzo', cena: 'cena', gia: 'Hai già risposto', gia2: 'Se devi cambiare qualcosa, avvisa la produzione.',
       all: 'Allergie o intolleranze', chips: ALL, altro: 'Altro', ph: 'Es. niente funghi', grave: 'Ho un\'allergia grave: avvisate il catering', invia: 'Invia',
       nota: 'Le risposte vanno solo al catering di questa produzione.', grazie: 'Grazie, ricevuto!', grazie2: 'Lo giriamo al catering. Ci vediamo sul set.',
       off: 'Link non più attivo', off2: 'Chiedi un link nuovo a chi te l\'ha mandato.', rete: 'Connessione assente', rete2: 'Controlla internet e riapri il link.', ko: 'La risposta non è arrivata. Riprova.' },
-    en: { titolo: 'What do you eat on set?', nome: 'First name', eNome: 'Please enter your first name', cognome: 'Last name', eCognome: 'Please enter your last name', dieta: 'Your diet', eDieta: 'Please choose your diet', scegli: 'Choose', nessuna: 'None', diete: ['I eat everything', 'Vegetarian', 'Vegan', 'Pescatarian'],
+    en: { titolo: 'What do you eat on set?', nome: 'First name', eNome: 'Please enter your first name', cognome: 'Last name', eCognome: 'Please enter your last name', dieta: 'Your diet', eDieta: 'Please choose your diet', scegli: 'Choose', nessuna: 'None', ciao: 'Hi', quando: 'When are you on set?', eQuando: 'Choose at least one day', pranzo: 'lunch', cena: 'dinner', gia: 'You have already answered', gia2: 'If you need to change something, let the production know.', diete: ['I eat everything', 'Vegetarian', 'Vegan', 'Pescatarian'],
       all: 'Allergies or intolerances', chips: ['Gluten', 'Lactose', 'Tree nuts', 'Shellfish and fish', 'Eggs'], altro: 'Other', ph: 'E.g. no mushrooms', grave: 'I have a severe allergy: please tell the caterer', invia: 'Send',
       nota: 'Your answers go only to this production\'s caterer.', grazie: 'Thanks, got it!', grazie2: 'We\'ll pass it on to the caterer. See you on set.',
       off: 'This link is no longer active', off2: 'Ask the person who sent it for a new one.', rete: 'No connection', rete2: 'Check your internet and open the link again.', ko: 'Your answer didn\'t go through. Please try again.' }
@@ -110,7 +126,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       .then(function(r){ return r.json(); }).then(function(j){ if (j.err) throw new Error(j.err); return j.data; });
   }
   var fmt = function(iso){ return iso ? iso.split('-').reverse().join('/') : ''; };
-  var CID = (Q.get('c') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 40);
+  var CID = (Q.get('c') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 40), UID = (Q.get('u') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 40), MP = null, PERS = null, SCELTI = null;
   var INV = (Q.get('invito') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 40);
   var codice = function(){ var a = new Uint8Array(18), c = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789', o = ''; crypto.getRandomValues(a); for (var i = 0; i < a.length; i++) o += c[a[i] % c.length]; return o; };
   var ADMIN = 'simonemanfredaa@gmail.com';
@@ -158,7 +174,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   var SUB = {};
   function ascolta(){
     var F = window.FB; SUB = {};
-    var mappa = function(d){ var v = d.data(); return { id: d.id, e: v.nome, f: v.inizio || '', da: v.creataNome || '', creata: v.creata, pulita: !!v.pulita, conteggi: v.conteggi || null, eliminata: !!v.eliminata }; };
+    var mappa = function(d){ var v = d.data(); return { id: d.id, e: v.nome, f: v.inizio || '', fine: v.fine || '', giorni: v.giorni || [], da: v.creataNome || '', creata: v.creata, pulita: !!v.pulita, conteggi: v.conteggi || null, eliminata: !!v.eliminata }; };
     var ordinaP = function(){ PROD.sort(function(a, b){ return (b.f || '9').localeCompare(a.f || '9') || a.e.localeCompare(b.e, 'it'); }); };
     if (ME.collab) {   // collaboratori: solo le produzioni a cui sono invitati, una per una
       var tutte = {};
@@ -168,7 +184,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
           PROD = Object.keys(tutte).map(function(k){ return tutte[k]; }).filter(function(x){ return !x.eliminata; }); ordinaP(); ridisegna();
         }));
         STOP.push(F.onSnapshot(F.collection(F.db, 'produzioni', pid, 'risposte'), function(qs2){
-          RIS[pid] = qs2.docs.map(function(d){ var v = d.data(); return { id: d.id, nome: v.nome || '', dieta: v.dieta || '', allergie: v.allergie || '', altro: v.altro || '', grave: !!v.grave }; });
+          RIS[pid] = qs2.docs.map(function(d){ var v = d.data(); return { id: d.id, nome: v.nome || '', dieta: v.dieta || '', allergie: v.allergie || '', altro: v.altro || '', grave: !!v.grave, crew: v.crew || '', pasti: v.pasti || [] }; });
           ridisegna();
         }, function(err){ mostraErrore(err); }));
       });
@@ -179,7 +195,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     }, function(err){ mostraErrore(err); }));
     STOP.push(F.onSnapshot(F.collectionGroup(F.db, 'risposte'), function(qs){
       RIS = {};
-      qs.docs.forEach(function(d){ var p = d.ref.parent.parent.id, v = d.data(); (RIS[p] = RIS[p] || []).push({ id: d.id, nome: v.nome || '', dieta: v.dieta || '', allergie: v.allergie || '', altro: v.altro || '', grave: !!v.grave }); });
+      qs.docs.forEach(function(d){ var p = d.ref.parent.parent.id, v = d.data(); (RIS[p] = RIS[p] || []).push({ id: d.id, nome: v.nome || '', dieta: v.dieta || '', allergie: v.allergie || '', altro: v.altro || '', grave: !!v.grave, crew: v.crew || '', pasti: v.pasti || [] }); });
       ridisegna();
     }, function(err){ mostraErrore(err); }));
   }
@@ -190,12 +206,12 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function pulizia(){
     var F = window.FB;
     PROD.forEach(function(x){
-      var rif = x.f || isoDi(x.creata);
+      var rif = x.fine || x.f || isoDi(x.creata);
       if (x.pulita || PULITE[x.id] || !rif || giorniDa(rif) <= 45) return;
       PULITE[x.id] = 1;
-      F.getDocs(F.collection(F.db, 'produzioni', x.id, 'risposte')).then(function(qs){
-        var r = qs.docs.map(function(d){ return d.data(); }), c = conta(r), b = F.writeBatch(F.db);
-        qs.docs.forEach(function(d){ b.delete(d.ref); });
+      Promise.all([F.getDocs(F.collection(F.db, 'produzioni', x.id, 'risposte')), F.getDocs(F.collection(F.db, 'produzioni', x.id, 'crew'))]).then(function(qq){
+        var qs = qq[0], r = qs.docs.map(function(d){ return d.data(); }), c = conta(r), b = F.writeBatch(F.db);
+        qs.docs.concat(qq[1].docs).forEach(function(d){ b.delete(d.ref); });
         b.update(F.doc(F.db, 'produzioni', x.id), { pulita: true, conteggi: c });
         return b.commit();
       }).catch(function(e){ console.warn('pulizia', e); });
@@ -225,16 +241,43 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     app.innerHTML = '<p class="eyebrow">Catering</p><h1>Account non abilitato</h1><div class="card">' + (motivo ? '<div class="err">' + esc(motivo) + '</div>' : '') + '<p style="margin:0 0 12px">L\'account <b>' + esc(email) + '</b> non è ancora tra i producer.</p><p class="muted" style="margin:0 0 14px">Chiedi un link di invito a chi segue la produzione, oppure chiedi a Simone di aggiungerti.</p><button class="btn sec" id="out">Usa un altro account</button></div>';
     document.getElementById('out').onclick = esci;
   }
-  function esci(){ ferma(); PROD = []; RIS = {}; window.FB.signOut(window.FB.auth); }
+  function esci(){ ferma(); fermaVista(); PROD = []; RIS = {}; window.FB.signOut(window.FB.auth); }
 
   // ── home: tutte le produzioni ──
+  // ── giorni e pasti ──
+  var GS = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'], MESI = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+  var dataDi = function(iso){ var p = iso.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); };
+  var isoLoc = function(d){ return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
+  var nomeGiorno = function(iso){ var d = dataDi(iso); return GS[d.getDay()] + ' ' + d.getDate(); };
+  // i "servizi" di una produzione: un elemento per ogni giorno e pasto (es. 2026-11-26|pranzo)
+  function servizi(x){
+    var g = x && x.giorni && x.giorni.length ? x.giorni : (x && x.f ? [{ d: x.f, pranzo: true, cena: false }] : []);
+    var out = [];
+    g.forEach(function(v){ ['pranzo', 'cena'].forEach(function(p){ if (v[p]) out.push({ k: v.d + '|' + p, d: v.d, pasto: p }); }); });
+    return out;
+  }
+  function periodo(x){
+    var g = x.giorni && x.giorni.length ? x.giorni.map(function(v){ return v.d; }) : (x.f ? [x.f] : []);
+    if (!g.length) return 'Senza data';
+    var a = dataDi(g[0]), b = dataDi(g[g.length - 1]);
+    if (g.length === 1) return 'Shoot ' + GS[a.getDay()].toLowerCase() + ' ' + a.getDate() + '/' + (a.getMonth() + 1);
+    return 'Shoot ' + a.getDate() + (a.getMonth() !== b.getMonth() ? '/' + (a.getMonth() + 1) : '') + '–' + b.getDate() + '/' + (b.getMonth() + 1) + ' · ' + g.length + ' giorni';
+  }
+  // in quali servizi c'è una risposta: quelli scelti nel modulo, altrimenti i giorni della crew list, altrimenti tutti
+  function presente(r, k, persona){
+    if (r && r.pasti && r.pasti.length) return r.pasti.indexOf(k) !== -1;
+    if (persona && persona.g && persona.g.length) return persona.g.indexOf(k.split('|')[0]) !== -1;
+    return true;
+  }
+
+  // ── home ──
   function vHome(){
-    VISTA = disegnaHome;
+    VISTA = disegnaHome; fermaVista();
     app.innerHTML = '<div class="top"><span class="muted">' + esc(ME.nome) + '</span><button class="link" id="out">Esci</button></div>' +
       '<p class="brand">Catering<span>.</span></p><p class="sez">Produzioni</p>' +
       '<div id="lst"></div>' + (ME.collab ? '' : '<button class="btn main" id="nuova">+ Nuova produzione</button>') +
       (ME.admin ? '<div style="height:80px"></div><button class="gear" id="team" aria-label="Producer e impostazioni"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>' : '');
-    if (!ME.collab) document.getElementById('nuova').onclick = vCrea;
+    if (!ME.collab) document.getElementById('nuova').onclick = function(){ vProduzione(); };
     document.getElementById('out').onclick = esci;
     if (ME.admin) document.getElementById('team').onclick = vProducer;
     disegnaHome();
@@ -243,45 +286,130 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     var el = document.getElementById('lst'); if (!el) return;
     el.innerHTML = PROD.length ? '<div class="card list" style="padding:2px 16px">' + PROD.map(function(x, i){
       var n = x.pulita && x.conteggi ? x.conteggi.totale : (RIS[x.id] || []).length;
-      var info = [x.f ? 'shoot dal ' + fmt(x.f) : 'senza data', n + (n === 1 ? ' risposta' : ' risposte'), x.da ? 'di ' + x.da : ''].filter(Boolean).join(' · ');
+      var info = [periodo(x), n + (n === 1 ? ' risposta' : ' risposte'), x.da ? 'di ' + x.da : ''].filter(Boolean).join(' · ');
       return '<div class="it" data-i="' + i + '"><div class="t"><b>' + esc(x.e) + '</b><small>' + esc(info) + '</small></div><span style="color:#B9BBBF;font-size:22px">›</span></div>'; }).join('') + '</div>' :
       '<div class="card"><p class="muted" style="margin:0">' + (ME.collab ? 'Nessuna produzione condivisa con te, per ora.' : 'Nessuna produzione. Creane una: ti do il link da mandare a crew, clienti e ospiti, e le risposte arrivano qui.') + '</p></div>';
     Array.prototype.forEach.call(el.querySelectorAll('[data-i]'), function(it){ it.onclick = function(){ vEvento(PROD[Number(it.dataset.i)].id); }; });
   }
-  function vCrea(){
-    VISTA = null;
-    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>Nuova produzione</h1>' +
-      '<form id="crea" class="card" autocomplete="off"><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" placeholder="Es. Alain Mikli N1"></div>' +
-      '<div class="f"><label class="lab" for="fi">Inizio shoot</label><input type="date" id="fi"></div>' +
-      '<button class="btn main" type="submit">Crea</button><p class="muted" style="margin:10px 0 0">Serve per la privacy: 45 giorni dopo l\'inizio dello shoot le risposte si cancellano da sole e restano solo i numeri.</p></form>';
-    document.getElementById('ind').onclick = vHome;
-    document.getElementById('crea').addEventListener('submit', function(e){
-      e.preventDefault();
-      var F = window.FB, ev = document.getElementById('ev').value.trim().slice(0, 80), fi = document.getElementById('fi').value;
-      if (ev.length < 2) return toast('Scrivi il nome della produzione');
-      var ref = F.doc(F.collection(F.db, 'produzioni'));
-      F.setDoc(ref, { nome: ev, inizio: fi, creataNome: ME.nome, creataDa: ME.email, creata: F.serverTimestamp(), eliminata: false, pulita: false }).catch(function(err){ toast('Non salvata: ' + err.message); });
-      PROD.unshift({ id: ref.id, e: ev, f: fi, da: ME.nome });
-      vEvento(ref.id, true);
-    });
+
+  // ── calendario: tocchi inizio e fine ──
+  function calendario(cal, gp, C){
+    function giorni(){ if (!C.a) return []; var out = [], d = new Date(C.a), e = C.b || C.a; while (d <= e) { out.push(new Date(d)); d.setDate(d.getDate() + 1); } return out; }
+    C.giorni = function(){ return C.b ? giorni().map(function(d){ var k = isoLoc(d), p = C.pasti[k] || { pranzo: true, cena: false }; return { d: k, pranzo: !!p.pranzo, cena: !!p.cena }; }).filter(function(v){ return v.pranzo || v.cena; }) : []; };
+    function disegna(){
+      var y = C.m.getFullYear(), m = C.m.getMonth(), primo = (new Date(y, m, 1).getDay() + 6) % 7, n = new Date(y, m + 1, 0).getDate(), oggi = isoLoc(new Date());
+      var celle = ''; for (var i = 0; i < primo; i++) celle += '<span></span>';
+      for (var g = 1; g <= n; g++) {
+        var d = new Date(y, m, g), k = isoLoc(d), sel = C.a && (k === isoLoc(C.a) || (C.b && k === isoLoc(C.b))), dentro = C.a && C.b && d > C.a && d < C.b;
+        celle += '<button type="button" class="cg' + (sel ? ' s' : dentro ? ' in' : '') + (k < oggi ? ' pass' : '') + (k === oggi ? ' oggi' : '') + '" data-d="' + k + '">' + g + '</button>';
+      }
+      var gg = giorni();
+      cal.innerHTML = '<div class="calt"><button type="button" class="link" id="pm" aria-label="Mese prima">‹</button><b>' + MESI[m] + ' ' + y + '</b><button type="button" class="link" id="nm2" aria-label="Mese dopo">›</button></div>' +
+        '<div class="calg">' + ['L', 'M', 'M', 'G', 'V', 'S', 'D'].map(function(x){ return '<span class="calh">' + x + '</span>'; }).join('') + celle + '</div>' +
+        '<p class="muted" style="margin:10px 2px 0">' + (!C.a ? 'Tocca il primo giorno di shoot.' : !C.b ? 'Ora tocca l\'ultimo giorno (o di nuovo lo stesso, se è uno solo).' :
+          gg.length + (gg.length === 1 ? ' giorno' : ' giorni') + ' · <button type="button" class="link" id="rs" style="font-size:13px">Ricomincia</button>') + '</p>';
+      cal.querySelector('#pm').onclick = function(){ C.m = new Date(y, m - 1, 1); disegna(); };
+      cal.querySelector('#nm2').onclick = function(){ C.m = new Date(y, m + 1, 1); disegna(); };
+      var rs = cal.querySelector('#rs'); if (rs) rs.onclick = function(){ C.a = C.b = null; disegna(); };
+      Array.prototype.forEach.call(cal.querySelectorAll('[data-d]'), function(b){ b.onclick = function(){
+        var d = dataDi(b.dataset.d);
+        if (!C.a || C.b) { C.a = d; C.b = null; } else if (d < C.a) { C.b = C.a; C.a = d; } else C.b = d;
+        disegna();
+      }; });
+      gp.innerHTML = C.b ? '<p class="sez">Pasti</p><div class="card list" style="padding:2px 14px">' + gg.map(function(d){ var k = isoLoc(d), pa = C.pasti[k] || (C.pasti[k] = { pranzo: true, cena: false });
+        return '<div class="it" style="cursor:default"><div class="t"><b>' + GS[d.getDay()] + ' ' + d.getDate() + '</b></div><button type="button" class="chip' + (pa.pranzo ? ' on' : '') + '" data-p="' + k + '|pranzo">Pranzo</button><button type="button" class="chip' + (pa.cena ? ' on' : '') + '" data-p="' + k + '|cena">Cena</button></div>'; }).join('') + '</div>' : '';
+      Array.prototype.forEach.call(gp.querySelectorAll('[data-p]'), function(b){ b.onclick = function(){ var q = b.dataset.p.split('|'); C.pasti[q[0]][q[1]] = !C.pasti[q[0]][q[1]]; disegna(); }; });
+    }
+    disegna();
   }
+  // crea (id vuoto) o modifica una produzione
+  function vProduzione(id, eliminaSubito){
+    var x = id ? trova(id) : null; if (id && !x) return vHome();
+    VISTA = null; fermaVista();
+    var C = { m: new Date(), a: null, b: null, pasti: {} };
+    if (x && x.giorni && x.giorni.length) { C.a = dataDi(x.giorni[0].d); C.b = dataDi(x.giorni[x.giorni.length - 1].d); x.giorni.forEach(function(v){ C.pasti[v.d] = { pranzo: v.pranzo, cena: v.cena }; }); }
+    else if (x && x.f) { C.a = C.b = dataDi(x.f); }
+    if (C.a) C.m = new Date(C.a.getFullYear(), C.a.getMonth(), 1);
+    app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>' + (x ? 'Modifica produzione' : 'Nuova produzione') + '</h1>' +
+      '<form id="frm" autocomplete="off"><div class="card"><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" placeholder="Es. Alain Mikli N1" value="' + esc(x ? x.e : '') + '"></div>' +
+      '<label class="lab">Giorni di shoot</label><div id="cal"></div></div><div id="gp"></div>' +
+      '<button class="btn main" type="submit">' + (x ? 'Salva modifiche' : 'Crea') + '</button><p class="muted" style="margin:8px 4px 0;text-align:center">Per la privacy, 45 giorni dopo l\'ultimo giorno di shoot le risposte si cancellano da sole e restano solo i numeri.</p></form>' +
+      (x ? '<div id="del" style="margin-top:14px"><button class="btn danger" id="eli">Elimina produzione</button></div>' : '');
+    calendario(document.getElementById('cal'), document.getElementById('gp'), C);
+    document.getElementById('ind').onclick = function(){ x ? vEvento(id) : vHome(); };
+    document.getElementById('frm').addEventListener('submit', function(e){
+      e.preventDefault();
+      var F = window.FB, ev = document.getElementById('ev').value.trim().slice(0, 80), g = C.giorni();
+      if (ev.length < 2) return toast('Scrivi il nome della produzione');
+      if (!C.b) return toast('Scegli inizio e fine sul calendario');
+      if (!g.length) return toast('Accendi almeno un pasto');
+      var dati = { nome: ev, inizio: g[0].d, fine: g[g.length - 1].d, giorni: g };
+      if (x) {
+        F.updateDoc(F.doc(F.db, 'produzioni', id), dati).catch(function(err){ toast('Non salvata: ' + err.message); });
+        x.e = ev; x.f = dati.inizio; x.fine = dati.fine; x.giorni = g; toast('Modifiche salvate'); vEvento(id);
+      } else {
+        var ref = F.doc(F.collection(F.db, 'produzioni'));
+        F.setDoc(ref, Object.assign(dati, { creataNome: ME.nome, creataDa: ME.email, creata: F.serverTimestamp(), eliminata: false, pulita: false })).catch(function(err){ toast('Non salvata: ' + err.message); });
+        PROD.unshift({ id: ref.id, e: ev, f: dati.inizio, fine: dati.fine, giorni: g, da: ME.nome });
+        vEvento(ref.id, true);
+      }
+    });
+    if (!x) return;
+    document.getElementById('eli').onclick = function(){
+      document.getElementById('del').innerHTML = '<div class="card"><h2>Eliminare «' + esc(x.e) + '»?</h2><p class="muted" style="margin:0 0 12px">I link smettono di funzionare e risposte e crew list vengono cancellate subito. Non si può annullare.</p>' +
+        '<div class="row"><button class="btn sec" id="no">Annulla</button><button class="btn danger" id="si">Elimina</button></div></div>';
+      document.getElementById('no').onclick = function(){ vProduzione(id); };
+      document.getElementById('si').onclick = function(){
+        var F = window.FB, b = this; b.disabled = true; b.textContent = 'Elimino…';
+        var c = conta(RIS[id] || []);
+        Promise.all([F.getDocs(F.collection(F.db, 'produzioni', id, 'risposte')), F.getDocs(F.collection(F.db, 'produzioni', id, 'crew'))]).then(function(qs){
+          var bt = F.writeBatch(F.db);
+          qs[0].docs.concat(qs[1].docs).forEach(function(d){ bt.delete(d.ref); });
+          bt.update(F.doc(F.db, 'produzioni', id), { eliminata: true, pulita: true, conteggi: c });
+          return bt.commit();
+        }).then(function(){ toast('Produzione eliminata'); vHome(); })
+          .catch(function(err){ b.disabled = false; b.textContent = 'Elimina'; toast(err.message); });
+      };
+    };
+    if (eliminaSubito) document.getElementById('eli').click();
+  }
+
   // ── una produzione ──
   function trova(id){ return PROD.filter(function(x){ return x.id === id; })[0]; }
   var ICO_SHARE = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
   var ICO_DOTS = '<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
   function messaggio(x){ return 'Ciao! Per ' + x.e + ' ci dici cosa mangi e se hai allergie? / Hi! For ' + x.e + ', please tell us your diet and any allergies: ' + linkModulo(x); }
+  function linkPersona(x, p){ return BASE + '?c=' + x.id + '&u=' + p.id; }
+  function msgPersona(x, p){
+    var gg = p.g && p.g.length ? p.g.map(nomeGiorno).join(', ') : '';
+    return p.stato === 'mandato' ? 'Ciao ' + p.n + ', ti ricordo il modulo per il catering di ' + x.e + ' 🙂 ' + linkPersona(x, p) :
+      'Ciao ' + p.n + '! Per ' + x.e + (gg ? ' (' + gg + ')' : '') + ' ci dici cosa mangi e se hai allergie? Ci vuole un minuto / Hi ' + p.n + '! Please tell us your diet and any allergies: ' + linkPersona(x, p);
+  }
+  function waHref(tel, testo){
+    var n = String(tel || '').replace(/[^\d+]/g, '');
+    if (n.indexOf('00') === 0) n = n.slice(2); if (n.charAt(0) === '+') n = n.slice(1);
+    if (n && n.length <= 10 && n.charAt(0) === '3') n = '39' + n;   // cellulare italiano senza prefisso
+    return n ? 'https://wa.me/' + n + '?text=' + encodeURIComponent(testo) : 'whatsapp://send?text=' + encodeURIComponent(testo);
+  }
+  var CREW = {}, STOPV = [], SEL = { giorno: '', filtro: '' };
+  function fermaVista(){ STOPV.forEach(function(f){ try { f(); } catch (e) {} }); STOPV = []; }
   function vEvento(id, nuova){
     var x = trova(id); if (!x) return vHome();
-    var gest = !ME.collab;
+    var gest = !ME.collab, F = window.FB, sv = servizi(x);
+    var giorniU = sv.map(function(s){ return s.d; }).filter(function(d, i, a){ return a.indexOf(d) === i; });
+    fermaVista(); SEL = { giorno: '', filtro: '' };
     app.innerHTML = '<div class="top" style="position:relative"><button class="link" id="ind">‹ Produzioni</button><span>' +
       (gest ? '<button class="ib" id="sh" aria-label="Condividi con un collaboratore">' + ICO_SHARE + '</button><button class="ib" id="mn" aria-label="Altro">' + ICO_DOTS + '</button>' : '') + '</span></div>' +
-      '<h1 style="margin-bottom:2px">' + esc(x.e) + '</h1><p class="eyebrow" style="margin-bottom:14px">' + [x.f ? 'Shoot dal ' + fmt(x.f) : 'Senza data', x.da ? 'di ' + esc(x.da) : ''].filter(Boolean).join(' · ') + '</p>' +
-      '<div id="ris"></div><div class="sep"></div>' + (nuova ? '<p class="muted" style="text-align:center;margin:0 0 8px">Pronta! Ora manda il modulo alla crew.</p>' : '') +
-      '<div class="az" id="az"><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(messaggio(x)) + '">Manda modulo</a><button class="btn main" id="pdf">PDF catering</button></div>' +
-      '<button class="link" id="cp" style="display:block;margin:10px auto 0">Copia il link del modulo</button>';
+      '<h1 style="margin-bottom:2px">' + esc(x.e) + '</h1><p class="eyebrow" style="margin-bottom:12px">' + esc([periodo(x), x.da ? 'di ' + x.da : ''].filter(Boolean).join(' · ')) + '</p>' +
+      (giorniU.length > 1 ? '<div class="chips2" id="gch"></div>' : '') +
+      '<div id="ris"></div>' + (gest ? '<button class="add" id="add">+ Aggiungi persone in crew</button>' : '') +
+      '<div class="sep"></div>' + (nuova ? '<p class="muted" style="text-align:center;margin:0 0 8px">Pronta! Aggiungi la crew o manda il link crew.</p>' : '') +
+      '<div class="az" id="az"><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(messaggio(x)) + '">Link crew</a><button class="btn main" id="pdf">PDF catering</button></div>' +
+      '<button class="link" id="cp" style="display:block;margin:10px auto 0">Copia il link crew</button>';
     document.getElementById('ind').onclick = vHome;
     document.getElementById('cp').onclick = function(){ copia(linkModulo(x), 'Link copiato'); };
     if (gest) {
+      document.getElementById('add').onclick = function(){ aggiungiCrew(id); };
       document.getElementById('sh').onclick = function(){ vCondividi(id); };
       document.getElementById('mn').onclick = function(e){
         e.stopPropagation();
@@ -289,21 +417,207 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
         var m = document.createElement('div'); m.className = 'menu';
         m.innerHTML = '<button id="m1">Modifica</button><button id="m2" style="color:#A3202A">Elimina</button>';
         this.parentNode.parentNode.appendChild(m);
-        document.getElementById('m1').onclick = function(){ vModifica(id); };
-        document.getElementById('m2').onclick = function(){ vModifica(id, true); };
+        document.getElementById('m1').onclick = function(){ vProduzione(id); };
+        document.getElementById('m2').onclick = function(){ vProduzione(id, true); };
         setTimeout(function(){ document.addEventListener('click', function chiudi(){ m.remove(); document.removeEventListener('click', chiudi); }); }, 0);
       };
     }
     document.getElementById('pdf').onclick = function(){ scaricaPdf(id, this); };
+    STOPV.push(F.onSnapshot(F.collection(F.db, 'produzioni', id, 'crew'), function(qs){
+      CREW[id] = qs.docs.map(function(d){ var v = d.data(); return { id: d.id, n: v.nome || '', c: v.cognome || '', tel: v.tel || '', g: v.giorni || [], stato: v.stato || 'da', mandato: v.mandato || null }; });
+      disegnaRisposte(id);
+    }, function(err){ mostraErrore(err); }));
     VISTA = function(){ disegnaRisposte(id); };
     disegnaRisposte(id);
+  }
+  function quando(ts){
+    try { var d = ts.toDate(), g = Math.floor((Date.now() - d.getTime()) / 864e5); return g <= 0 ? 'oggi' : g === 1 ? 'ieri' : g + ' giorni fa'; } catch (e) { return ''; }
+  }
+  function ordina(r){ var w = function(x){ return x.grave ? 0 : (x.allergie || x.altro) ? 1 : 2; }; return r.slice().sort(function(a, b){ return w(a) - w(b) || a.nome.localeCompare(b.nome, 'it'); }); }
+  function righeConta(c){
+    return [['Mangiano tutto', c.tutto], ['Dieta vegetariana', c.vegetariani], ['Dieta vegana', c.vegani], ['Dieta pescetariana', c.pescetariani]].filter(function(v){ return v[1]; })
+      .map(function(v){ return '<div class="rw"><span>' + v[0] + '</span><b>' + v[1] + '</b></div>'; }).join('') +
+      (c.allergie ? '<div class="rw al"><span>Con allergie o note</span><b>' + c.allergie + '</b></div>' + (c.gravi ? '<div class="rw sub"><span>di cui allergie gravi</span><b>' + c.gravi + '</b></div>' : '') : '');
+  }
+  // unisce crew list e risposte: ogni voce ha persona (se in lista) e risposta (se arrivata)
+  function voci(id){
+    var r = RIS[id] || [], cr = CREW[id] || [], perCrew = {};
+    r.forEach(function(y){ if (y.crew) perCrew[y.crew] = y; });
+    var out = cr.map(function(p){ var y = perCrew[p.id]; return { p: p, r: y, stato: y ? 'ok' : p.stato === 'mandato' ? 'mandato' : 'da' }; });
+    r.forEach(function(y){ if (!y.crew || !cr.some(function(p){ return p.id === y.crew; })) out.push({ p: null, r: y, stato: 'ok' }); });
+    return out;
+  }
+  function disegnaRisposte(id){
+    var el = document.getElementById('ris'); if (!el) return;
+    var x = trova(id) || {}, sv = servizi(x), V = voci(id);
+    var giorniU = sv.map(function(s){ return s.d; }).filter(function(d, i, a){ return a.indexOf(d) === i; });
+    var gch = document.getElementById('gch');
+    if (gch) {
+      gch.innerHTML = '<button class="chip' + (!SEL.giorno ? ' on' : '') + '" data-g="">Tutti i giorni</button>' + giorniU.map(function(d){ return '<button class="chip' + (SEL.giorno === d ? ' on' : '') + '" data-g="' + d + '">' + nomeGiorno(d) + '</button>'; }).join('');
+      Array.prototype.forEach.call(gch.querySelectorAll('[data-g]'), function(b){ b.onclick = function(){ SEL.giorno = b.dataset.g; disegnaRisposte(id); }; });
+    }
+    // persone di questo giorno
+    var delGiorno = function(v){ if (!SEL.giorno) return true; return sv.filter(function(s){ return s.d === SEL.giorno; }).some(function(s){ return v.r ? presente(v.r, s.k, v.p) : !v.p || !v.p.g.length || v.p.g.indexOf(SEL.giorno) !== -1; }); };
+    var VG = V.filter(delGiorno);
+    var numeri;
+    if (x.pulita && x.conteggi) numeri = '<div class="card"><div class="tot"><b>' + x.conteggi.totale + '</b><span>persone</span></div>' + righeConta(x.conteggi) + '</div>';
+    else if (!SEL.giorno) {
+      var risp = V.filter(function(v){ return v.r; }).map(function(v){ return v.r; }), c = conta(risp);
+      numeri = '<div class="card"><div class="tot"><b>' + c.totale + '</b><span>' + (c.totale === 1 ? 'risposta' : 'risposte') + ((CREW[id] || []).length ? ' · su ' + V.length + ' in crew' : '') + '</span></div>' + righeConta(c) + '</div>';
+    } else {
+      numeri = '<div class="card">' + sv.filter(function(s){ return s.d === SEL.giorno; }).map(function(s){
+        var rr = V.filter(function(v){ return v.r && presente(v.r, s.k, v.p); }).map(function(v){ return v.r; }), c = conta(rr);
+        return '<div class="tot"><b>' + c.totale + '</b><span>' + (s.pasto === 'cena' ? 'a cena' : 'a pranzo') + '</span></div>' + righeConta(c);
+      }).join('<div style="height:8px"></div>') + '</div>';
+    }
+    var n = { ok: 0, mandato: 0, da: 0 }; VG.forEach(function(v){ n[v.stato]++; });
+    var conLista = (CREW[id] || []).length > 0;
+    var lista = VG.filter(function(v){ return !SEL.filtro || v.stato === SEL.filtro; }).sort(function(a, b){
+      var o = { da: 0, mandato: 1, ok: 2 }, w = function(v){ return !v.r ? 3 : v.r.grave ? 0 : (v.r.allergie || v.r.altro) ? 1 : 2; };
+      return o[a.stato] - o[b.stato] || w(a) - w(b) || nomeVoce(a).localeCompare(nomeVoce(b), 'it');
+    });
+    el.innerHTML = numeri + '<p class="sez" style="margin-top:4px">Crew</p>' +
+      (conLista ? '<div class="pills"><button class="pill' + (!SEL.filtro ? ' on' : '') + '" data-f="" style="background:var(--ink);color:#fff">' + VG.length + ' in crew</button>' +
+        '<button class="pill' + (SEL.filtro === 'ok' ? ' on' : '') + '" data-f="ok" style="color:#2E6B3C"><span class="pd" style="background:#3E9B58"></span>' + n.ok + ' risposte</button>' +
+        '<button class="pill' + (SEL.filtro === 'mandato' ? ' on' : '') + '" data-f="mandato" style="color:#8A6A00"><span class="pd" style="background:#E0A800"></span>' + n.mandato + ' mandati</button>' +
+        '<button class="pill' + (SEL.filtro === 'da' ? ' on' : '') + '" data-f="da" style="color:var(--muted)"><span class="pd" style="background:#C9C8C3"></span>' + n.da + ' da mandare</button></div>' : '') +
+      (lista.length ? '<div class="card list" style="padding:2px 16px">' + lista.map(function(v, i){
+        var y = v.r, p = v.p;
+        var sub = y ? [y.allergie ? '<span class="alg" style="display:inline">' + esc(y.allergie) + '</span>' : '', y.altro ? esc(y.altro) : ''].filter(Boolean).join(' · ') :
+          v.stato === 'mandato' ? ('mandato ' + quando(p.mandato)).trim() + ' · nessuna risposta' : 'da mandare';
+        var gg = p && p.g.length && giorniU.length > 1 ? (p.g.length === giorniU.length ? 'tutti i giorni' : p.g.map(nomeGiorno).join(', ')) : '';
+        var act = !ME.collab || true ? (v.stato === 'da' ? '<a class="act wa" data-wa="' + i + '" href="' + waHref(p.tel, msgPersona(x, p)) + '">WhatsApp</a>' : v.stato === 'mandato' ? '<a class="act ric" data-wa="' + i + '" href="' + waHref(p.tel, msgPersona(x, p)) + '">Ricorda</a>' : '') : '';
+        return '<div class="it" data-v="' + i + '">' + (conLista ? '<span class="sd" style="background:' + { ok: '#3E9B58', mandato: '#E0A800', da: '#C9C8C3' }[v.stato] + '"></span>' : '') +
+          '<div class="t"><b>' + esc(nomeVoce(v)) + (y && y.grave ? ' <span class="badge">grave</span>' : '') + '</b>' + (sub ? '<small>' + sub + '</small>' : '') + (gg ? '<small>' + esc(gg) + '</small>' : '') + (!p && conLista ? '<small>dal link crew</small>' : '') + '</div>' +
+          (y ? '<span class="dp' + (y.dieta !== 'Mangio tutto' ? ' v' : '') + '">' + esc(SIGLA[y.dieta] || y.dieta) + '</span>' : act) + '</div>';
+      }).join('') + '</div>' : '<div class="card"><p class="muted" style="margin:0">' + (x.pulita ? 'Le risposte sono state cancellate per la privacy: restano solo i numeri.' : SEL.filtro ? 'Nessuno in questo gruppo.' : 'Ancora nessuno. Aggiungi la crew oppure manda il link crew: chi compila compare qui da solo.') + '</p></div>');
+    Array.prototype.forEach.call(el.querySelectorAll('[data-f]'), function(b){ b.onclick = function(){ SEL.filtro = SEL.filtro === b.dataset.f ? '' : b.dataset.f; disegnaRisposte(id); }; });
+    Array.prototype.forEach.call(el.querySelectorAll('[data-wa]'), function(a){ a.onclick = function(e){
+      e.stopPropagation(); var v = lista[+a.dataset.wa], F = window.FB;
+      F.updateDoc(F.doc(F.db, 'produzioni', id, 'crew', v.p.id), { stato: 'mandato', mandato: F.serverTimestamp() }).catch(function(err){ toast(err.message); });
+    }; });
+    Array.prototype.forEach.call(el.querySelectorAll('[data-v]'), function(it){ it.onclick = function(){ schedaPersona(id, lista[+it.dataset.v]); }; });
+  }
+  function nomeVoce(v){ return v.p ? (v.p.n + ' ' + v.p.c).trim() : v.r.nome; }
+
+  // ── scheda di una persona: riepilogo, poi eventuale correzione ──
+  function foglio(html){ chiudiFoglio(); var o = document.createElement('div'); o.className = 'ov'; o.innerHTML = '<div class="shb">' + html + '</div>'; o.onclick = function(e){ if (e.target === o) chiudiFoglio(); }; document.body.appendChild(o); return o; }
+  function chiudiFoglio(){ var o = document.querySelector('.ov'); if (o) o.remove(); }
+  function schedaPersona(id, v){
+    var y = v.r, p = v.p, x = trova(id), giorniU = servizi(x).map(function(s){ return s.d; }).filter(function(d, i, a){ return a.indexOf(d) === i; });
+    var riga = function(k, val, red){ return '<div class="rw"><span class="muted" style="font-size:14px">' + k + '</span><b style="text-align:right' + (red ? ';color:var(--err)' : '') + '">' + (val || '—') + '</b></div>'; };
+    var pasti = y && y.pasti && y.pasti.length ? y.pasti.map(function(k){ var q = k.split('|'); return nomeGiorno(q[0]) + (q[1] === 'cena' ? ' cena' : ''); }).join(', ') : p && p.g.length ? p.g.map(nomeGiorno).join(', ') : '';
+    var o = foglio('<h2>' + esc(nomeVoce(v)) + (y && y.grave ? '<span class="badge" style="margin-left:6px">grave</span>' : '') + '</h2><div class="card">' +
+      riga('Stato', v.stato === 'ok' ? 'ha risposto' : v.stato === 'mandato' ? 'mandato, in attesa' : 'da mandare') +
+      (giorniU.length > 1 ? riga('Presente', esc(pasti) || 'tutti i giorni') : '') +
+      (y ? riga('Dieta', esc(y.dieta)) + riga('Allergie', esc(y.allergie), true) + riga('Note', esc(y.altro)) : '') +
+      (p ? riga('Telefono', esc(p.tel)) : '') + '</div>' +
+      (ME.collab ? '' : '<button class="add" id="ed">' + (y ? 'Correggi' : 'Compila tu') + '</button>' + (p ? '<button class="add" id="rm" style="color:var(--err);padding-top:0">Togli dalla crew</button>' : '')) +
+      '<button class="btn sec" id="ch" style="margin-top:6px">Chiudi</button>');
+    o.querySelector('#ch').onclick = chiudiFoglio;
+    if (ME.collab) return;
+    o.querySelector('#ed').onclick = function(){ correggi(id, v); };
+    var rm = o.querySelector('#rm'); if (rm) rm.onclick = function(){ var F = window.FB; F.deleteDoc(F.doc(F.db, 'produzioni', id, 'crew', p.id)).catch(function(err){ toast(err.message); }); chiudiFoglio(); toast('Tolto dalla crew'); };
+  }
+  function correggi(id, v){
+    var y = v.r || {}, p = v.p, x = trova(id), F = window.FB, sv = servizi(x);
+    var nn = p ? p.n : (y.nome || '').split(' ')[0], cc = p ? p.c : (y.nome || '').split(' ').slice(1).join(' ');
+    var alSel = (y.allergie || '').split(', ').filter(Boolean);
+    var pres = sv.filter(function(s){ return v.r ? presente(v.r, s.k, p) : !p || !p.g.length || p.g.indexOf(s.d) !== -1; }).map(function(s){ return s.k; });
+    var o = foglio('<h2>' + (v.r ? 'Correggi' : 'Compila tu') + '</h2><div class="card"><div class="f"><label class="lab">Nome</label><input type="text" id="en" value="' + esc(nn) + '"></div><div class="f"><label class="lab">Cognome</label><input type="text" id="ec" value="' + esc(cc) + '"></div>' +
+      (p ? '<div class="f"><label class="lab">Telefono</label><input type="text" id="et" inputmode="tel" value="' + esc(p.tel) + '"></div>' : '') +
+      (sv.length > 1 ? '<label class="lab">Presente</label><div class="chips2" id="es">' + sv.map(function(s){ return '<button type="button" class="chip' + (pres.indexOf(s.k) !== -1 ? ' on' : '') + '" data-s="' + s.k + '">' + nomeGiorno(s.d) + (s.pasto === 'cena' ? ' cena' : '') + '</button>'; }).join('') + '</div>' : '') +
+      '<label class="lab">Dieta</label><div class="chips2" id="ed2">' + DIETE.map(function(d){ return '<button type="button" class="chip' + (y.dieta === d ? ' on' : '') + '" data-d="' + d + '">' + d + '</button>'; }).join('') + '</div>' +
+      '<label class="lab">Allergie o intolleranze</label><div class="chips2" id="ea">' + ALL.map(function(a){ return '<button type="button" class="chip' + (alSel.indexOf(a) !== -1 ? ' on' : '') + '" data-a="' + a + '">' + a + '</button>'; }).join('') + '</div>' +
+      '<div class="f"><label class="lab">Altro</label><input type="text" id="eo" value="' + esc(y.altro || '') + '" placeholder="Es. niente funghi"></div><label class="chk" style="margin-top:4px"><input type="checkbox" id="eg"' + (y.grave ? ' checked' : '') + '>Allergia grave</label></div>' +
+      '<button class="btn main" id="sv">Salva</button><button class="add" id="an">Annulla</button>');
+    Array.prototype.forEach.call(o.querySelectorAll('#es [data-s],#ea [data-a]'), function(b){ b.onclick = function(){ b.classList.toggle('on'); }; });
+    Array.prototype.forEach.call(o.querySelectorAll('#ed2 [data-d]'), function(b){ b.onclick = function(){ Array.prototype.forEach.call(o.querySelectorAll('#ed2 .chip'), function(c){ c.classList.toggle('on', c === b); }); }; });
+    o.querySelector('#an').onclick = function(){ schedaPersona(id, v); };
+    o.querySelector('#sv').onclick = function(){
+      var n1 = o.querySelector('#en').value.trim(), n2 = o.querySelector('#ec').value.trim(), d = o.querySelector('#ed2 .on');
+      if (n1.length < 2 || n2.length < 2) return toast('Nome e cognome servono');
+      if (!d) return toast('Scegli la dieta');
+      var pasti = sv.length > 1 ? Array.prototype.map.call(o.querySelectorAll('#es .on'), function(b){ return b.dataset.s; }) : [];
+      if (sv.length > 1 && !pasti.length) return toast('Scegli almeno un giorno');
+      var dati = { nome: (n1 + ' ' + n2).slice(0, 80), dieta: d.dataset.d, allergie: Array.prototype.map.call(o.querySelectorAll('#ea .on'), function(b){ return b.dataset.a; }).join(', '), altro: o.querySelector('#eo').value.trim().slice(0, 300), grave: o.querySelector('#eg').checked, pasti: pasti };
+      if (p) dati.crew = p.id;
+      var fatto = v.r ? F.updateDoc(F.doc(F.db, 'produzioni', id, 'risposte', v.r.id), dati) : F.setDoc(F.doc(F.db, 'produzioni', id, 'risposte', p ? 'u_' + p.id : codice()), Object.assign(dati, { quando: F.serverTimestamp() }));
+      fatto.catch(function(err){ toast('Non salvato: ' + err.message); });
+      if (p) F.updateDoc(F.doc(F.db, 'produzioni', id, 'crew', p.id), { nome: n1.slice(0, 60), cognome: n2.slice(0, 60), tel: (o.querySelector('#et').value || '').trim().slice(0, 30) }).catch(function(){});
+      chiudiFoglio(); toast(v.r ? 'Modifiche salvate' : 'Compilato: ora è verde');
+    };
+  }
+
+  // ── aggiungi persone in crew: da file o a mano ──
+  function caricaXlsx(){ return window.XLSX ? Promise.resolve(window.XLSX) : new Promise(function(ok, ko){ var s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; s.onload = function(){ ok(window.XLSX); }; s.onerror = ko; document.head.appendChild(s); }); }
+  function aggiungiCrew(id, tab){
+    tab = tab || 'file';
+    var x = trova(id), F = window.FB, giorniU = servizi(x).map(function(s){ return s.d; }).filter(function(d, i, a){ return a.indexOf(d) === i; });
+    var o = foglio('<h2>Aggiungi persone in crew</h2><div class="tabs"><button type="button" data-t="file" class="' + (tab === 'file' ? 'on' : '') + '">Da file</button><button type="button" data-t="mano" class="' + (tab === 'mano' ? 'on' : '') + '">A mano</button></div><div id="tb"></div>');
+    Array.prototype.forEach.call(o.querySelectorAll('[data-t]'), function(b){ b.onclick = function(){ aggiungiCrew(id, b.dataset.t); }; });
+    var tb = o.querySelector('#tb');
+    var salva = function(lista){
+      var bt = F.writeBatch(F.db);
+      lista.forEach(function(p){ bt.set(F.doc(F.collection(F.db, 'produzioni', id, 'crew')), { nome: p.n.slice(0, 60), cognome: p.c.slice(0, 60), tel: p.tel.slice(0, 30), giorni: p.g, stato: 'da', aggiunto: F.serverTimestamp() }); });
+      return bt.commit();
+    };
+    if (tab === 'file') {
+      var esempio = ['Nome', 'Cognome', 'Telefono'].concat(giorniU.length > 1 ? giorniU.map(nomeGiorno) : []);
+      tb.innerHTML = '<div class="card"><p class="muted" style="margin:0 0 8px">Carica un Excel o CSV con le colonne <b>' + esempio.join(', ') + '</b>' + (giorniU.length > 1 ? ': nelle colonne dei giorni metti una <b>x</b> dove la persona c\'è (se non ci sono, vale per tutti i giorni)' : '') + '. Va bene anche la tua crew list, basta che abbia queste intestazioni.</p></div>' +
+        '<label class="btn main" style="margin-bottom:8px">Scegli il file<input type="file" id="fi" accept=".xlsx,.xls,.csv" hidden></label><div id="pv"></div>';
+      tb.querySelector('#fi').onchange = function(){
+        var f = this.files[0], pv = tb.querySelector('#pv'); if (!f) return;
+        pv.innerHTML = '<p class="muted">Leggo il file…</p>';
+        caricaXlsx().then(function(X){ return f.arrayBuffer().then(function(buf){ var wb = X.read(new Uint8Array(buf), { type: 'array', cellDates: true }); return X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false }); }); })
+          .then(function(rows){ anteprimaFile(id, rows, giorniU, pv, salva); })
+          .catch(function(){ pv.innerHTML = '<div class="err">Non riesco a leggere il file. Prova a salvarlo come .xlsx o .csv.</div>'; });
+      };
+    } else {
+      tb.innerHTML = '<div class="card"><div class="f"><label class="lab">Nome</label><input type="text" id="an1"></div><div class="f"><label class="lab">Cognome</label><input type="text" id="an2"></div>' +
+        '<div class="f"><label class="lab">Telefono (facoltativo)</label><input type="text" id="an3" inputmode="tel" placeholder="333 1234567"></div>' +
+        (giorniU.length > 1 ? '<label class="lab">Giorni sul set</label><div class="chips2" id="an4">' + giorniU.map(function(d){ return '<button type="button" class="chip on" data-k="' + d + '">' + nomeGiorno(d) + '</button>'; }).join('') + '</div>' : '') + '</div><button class="btn main" id="an5">Aggiungi</button>';
+      Array.prototype.forEach.call(tb.querySelectorAll('#an4 [data-k]'), function(b){ b.onclick = function(){ b.classList.toggle('on'); }; });
+      tb.querySelector('#an5').onclick = function(){
+        var n = tb.querySelector('#an1').value.trim(), c = tb.querySelector('#an2').value.trim();
+        if (n.length < 2 || c.length < 2) return toast('Scrivi nome e cognome');
+        var g = Array.prototype.map.call(tb.querySelectorAll('#an4 .on'), function(b){ return b.dataset.k; });
+        salva([{ n: n, c: c, tel: tb.querySelector('#an3').value.trim(), g: giorniU.length > 1 ? (g.length ? g : giorniU) : giorniU }]).catch(function(err){ toast('Non salvato: ' + err.message); });
+        chiudiFoglio(); toast(n + ' aggiunto: ora mandagli il link');
+      };
+    }
+  }
+  function anteprimaFile(id, rows, giorniU, pv, salva){
+    var norm = function(s){ return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); };
+    var h = (rows[0] || []).map(norm);
+    var trovaCol = function(nomi){ for (var i = 0; i < h.length; i++) if (nomi.indexOf(h[i]) !== -1) return i; return -1; };
+    var iN = trovaCol(['nome', 'name', 'first name']), iC = trovaCol(['cognome', 'surname', 'last name']), iT = trovaCol(['telefono', 'tel', 'cellulare', 'phone', 'mobile']);
+    if (iN === -1) { pv.innerHTML = '<div class="err">Manca la colonna «Nome» nella prima riga.</div>'; return; }
+    // colonne dei giorni: "Gio 26", "26/11", "26/11/2026", "2026-11-26"
+    var colG = giorniU.map(function(d){
+      var dt = dataDi(d), cand = [norm(nomeGiorno(d)), dt.getDate() + '/' + (dt.getMonth() + 1), ('0' + dt.getDate()).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2), dt.getDate() + '/' + (dt.getMonth() + 1) + '/' + dt.getFullYear(), ('0' + dt.getDate()).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2) + '/' + dt.getFullYear(), d];
+      return trovaCol(cand);
+    });
+    var gia = (CREW[id] || []).map(function(p){ return norm(p.n + ' ' + p.c); }), nuovi = [], doppi = 0;
+    rows.slice(1).forEach(function(r){
+      var n = String(r[iN] || '').trim(), c = iC > -1 ? String(r[iC] || '').trim() : '';
+      if (iC === -1 && n.indexOf(' ') > 0) { c = n.split(' ').slice(1).join(' '); n = n.split(' ')[0]; }
+      if (!n) return;
+      if (gia.indexOf(norm(n + ' ' + c)) !== -1 || nuovi.some(function(p){ return norm(p.n + ' ' + p.c) === norm(n + ' ' + c); })) { doppi++; return; }
+      var g = giorniU.filter(function(d, i){ return colG[i] > -1 && String(r[colG[i]]).trim(); });
+      nuovi.push({ n: n, c: c, tel: iT > -1 ? String(r[iT] || '').trim() : '', g: g.length ? g : giorniU });
+    });
+    pv.innerHTML = '<div class="card"><b>' + nuovi.length + (nuovi.length === 1 ? ' persona trovata' : ' persone trovate') + '</b>' + (doppi ? '<span class="muted"> · ' + doppi + ' già in crew, saltate</span>' : '') +
+      '<div style="margin-top:6px">' + nuovi.map(function(p){ return '<div class="rw"><span>' + esc(p.n + ' ' + p.c) + '</span><span class="muted">' + (giorniU.length > 1 ? (p.g.length === giorniU.length ? 'tutti i giorni' : p.g.map(nomeGiorno).join(', ')) : esc(p.tel)) + '</span></div>'; }).join('') + '</div></div>' +
+      (nuovi.length ? '<button class="btn main" id="imp">Aggiungi ' + nuovi.length + ' alla crew</button>' : '');
+    var b = pv.querySelector('#imp'); if (b) b.onclick = function(){ salva(nuovi).catch(function(err){ toast('Non salvato: ' + err.message); }); chiudiFoglio(); toast(nuovi.length + ' persone aggiunte'); };
   }
 
   // ── condividi la produzione con un collaboratore: link di invito ──
   function vCondividi(id){
     var x = trova(id); if (!x) return vHome();
     var F = window.FB, link = '';
-    VISTA = null;
+    VISTA = null; fermaVista();
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ ' + esc(x.e) + '</button></div><h1>Condividi la produzione</h1>' +
       '<p class="muted" style="margin:-6px 4px 14px">Chi apre il link ed entra con Google vede questa produzione e le risposte, e può mandare il modulo alla crew. Non può modificarla né eliminarla.</p>' +
       '<div class="card cent" id="lk"><button class="btn main" id="crea">Crea il link di invito</button></div>' +
@@ -319,30 +633,12 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
         '<p class="muted" style="margin:8px 0 0">Mandalo solo a chi deve vedere la produzione: chiunque lo apra può entrare.</p>';
       document.getElementById('cpi').onclick = function(){ copia(link, 'Link di invito copiato'); };
     };
-    STOP.push(F.onSnapshot(F.collection(F.db, 'produzioni', id, 'membri'), function(qs){
+    STOPV.push(F.onSnapshot(F.collection(F.db, 'produzioni', id, 'membri'), function(qs){
       var el = document.getElementById('cl'); if (!el) return;
       el.innerHTML = !qs.docs.length ? '<div class="card"><p class="muted" style="margin:0">Nessuno, per ora.</p></div>' :
         '<div class="card list" style="padding:2px 16px">' + qs.docs.map(function(d){ var v = d.data(); return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(v.nome || v.email) + '</b><small>' + esc(v.email) + '</small></div><button class="link" style="color:#A3202A" data-m="' + esc(d.id) + '">Togli</button></div>'; }).join('') + '</div>';
       Array.prototype.forEach.call(el.querySelectorAll('[data-m]'), function(b){ b.onclick = function(){ F.deleteDoc(F.doc(F.db, 'produzioni', id, 'membri', b.dataset.m)).then(function(){ toast('Accesso tolto'); }).catch(function(err){ toast(err.message); }); }; });
     }, function(err){ mostraErrore(err); }));
-  }
-  function ordina(r){ var w = function(x){ return x.grave ? 0 : (x.allergie || x.altro) ? 1 : 2; }; return r.slice().sort(function(a, b){ return w(a) - w(b) || a.nome.localeCompare(b.nome, 'it'); }); }
-  function iniziali(n){ return String(n).trim().split(/\s+/).slice(0, 2).map(function(p){ return p.charAt(0).toUpperCase(); }).join(''); }
-  function disegnaRisposte(id){
-    var el = document.getElementById('ris'); if (!el) return;
-    var x = trova(id) || {}, r = RIS[id] || [];
-    var c = x.pulita && x.conteggi ? x.conteggi : conta(r);
-    var righe = [['Mangiano tutto', c.tutto], ['Dieta vegetariana', c.vegetariani], ['Dieta vegana', c.vegani], ['Dieta pescetariana', c.pescetariani]].filter(function(v){ return v[1]; });
-    el.innerHTML = '<div class="card"><div class="tot"><b>' + c.totale + '</b><span>' + (c.totale === 1 ? 'persona' : 'persone') + '</span></div>' +
-      righe.map(function(v){ return '<div class="rw"><span>' + v[0] + '</span><b>' + v[1] + '</b></div>'; }).join('') +
-      (c.allergie ? '<div class="rw al"><span>Con allergie o note</span><b>' + c.allergie + '</b></div>' + (c.gravi ? '<div class="rw sub"><span>di cui allergie gravi</span><b>' + c.gravi + '</b></div>' : '') : '') + '</div>' +
-      '<p class="sez" style="margin-top:4px">Crew</p>' +
-      (r.length ? '<div class="card list" style="padding:2px 16px">' + ordina(r).map(function(y){
-        var al = y.allergie || y.altro || y.grave;
-        return '<div class="it" style="cursor:default"><div class="t"><b>' + esc(y.nome) + (y.grave ? ' <span class="badge">grave</span>' : '') + '</b>' +
-          (y.allergie ? '<span class="alg">' + esc(y.allergie) + '</span>' : '') + (y.altro ? '<small>' + esc(y.altro) + '</small>' : '') + '</div>' +
-          '<span class="dp' + (y.dieta !== 'Mangio tutto' ? ' v' : '') + '">' + esc(SIGLA[y.dieta] || y.dieta) + '</span></div>';
-      }).join('') + '</div>' : '<div class="card"><p class="muted" style="margin:0">' + (x.pulita ? 'Le risposte sono state cancellate per la privacy: restano solo i numeri.' : 'Ancora nessuna risposta. Appena qualcuno compila, compare qui da solo.') + '</p></div>');
   }
 
   // ── PDF fatto sul telefono ──
@@ -350,39 +646,63 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     return window.PDFLIB ? Promise.resolve(window.PDFLIB) : new Promise(function(ok, ko){ var s = document.createElement('script'); s.src = 'pdf-catering.js'; s.onload = function(){ ok(window.PDFLIB); }; s.onerror = ko; document.head.appendChild(s); });
   }
   function scaricaPdf(id, b){
-    var x = trova(id), r = ordina(RIS[id] || []), c = x.pulita && x.conteggi ? x.conteggi : conta(RIS[id] || []);
+    var x = trova(id), sv = servizi(x), V = voci(id).filter(function(v){ return v.r; });
+    var tutte = V.map(function(v){ return v.r; });
     b.disabled = true; b.textContent = 'Preparo…';
     caricaPdfLib().then(function(L){
       var d = new L.jsPDF({ unit: 'pt', format: 'a4' }), oggi = new Date().toLocaleDateString('it-IT');
-      d.setFont('helvetica', 'bold'); d.setFontSize(20); d.setTextColor(23, 24, 27); d.text('Catering · ' + x.e, 40, 56);
-      d.setFont('helvetica', 'normal'); d.setFontSize(10); d.setTextColor(104, 107, 112);
-      d.text((x.f ? 'Inizio shoot ' + fmt(x.f) + ' · ' : '') + 'aggiornato al ' + oggi, 40, 74);
-      d.setFont('helvetica', 'bold'); d.setFontSize(44); d.setTextColor(23, 24, 27); d.text(String(c.totale), 40, 128);
-      var tw = d.getTextWidth(String(c.totale)); d.setFont('helvetica', 'normal'); d.setFontSize(14); d.setTextColor(104, 107, 112); d.text(c.totale === 1 ? 'persona' : 'persone', 40 + tw + 8, 128);
-      var righe = [['Mangiano tutto', c.tutto], ['Dieta vegetariana', c.vegetariani], ['Dieta vegana', c.vegani], ['Dieta pescetariana', c.pescetariani]], yy = 150;
-      righe.forEach(function(v){ d.setDrawColor(230); d.line(40, yy - 12, 300, yy - 12); d.setFontSize(11); d.setTextColor(23, 24, 27); d.setFont('helvetica', 'normal'); d.text(v[0], 40, yy + 2); d.setFont('helvetica', 'bold'); d.text(String(v[1]), 300, yy + 2, { align: 'right' }); yy += 22; });
-      d.setDrawColor(230); d.line(40, yy - 12, 300, yy - 12); d.setTextColor(163, 32, 42); d.setFont('helvetica', 'normal'); d.text('Con allergie o note', 40, yy + 2); d.setFont('helvetica', 'bold'); d.text(String(c.allergie), 300, yy + 2, { align: 'right' }); yy += 18;
-      if (c.gravi) { d.setFontSize(9.5); d.setFont('helvetica', 'normal'); d.text('di cui allergie gravi', 40, yy + 2); d.setFont('helvetica', 'bold'); d.text(String(c.gravi), 300, yy + 2, { align: 'right' }); yy += 14; }
-      var inizioTab = yy + 16;
-      L.autoTable(d, { startY: inizioTab, head: [['Nome', 'Dieta', 'Allergie e intolleranze', 'Note']],
-        body: r.map(function(y){ return [y.nome + (y.grave ? '  GRAVE' : ''), y.dieta, y.allergie, y.altro]; }),
-        styles: { font: 'helvetica', fontSize: 10, cellPadding: 6, textColor: [23, 24, 27], lineColor: [227, 227, 227], lineWidth: { bottom: .5 } },
-        headStyles: { fillColor: false, textColor: [104, 107, 112], fontSize: 8.5, fontStyle: 'bold', lineWidth: { bottom: 1.2 }, lineColor: [23, 24, 27] },
-        columnStyles: { 0: { cellWidth: 140 }, 1: { cellWidth: 90 }, 2: { cellWidth: 160, textColor: [163, 32, 42], fontStyle: 'bold' }, 3: { cellWidth: 125 } },
-        didParseCell: function(h){ if (h.section !== 'body') return; var y = r[h.row.index]; if (y.grave) h.cell.styles.fillColor = [248, 215, 218]; else if (y.allergie || y.altro) h.cell.styles.fillColor = [252, 237, 238]; }
-      });
-      if (c.allergie) { d.setFontSize(8.5); d.setTextColor(104, 107, 112); d.text('In rosso chi ha allergie, intolleranze o note: sono in cima all\'elenco. GRAVE = allergia grave.', 40, d.lastAutoTable.finalY + 18); }
+      var testata = function(t, s){ d.setFont('helvetica', 'bold'); d.setFontSize(20); d.setTextColor(23, 24, 27); d.text(t, 40, 56); d.setFont('helvetica', 'normal'); d.setFontSize(10); d.setTextColor(104, 107, 112); d.text(s, 40, 74); };
+      var blocco = function(c, y0, etichetta){
+        d.setFont('helvetica', 'bold'); d.setFontSize(44); d.setTextColor(23, 24, 27); d.text(String(c.totale), 40, y0);
+        var tw = d.getTextWidth(String(c.totale)); d.setFont('helvetica', 'normal'); d.setFontSize(14); d.setTextColor(104, 107, 112); d.text(etichetta || (c.totale === 1 ? 'persona' : 'persone'), 40 + tw + 8, y0);
+        var yy = y0 + 22;
+        [['Mangiano tutto', c.tutto], ['Dieta vegetariana', c.vegetariani], ['Dieta vegana', c.vegani], ['Dieta pescetariana', c.pescetariani]].forEach(function(v){ d.setDrawColor(230); d.line(40, yy - 12, 300, yy - 12); d.setFontSize(11); d.setTextColor(23, 24, 27); d.setFont('helvetica', 'normal'); d.text(v[0], 40, yy + 2); d.setFont('helvetica', 'bold'); d.text(String(v[1]), 300, yy + 2, { align: 'right' }); yy += 22; });
+        d.setDrawColor(230); d.line(40, yy - 12, 300, yy - 12); d.setTextColor(163, 32, 42); d.setFont('helvetica', 'normal'); d.text('Con allergie o note', 40, yy + 2); d.setFont('helvetica', 'bold'); d.text(String(c.allergie), 300, yy + 2, { align: 'right' }); yy += 18;
+        if (c.gravi) { d.setFontSize(9.5); d.setFont('helvetica', 'normal'); d.text('di cui allergie gravi', 40, yy + 2); d.setFont('helvetica', 'bold'); d.text(String(c.gravi), 300, yy + 2, { align: 'right' }); yy += 14; }
+        return yy + 16;
+      };
+      var tabella = function(r, y0){
+        r = ordina(r);
+        L.autoTable(d, { theme: 'plain', startY: y0, head: [['Nome', 'Dieta', 'Allergie e intolleranze', 'Note']],
+          body: r.map(function(y){ return [y.nome + (y.grave ? '  GRAVE' : ''), y.dieta, y.allergie, y.altro]; }),
+          styles: { font: 'helvetica', fontSize: 10, cellPadding: 6, textColor: [23, 24, 27], lineColor: [227, 227, 227], lineWidth: { bottom: .5 } },
+          headStyles: { fillColor: false, textColor: [104, 107, 112], fontSize: 8.5, fontStyle: 'bold', lineWidth: { bottom: 1.2 }, lineColor: [23, 24, 27] },
+          columnStyles: { 0: { cellWidth: 140 }, 1: { cellWidth: 90 }, 2: { cellWidth: 160, textColor: [163, 32, 42], fontStyle: 'bold' }, 3: { cellWidth: 125 } },
+          didParseCell: function(h){ if (h.section !== 'body') return; var y = r[h.row.index]; if (y.grave) h.cell.styles.fillColor = [248, 215, 218]; else if (y.allergie || y.altro) h.cell.styles.fillColor = [252, 237, 238]; }
+        });
+      };
+      if (sv.length <= 1) {
+        testata('Catering · ' + x.e, periodo(x) + ' · aggiornato al ' + oggi);
+        tabella(tutte, blocco(conta(tutte), 128));
+      } else {
+        // pagina 1: riepilogo per servizio
+        testata('Catering · ' + x.e, periodo(x) + ' · riepilogo · aggiornato al ' + oggi);
+        var perServ = sv.map(function(s){ return { s: s, r: V.filter(function(v){ return presente(v.r, s.k, v.p); }).map(function(v){ return v.r; }) }; });
+        L.autoTable(d, { theme: 'plain', startY: 96, head: [['Giorno', 'Pasto', 'Persone', 'Tutto', 'Vege', 'Vegan', 'Pesce', 'Allergie']],
+          body: perServ.map(function(q){ var c = conta(q.r); return [nomeGiorno(q.s.d) + '/' + (dataDi(q.s.d).getMonth() + 1), q.s.pasto === 'cena' ? 'Cena' : 'Pranzo', c.totale, c.tutto, c.vegetariani, c.vegani, c.pescetariani, c.allergie]; }),
+          styles: { font: 'helvetica', fontSize: 10.5, cellPadding: 6, textColor: [23, 24, 27], lineColor: [227, 227, 227], lineWidth: { bottom: .5 } },
+          headStyles: { fillColor: false, textColor: [104, 107, 112], fontSize: 8.5, fontStyle: 'bold', lineWidth: { bottom: 1.2 }, lineColor: [23, 24, 27] },
+          columnStyles: { 2: { fontStyle: 'bold' }, 7: { textColor: [163, 32, 42], fontStyle: 'bold' } } });
+        var manca = voci(id).filter(function(v){ return !v.r; }).map(nomeVoce);
+        if (manca.length) { d.setFontSize(9); d.setTextColor(104, 107, 112); d.text(d.splitTextToSize('In crew ma senza risposta (non contati): ' + manca.join(', ') + '.', 515), 40, d.lastAutoTable.finalY + 18); }
+        // una pagina per servizio
+        perServ.forEach(function(q){
+          d.addPage();
+          testata(nomeGiorno(q.s.d) + '/' + (dataDi(q.s.d).getMonth() + 1) + ' · ' + (q.s.pasto === 'cena' ? 'Cena' : 'Pranzo'), 'Catering · ' + x.e);
+          tabella(q.r, blocco(conta(q.r), 128));
+        });
+      }
       var nome = 'Catering_' + x.e.replace(/[^\w\-]+/g, '_') + '_' + new Date().toISOString().slice(0, 10) + '.pdf';
       var file = new File([d.output('blob')], nome, { type: 'application/pdf' }), u = URL.createObjectURL(file);
       var puo = navigator.canShare && navigator.canShare({ files: [file] });
       var bx2 = document.createElement('div'); bx2.className = 'card'; bx2.id = 'pdfbox';
       bx2.innerHTML = '<h2 style="margin-bottom:4px">PDF pronto</h2><p class="muted" style="margin:0 0 10px">' + esc(nome) + '</p>' +
-        '<div class="row"><a class="btn main" id="sv" href="' + u + '" download="' + esc(nome) + '">Salva il PDF</a>' + (puo ? '<button class="btn sec" id="sh">Invia…</button>' : '') + '</div>' +
+        '<div class="row"><a class="btn main" id="sv" href="' + u + '" download="' + esc(nome) + '">Salva il PDF</a>' + (puo ? '<button class="btn sec" id="sh2">Invia…</button>' : '') + '</div>' +
         '<p class="muted" style="margin:10px 0 0">Salvalo e allegalo alla mail o al messaggio per il catering.' + (puo ? ' Con «Invia…» lo mandi subito da Mail, WhatsApp o Messaggi.' : '') + '</p>';
       var old = document.getElementById('pdfbox'); if (old) old.remove();
       var az = document.getElementById('az'); az.parentNode.insertBefore(bx2, az);
       b.disabled = false; b.textContent = 'Rifai PDF';
-      if (puo) document.getElementById('sh').onclick = function(){ navigator.share({ files: [file], title: nome }).catch(function(){}); };
+      if (puo) document.getElementById('sh2').onclick = function(){ navigator.share({ files: [file], title: nome }).catch(function(){}); };
       bx2.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }).catch(function(err){ b.disabled = false; b.textContent = 'PDF catering'; toast('PDF non riuscito: ' + (err && err.message || 'connessione')); });
   }
@@ -454,7 +774,12 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     app.innerHTML = '<div class="card"><p class="muted" style="margin:0">…</p></div>';
     F.getDoc(F.doc(F.db, 'produzioni', CID)).then(function(d){
       if (!d.exists() || d.data().eliminata) return fine(T('off'), T('off2'));
-      EV = d.data().nome; vModulo();
+      var v = d.data(); EV = v.nome; MP = { id: CID, e: v.nome, f: v.inizio || '', giorni: v.giorni || [] };
+      if (!UID) return vModulo();
+      return F.getDoc(F.doc(F.db, 'produzioni', CID, 'crew', UID)).then(function(c){
+        if (c.exists()) { var w = c.data(); PERS = { n: w.nome || '', c: w.cognome || '', g: w.giorni || [] }; }
+        vModulo(); if (PERS) { document.getElementById('nm').value = PERS.n; document.getElementById('cg').value = PERS.c; }
+      }).catch(function(){ vModulo(); });
     }).catch(function(){ fine(T('rete'), T('rete2')); });
   }
   // link vecchi (?e=Nome): se la produzione è stata importata su Firebase, uso quella
@@ -467,9 +792,10 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function vModulo(err){
     var D = T('diete'), C = T('chips');
     app.innerHTML = '<div class="top"><p class="eyebrow" style="margin:0">Catering · ' + esc(EV) + '</p><span class="lang"><button data-l="it" class="' + (LG === 'it' ? 'on' : '') + '">IT</button><button data-l="en" class="' + (LG === 'en' ? 'on' : '') + '">EN</button></span></div>' +
-      '<h1>' + esc(T('titolo')) + '</h1>' + (err ? '<div class="err">' + esc(err) + '</div>' : '') +
+      '<h1>' + esc(PERS && PERS.n ? T('ciao') + ' ' + PERS.n + ', ' + T('titolo').charAt(0).toLowerCase() + T('titolo').slice(1) : T('titolo')) + '</h1>' + (err ? '<div class="err">' + esc(err) + '</div>' : '') +
       '<form id="mod" autocomplete="off" novalidate><div class="card"><div class="f" id="f-nm"><label class="lab" for="nm">' + esc(T('nome')) + '</label><input type="text" id="nm" autocomplete="given-name" required aria-describedby="e-nm"><p class="ferr" id="e-nm" hidden>' + esc(T('eNome')) + '</p></div>' +
       '<div class="f" id="f-cg"><label class="lab" for="cg">' + esc(T('cognome')) + '</label><input type="text" id="cg" autocomplete="family-name" required aria-describedby="e-cg"><p class="ferr" id="e-cg" hidden>' + esc(T('eCognome')) + '</p></div>' +
+      bloccoQuando() +
       '<div class="f" id="f-seg"><span class="lab" id="l-seg">' + esc(T('dieta')) + '</span><button type="button" class="dd" id="seg" aria-expanded="false" aria-labelledby="l-seg"><span id="v-seg">' + (dieta ? esc(D[DIETE.indexOf(dieta)]) : '<i>' + esc(T('scegli')) + '</i>') + '</span>' + CHEV + '</button>' +
         '<div class="ddl" id="l-dieta" role="radiogroup" hidden>' + DIETE.map(function(t, i){ return '<button type="button" class="op' + (t === dieta ? ' on' : '') + '" role="radio" aria-checked="' + (t === dieta) + '" data-d="' + t + '"><span>' + esc(D[i]) + '</span><span class="ck"></span></button>'; }).join('') + '</div><p class="ferr" id="e-seg" hidden>' + esc(T('eDieta')) + '</p></div>' +
       '<div class="f"><span class="lab" id="l-al">' + esc(T('all')) + '</span><button type="button" class="dd" id="ddal" aria-expanded="false" aria-labelledby="l-al"><span id="v-al"><i>' + esc(T('nessuna')) + '</i></span>' + CHEV + '</button>' +
@@ -478,7 +804,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       '<label class="chk"><input type="checkbox" id="gr">' + esc(T('grave')) + '</label></div>' +
       '<button class="btn main" type="submit">' + esc(T('invia')) + '</button><p class="muted" style="margin:8px 4px;text-align:center;font-size:13px">' + esc(T('nota')) + '</p></form>';
     Array.prototype.forEach.call(app.querySelectorAll('[data-l]'), function(b){ b.onclick = function(){
-      var d = leggi(); LG = b.dataset.l; vModulo(); rimetti(d);
+      var d = leggi(); if (d.pasti) SCELTI = d.pasti; LG = b.dataset.l; vModulo(); rimetti(d);
     }; });
     var apri = function(btn, lista, su){ btn.onclick = function(){ var aperto = !lista.hidden; lista.hidden = aperto; btn.setAttribute('aria-expanded', !aperto); if (su) su(); }; };
     var ld = document.getElementById('l-dieta'), la = document.getElementById('l-all');
@@ -495,25 +821,39 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     document.getElementById('mod').addEventListener('submit', function(e){
       e.preventDefault();
       var d = leggi();
-      var okN = d.n1.length >= 2, okC = d.n2.length >= 2, okD = !!d.dieta;
-      segna('nm', !okN); segna('cg', !okC); segna('seg', !okD);
-      if (!okN || !okC || !okD) { var primo = !okN ? 'nm' : !okC ? 'cg' : 'seg'; document.getElementById(primo).scrollIntoView({ behavior: 'smooth', block: 'center' }); if (primo !== 'seg') document.getElementById(primo).focus(); return; }
+      var okN = d.n1.length >= 2, okC = d.n2.length >= 2, okD = !!d.dieta, okQ = !d.pasti || d.pasti.length > 0;
+      segna('nm', !okN); segna('cg', !okC); segna('seg', !okD); segna('qd', !okQ);
+      if (!okN || !okC || !okD || !okQ) { var primo = !okN ? 'nm' : !okC ? 'cg' : !okQ ? 'f-qd' : 'seg'; document.getElementById(primo).scrollIntoView({ behavior: 'smooth', block: 'center' }); if (primo !== 'seg') document.getElementById(primo).focus(); return; }
       fine(T('grazie'), T('grazie2'));
       if (CID) {
         var F = window.FB;
-        F.addDoc(F.collection(F.db, 'produzioni', CID, 'risposte'), { nome: d.nome.slice(0, 80), dieta: d.dieta, allergie: d.allergie.join(', '), altro: d.altro.slice(0, 300), grave: d.grave, quando: F.serverTimestamp() })
-          .catch(function(){ ripristina(d, T('ko')); });
+        var dati = { nome: d.nome.slice(0, 80), dieta: d.dieta, allergie: d.allergie.join(', '), altro: d.altro.slice(0, 300), grave: d.grave, quando: F.serverTimestamp() };
+        if (d.pasti) dati.pasti = d.pasti;
+        if (UID) dati.crew = UID;
+        (UID ? F.setDoc(F.doc(F.db, 'produzioni', CID, 'risposte', 'u_' + UID), dati) : F.addDoc(F.collection(F.db, 'produzioni', CID, 'risposte'), dati))
+          .catch(function(err){ if (UID && /permission/i.test(err && err.code || '')) fine(T('gia'), T('gia2')); else ripristina(d, T('ko')); });
         return;
       }
       api('catInvia', [d]).then(function(r){ if (!r.ok) ripristina(d, r.msg); }).catch(function(){ ripristina(d, T('ko')); });
     });
+  }
+  // "Quando sei sul set?": solo se la produzione ha più giorni o pasti
+  function bloccoQuando(){
+    var sv = MP ? servizi(MP) : [];
+    if (sv.length < 2) return '';
+    if (!SCELTI) SCELTI = sv.filter(function(s){ return !PERS || !PERS.g.length || PERS.g.indexOf(s.d) !== -1; }).map(function(s){ return s.k; });
+    return '<div class="f" id="f-qd"><span class="lab">' + esc(T('quando')) + '</span><div class="ddl" style="margin-top:0">' + sv.map(function(s){
+      var d = dataDi(s.d), nome = (LG === 'en' ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] : GS)[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1) + ' · ' + T(s.pasto);
+      return '<label class="op"><span>' + esc(nome) + '</span><input type="checkbox" name="qd" value="' + s.k + '"' + (SCELTI.indexOf(s.k) !== -1 ? ' checked' : '') + '><span class="ck sq"></span></label>'; }).join('') +
+      '</div><p class="ferr" id="e-qd" hidden>' + esc(T('eQuando')) + '</p></div>';
   }
   function leggi(){
     var v = function(k){ var el = document.getElementById(k); return el ? el.value.trim().replace(/\s+/g, ' ') : ''; };
     var n1 = v('nm'), n2 = v('cg');
     return { e: EV, f: FINO, p: PRJ, n1: n1, n2: n2, nome: (n1 + ' ' + n2).trim(), dieta: dieta,
       allergie: Array.prototype.map.call(document.querySelectorAll('input[name=al]:checked'), function(i){ return i.value; }),
-      altro: document.getElementById('al') ? document.getElementById('al').value.trim() : '', grave: !!(document.getElementById('gr') && document.getElementById('gr').checked) };
+      altro: document.getElementById('al') ? document.getElementById('al').value.trim() : '', grave: !!(document.getElementById('gr') && document.getElementById('gr').checked),
+      pasti: document.getElementById('f-qd') ? Array.prototype.map.call(document.querySelectorAll('input[name=qd]:checked'), function(i){ return i.value; }) : null };
   }
   function riassumiAllergie(){
     var C = T('chips'), sel = Array.prototype.map.call(document.querySelectorAll('input[name=al]:checked'), function(i){ return C[ALL.indexOf(i.value)]; });
@@ -526,7 +866,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   }
   function segna(id, male){
     var f = document.getElementById('f-' + id), e = document.getElementById('e-' + id); if (!f) return;
-    f.classList.toggle('bad', male); e.hidden = !male;
+    f.classList.toggle('bad', male); if (e) e.hidden = !male;
   }
   function ripristina(d, msg){ dieta = d.dieta; vModulo(msg); rimetti(d); }
 
