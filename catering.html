@@ -97,7 +97,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;backgr
 </head>
 <body>
 <div class="app" id="app"></div>
-<script src="fb-catering.js?v=20261118b"></script>
+<script src="fb-catering.js?v=20261118c"></script>
 <script>
 window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k-aiQJkvr8yw09bHlwlm3A1Xo8_UHSjB_fqTtdJKW1XoKhHQ/exec";
 (function(){
@@ -924,11 +924,15 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   }
 
   // ── modulo crew su Firebase (link ?c=…) ──
-  function fine(t1, t2){ app.innerHTML = '<div class="card fine"><div class="big">' + esc(t1) + '</div><p class="muted" style="margin:10px 0 0">' + esc(t2) + '</p></div>'; }
+  function fine(t1, t2, riprova){ app.innerHTML = '<div class="card fine"><div class="big">' + esc(t1) + '</div><p class="muted" style="margin:10px 0 0">' + esc(t2) + '</p>' + (riprova ? '<button class="btn sec" id="rip" style="margin-top:14px">' + (LG === 'en' ? 'Try again' : 'Riprova') + '</button>' : '') + '</div>'; if (riprova) document.getElementById('rip').onclick = function(){ location.reload(); }; }
   function vModuloFB(){
     var F = window.FB;
-    app.innerHTML = '<div class="card"><p class="muted" style="margin:0">…</p></div>';
-    F.getDoc(F.doc(F.db, 'produzioni', CID)).then(function(d){
+    app.innerHTML = '<div class="card"><p class="muted" style="margin:0">' + (LG === 'en' ? 'Loading…' : 'Un attimo…') + '</p></div>';
+    // se la rete non risponde entro 12 secondi, mostro un messaggio con "Riprova" invece di restare fermo
+    var finito = false, timer = setTimeout(function(){ if (!finito) { finito = true; fine(T('rete'), T('rete2'), true); } }, 12000);
+    var lento = function(p){ return p.then(function(x){ if (finito) throw 'tardi'; return x; }); };
+    lento(F.getDoc(F.doc(F.db, 'produzioni', CID))).then(function(d){
+      finito = true; clearTimeout(timer);
       if (!d.exists() || d.data().eliminata) return fine(T('off'), T('off2'));
       var v = d.data(); EV = v.nome; MP = { id: CID, e: v.nome, f: v.inizio || '', giorni: v.giorni || [] };
       if (!UID) return vModulo();
@@ -936,7 +940,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
         if (c.exists()) { var w = c.data(); PERS = { n: w.nome || '', c: w.cognome || '', g: w.giorni || [] }; }
         vModulo(); if (PERS) { document.getElementById('nm').value = PERS.n; document.getElementById('cg').value = PERS.c; }
       }).catch(function(){ vModulo(); });
-    }).catch(function(){ fine(T('rete'), T('rete2')); });
+    }).catch(function(e){ if (e === 'tardi') return; finito = true; clearTimeout(timer); fine(T('rete'), T('rete2'), true); });
   }
   // link vecchi (?e=Nome): se la produzione è stata importata su Firebase, uso quella
   function chiaveNome(n){ return String(n || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 80) || 'x'; }
