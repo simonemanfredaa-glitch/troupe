@@ -97,6 +97,13 @@ service cloud.firestore {
       allow update: if false;
     }
 
+    // elenco personale delle produzioni condivise con me (l'accesso vero lo decide "membri")
+    match /utenti/{email} {
+      allow read: if io() && email == request.auth.token.email;
+      allow create, update: if io() && email == request.auth.token.email
+        && request.resource.data.keys().hasOnly(['prod']) && request.resource.data.prod is list && request.resource.data.prod.size() <= 200;
+    }
+
     // le mie partecipazioni (per trovare le produzioni a cui sono invitato)
     match /{path=**}/membri/{m} {
       allow read: if producer() || (io() && resource.data.email == request.auth.token.email);

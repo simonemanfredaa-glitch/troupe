@@ -158,20 +158,27 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
         if (d.exists()) return entra(d.data().nome, true);   // i producer aggiunti dall'ingranaggio hanno gli stessi poteri dell'admin
         // non è producer: se arriva da un link di invito lo aggiungo alla produzione, poi vedo a quali è invitato
         return usaInvito(email, u.displayName).then(function(){
-          return F.getDocs(F.query(F.collectionGroup(F.db, 'membri'), F.where('email', '==', email)));
-        }).then(function(qs){
-          if (qs.empty) return vNonAbilitato(email);
-          ME = { email: email, nome: u.displayName || email, admin: false, collab: true, prod: qs.docs.map(function(d){ return d.ref.parent.parent.id; }) };
+          return F.getDoc(F.doc(F.db, 'utenti', email));
+        }).then(function(ud){
+          var prod = ud.exists() ? (ud.data().prod || []) : [];
+          if (!prod.length) return vNonAbilitato(email);
+          ME = { email: email, nome: u.displayName || email, admin: false, collab: true, prod: prod };
           ascolta(); vHome();
         });
-      }).catch(function(e){ console.warn(e); vNonAbilitato(email, INV ? 'Il link di invito non è valido o è stato disattivato.' : ''); });
+      }).catch(function(e){ console.warn(e); vNonAbilitato(email, e && e.invito ? 'Il link di invito non è valido o è stato disattivato.' : 'Qualcosa non ha funzionato (' + (e && (e.code || e.message) || 'errore') + '). Riapri il link di invito.'); });
     });
   }
   function usaInvito(email, nome){
     var F = window.FB; if (!INV) return Promise.resolve();
+    var pid;
     return F.getDoc(F.doc(F.db, 'inviti', INV)).then(function(d){
-      if (!d.exists()) throw new Error('invito');
-      return F.setDoc(F.doc(F.db, 'produzioni', d.data().p, 'membri', email), { email: email, nome: (nome || email).slice(0, 80), invito: INV, quando: F.serverTimestamp() });
+      if (!d.exists()) { var e = new Error('invito'); e.invito = true; throw e; }
+      pid = d.data().p;
+      var ref = F.doc(F.db, 'produzioni', pid, 'membri', email);
+      return F.getDoc(ref).then(function(m){ if (!m.exists()) return F.setDoc(ref, { email: email, nome: (nome || email).slice(0, 80), invito: INV, quando: F.serverTimestamp() }); });
+    }).then(function(){
+      // elenco personale delle produzioni condivise con me
+      return F.setDoc(F.doc(F.db, 'utenti', email), { prod: F.arrayUnion(pid) }, { merge: true });
     }).then(function(){ INV = ''; try { history.replaceState(null, '', BASE); } catch (e) {} });
   }
   var SUB = {};
@@ -189,7 +196,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
         STOP.push(F.onSnapshot(F.collection(F.db, 'produzioni', pid, 'risposte'), function(qs2){
           RIS[pid] = qs2.docs.map(function(d){ var v = d.data(); return { id: d.id, nome: v.nome || '', dieta: v.dieta || '', allergie: v.allergie || '', altro: v.altro || '', grave: !!v.grave, crew: v.crew || '', pasti: v.pasti || [] }; });
           ridisegna();
-        }, function(err){ mostraErrore(err); }));
+        }, function(err){ if (/permission/i.test(err && err.code || '')) { delete tutte[pid]; PROD = PROD.filter(function(x){ return x.id !== pid; }); ridisegna(); } else mostraErrore(err); }));
       });
       return;
     }
