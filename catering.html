@@ -97,7 +97,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;backgr
 </head>
 <body>
 <div class="app" id="app"></div>
-<script src="fb-catering.js?v=20261118c"></script>
+<script src="fb-catering.js?v=20261118d"></script>
 <script>
 window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k-aiQJkvr8yw09bHlwlm3A1Xo8_UHSjB_fqTtdJKW1XoKhHQ/exec";
 (function(){
@@ -432,12 +432,36 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function trova(id){ return PROD.filter(function(x){ return x.id === id; })[0]; }
   var ICO_SHARE = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg>';
   var ICO_DOTS = '<svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>';
-  function messaggio(x){ return 'Ciao! Per ' + x.e + ' ci dici cosa mangi e se hai allergie? / Hi! For ' + x.e + ', please tell us your diet and any allergies: ' + linkModulo(x); }
+  // date leggibili: "mar 1 dic", "1–3 dic", "30 nov – 2 dic", "1, 3 e 5 dic"
+  var MB = { it: ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'], en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] };
+  var GB = { it: ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'], en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] };
+  function dateTesto(lista, lg){
+    var g = (lista || []).filter(function(v){ return /^\d{4}-\d{2}-\d{2}$/.test(v); }).sort().filter(function(v, i, a){ return a.indexOf(v) === i; });
+    if (!g.length) return '';
+    var d = g.map(dataDi), m = function(x){ return MB[lg][x.getMonth()]; }, gm = function(x){ return x.getDate() + ' ' + m(x); };
+    if (d.length === 1) return GB[lg][d[0].getDay()] + ' ' + gm(d[0]);
+    var diFila = d.every(function(x, i){ return !i || Math.round((x - d[i - 1]) / 864e5) === 1; });
+    var a = d[0], b = d[d.length - 1], stesso = a.getMonth() === b.getMonth();
+    if (diFila) return stesso ? a.getDate() + '–' + gm(b) : gm(a) + ' – ' + gm(b);
+    var e = lg === 'en' ? ' and ' : ' e ';
+    if (d.every(function(x){ return x.getMonth() === a.getMonth(); })) { var n = d.map(function(x){ return x.getDate(); }); return n.slice(0, -1).join(', ') + e + gm(b); }
+    var t = d.map(gm); return t.slice(0, -1).join(', ') + e + t[t.length - 1];
+  }
+  var tra = function(t){ return t ? ' (' + t + ')' : ''; };
+  var giorniProd = function(x){ return (x.giorni && x.giorni.length ? x.giorni.map(function(g){ return g.d; }) : [x.f]); };
+  function messaggio(x){
+    var g = giorniProd(x);
+    return 'Ciao, per organizzare il catering di ' + x.e + tra(dateTesto(g, 'it')) + ' vi chiediamo di indicare dieta ed eventuali allergie al link qui sotto.\n\n' +
+      'Hi, please share your dietary needs and any allergies for ' + x.e + tra(dateTesto(g, 'en')) + ' at the link below.\n\n' + linkModulo(x);
+  }
   function linkPersona(x, p){ return BASE + '?c=' + x.id + '&u=' + p.id; }
   function msgPersona(x, p){
-    var gg = p.g && p.g.length ? p.g.map(nomeGiorno).join(', ') : '';
-    return p.stato === 'mandato' ? 'Ciao ' + p.n + ', ti ricordo il modulo per il catering di ' + x.e + ' 🙂 ' + linkPersona(x, p) :
-      'Ciao ' + p.n + '! Per ' + x.e + (gg ? ' (' + gg + ')' : '') + ' ci dici cosa mangi e se hai allergie? Ci vuole un minuto / Hi ' + p.n + '! Please tell us your diet and any allergies: ' + linkPersona(x, p);
+    var g = p.g && p.g.length ? p.g : giorniProd(x), it = tra(dateTesto(g, 'it')), en = tra(dateTesto(g, 'en'));
+    return p.stato === 'mandato' ?
+      'Ciao ' + p.n + ', ti ricordo il modulo per il catering di ' + x.e + it + ': ci serve sapere dieta ed eventuali allergie.\n\n' +
+      'Hi ' + p.n + ', a quick reminder about the catering form for ' + x.e + en + ': please share your dietary needs and any allergies.\n\n' + linkPersona(x, p) :
+      'Ciao ' + p.n + ', per organizzare il catering di ' + x.e + it + ' ti chiediamo di indicare dieta ed eventuali allergie al link qui sotto.\n\n' +
+      'Hi ' + p.n + ', please share your dietary needs and any allergies for ' + x.e + en + ' at the link below.\n\n' + linkPersona(x, p);
   }
   function waHref(tel, testo){
     var n = String(tel || '').replace(/[^\d+]/g, '');
@@ -783,7 +807,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
       var t = codice();
       F.setDoc(F.doc(F.db, 'inviti', t), { p: id, creato: F.serverTimestamp(), da: ME.email }).catch(function(err){ toast('Non creato: ' + err.message); });
       link = BASE + '?invito=' + t;
-      var msg = 'Ciao! Ti invito a seguire il catering di ' + x.e + '. Apri il link ed entra con Google: ' + link;
+      var msg = 'Ciao, ti invito a seguire il catering di ' + x.e + '. Apri il link ed entra con Google o con la tua email:\n\n' + link;
       document.getElementById('lk').innerHTML = '<h2>Link pronto</h2><a class="btn wa" href="whatsapp://send?text=' + encodeURIComponent(msg) + '">Manda su WhatsApp</a>' +
         '<button class="link" id="cpi" style="display:block;margin:8px auto 0">Copia il link</button>' +
         '<p class="muted" style="margin:8px 0 0">Mandalo solo a chi deve vedere la produzione: chiunque lo apra può entrare.</p>';
