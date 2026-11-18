@@ -6,11 +6,16 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email == 'simonemanfredaa@gmail.com'
         && request.auth.token.email_verified == true;
     }
+    // account Google: Google ha già verificato l'email, anche se non è @gmail.com
+    function verificato() {
+      return request.auth != null && (request.auth.token.email_verified == true
+        || request.auth.token.firebase.sign_in_provider == 'google.com');
+    }
     function producer() {
-      return admin() || (request.auth != null && request.auth.token.email_verified == true
+      return admin() || (verificato()
         && exists(/databases/$(database)/documents/producer/$(request.auth.token.email.lower())));
     }
-    function io() { return request.auth != null && request.auth.token.email_verified == true; }
+    function io() { return verificato(); }
     // collaboratore: è entrato in questa produzione con un link di invito
     function collab(p) {
       return io() && exists(/databases/$(database)/documents/produzioni/$(p)/membri/$(request.auth.token.email));
