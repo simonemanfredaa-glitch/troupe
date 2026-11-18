@@ -3,7 +3,7 @@ name: Regole Firebase
 on:
   push:
     branches: [main]
-    paths: ['firestore.rules']
+    paths: ['firestore.rules', 'firestore.indexes.json']
   workflow_dispatch:
 jobs:
   pubblica:
@@ -25,3 +25,4 @@ jobs:
         run: |
           npm install --no-save google-auth-library@9 >/dev/null
           node .github/scripts/regole.mjs
+          npx -y firebase-tools@latest deploy --only firestore:indexes --project troupe-app-f0364 --non-interactive --force
