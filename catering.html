@@ -13,6 +13,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{color-scheme:light}
+::placeholder{color:#A6A8AC;-webkit-text-fill-color:#A6A8AC;opacity:1}
 :root{--bg:#E9E8E4;--ink:#17181B;--muted:#686B70;--line:#DEDDD8;--soft:#F4F3F0;--ok:#1F6B3A;--err:#A3202A;--wa:#1F8F4E;--blue:#1E3A8A;--blue-soft:#EAEFFA}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Figtree,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
@@ -331,7 +332,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     else if (x && x.f) { C.a = C.b = dataDi(x.f); }
     if (C.a) C.m = new Date(C.a.getFullYear(), C.a.getMonth(), 1);
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Indietro</button></div><h1>' + (x ? 'Modifica produzione' : 'Nuova produzione') + '</h1>' +
-      '<form id="frm" autocomplete="off"><div class="card"><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" placeholder="Es. Alain Mikli N1" value="' + esc(x ? x.e : '') + '"></div>' +
+      '<form id="frm" autocomplete="off"><div class="card"><div class="f"><label class="lab" for="ev">Nome della produzione</label><input type="text" id="ev" placeholder="Es. Campagna primavera" value="' + esc(x ? x.e : '') + '"></div>' +
       '<label class="lab">Giorni di shoot</label><div id="cal"></div></div><div id="gp"></div>' +
       '<button class="btn main" type="submit">' + (x ? 'Salva modifiche' : 'Crea') + '</button><p class="muted" style="margin:8px 4px 0;text-align:center">Per la privacy, 45 giorni dopo l\'ultimo giorno di shoot le risposte si cancellano da sole e restano solo i numeri.</p></form>' +
       (x ? '<div id="del" style="margin-top:14px"><button class="btn danger" id="eli">Elimina produzione</button></div>' : '');
@@ -713,7 +714,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     VISTA = null;
     app.innerHTML = '<div class="top"><button class="link" id="ind">‹ Produzioni</button></div><h1>Producer</h1>' +
       '<div class="card" id="pl"><p class="muted" style="margin:0">Carico…</p></div>' +
-      '<form id="pf" class="card" autocomplete="off"><h2>Aggiungi un producer</h2><p class="muted" style="margin:-4px 0 10px">Vede e gestisce tutte le produzioni, come te. Per far vedere una sola produzione usa il link di invito dentro la produzione.</p><div class="f"><label class="lab" for="pn">Nome</label><input type="text" id="pn" placeholder="Es. Filippo Mogno"></div>' +
+      '<form id="pf" class="card" autocomplete="off"><h2>Aggiungi un producer</h2><p class="muted" style="margin:-4px 0 10px">Vede e gestisce tutte le produzioni, come te. Per far vedere una sola produzione usa il link di invito dentro la produzione.</p><div class="f"><label class="lab" for="pn">Nome</label><input type="text" id="pn" placeholder="Es. Mario Rossi"></div>' +
       '<div class="f"><label class="lab" for="pe">Email Google</label><input type="text" id="pe" inputmode="email" autocapitalize="off" placeholder="nome@gmail.com"></div><button class="btn main" type="submit">Aggiungi</button></form>' +
       '<form id="imp" class="card" autocomplete="off"><h2>Porta qui le produzioni vecchie</h2><p class="muted" style="margin:0 0 10px">Copia le produzioni create prima su Google, con le loro risposte. I link già mandati continuano a funzionare e da ora scrivono qui. Serve il tuo codice Troupe.</p>' +
       '<div class="f"><input type="password" id="ic" inputmode="numeric" placeholder="Codice Troupe" autocomplete="one-time-code"></div><button class="btn sec" type="submit">Importa</button><div id="ir"></div></form>';
