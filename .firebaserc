@@ -1,1 +1,4 @@
-{ "projects": { "default": "troupe-app-f0364" } }
+{
+  "projects": { "default": "troupe-app-f0364" },
+  "targets": { "troupe-app-f0364": { "hosting": { "catering": ["troupe-catering"] } } }
+}

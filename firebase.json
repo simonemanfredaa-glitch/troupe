@@ -1,3 +1,13 @@
 {
-  "firestore": { "rules": "firestore.rules" }
+  "firestore": { "rules": "firestore.rules" },
+  "hosting": [
+    {
+      "target": "catering",
+      "public": "public",
+      "headers": [
+        { "source": "**/*.@(js|png)", "headers": [{ "key": "Cache-Control", "value": "public, max-age=3600" }] },
+        { "source": "/", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+      ]
+    }
+  ]
 }
