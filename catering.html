@@ -97,7 +97,7 @@ pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;backgr
 </head>
 <body>
 <div class="app" id="app"></div>
-<script src="fb-catering.js"></script>
+<script src="fb-catering.js?v=20261118b"></script>
 <script>
 window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k-aiQJkvr8yw09bHlwlm3A1Xo8_UHSjB_fqTtdJKW1XoKhHQ/exec";
 (function(){
@@ -146,7 +146,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function avvia(){
     var F = window.FB;
     app.innerHTML = '<div class="card"><p class="muted" style="margin:0">Un attimo…</p></div>';
-    if (F.isSignInWithEmailLink(F.auth, location.href)) return entraDaLink();
+    if (F.isSignInWithEmailLink && F.isSignInWithEmailLink(F.auth, location.href)) return entraDaLink();
     F.onAuthStateChanged(F.auth, function(u){
       ferma(); U = u; ME = null;
       if (!u) return vLogin();
