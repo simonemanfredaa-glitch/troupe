@@ -25,4 +25,4 @@ jobs:
         run: |
           npm install --no-save google-auth-library@9 >/dev/null
           node .github/scripts/regole.mjs
-          npx -y firebase-tools@latest deploy --only firestore:indexes --project troupe-app-f0364 --non-interactive --force
+          node .github/scripts/indici.mjs
