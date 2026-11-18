@@ -25,6 +25,8 @@ service cloud.firestore {
     // elenco dei producer: hanno tutti gli stessi poteri dell'admin
     match /producer/{email} {
       allow read: if producer();
+      // ognuno può controllare se è nell'elenco (serve all'avvio a chi è solo collaboratore)
+      allow get: if io() && email == request.auth.token.email.lower();
       allow create, update: if producer() && request.resource.data.keys().hasOnly(['nome']) && testo(request.resource.data.nome, 80);
       allow delete: if producer();
     }

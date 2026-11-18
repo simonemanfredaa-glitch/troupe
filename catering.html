@@ -156,8 +156,8 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
         ascolta(); vHome();
       };
       if (email === ADMIN) return entra(u.displayName || 'Simone Manfreda', true);
-      F.getDoc(F.doc(F.db, 'producer', email)).then(function(d){
-        if (d.exists()) return entra(d.data().nome, true);   // i producer aggiunti dall'ingranaggio hanno gli stessi poteri dell'admin
+      F.getDoc(F.doc(F.db, 'producer', email)).catch(function(){ return null; }).then(function(d){
+        if (d && d.exists()) return entra(d.data().nome, true);   // i producer aggiunti dall'ingranaggio hanno gli stessi poteri dell'admin
         // non è producer: se arriva da un link di invito lo aggiungo alla produzione, poi vedo a quali è invitato
         return usaInvito(email, u.displayName).then(function(){
           return F.getDoc(F.doc(F.db, 'utenti', email));
