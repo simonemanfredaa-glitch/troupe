@@ -478,8 +478,8 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
     });
     el.innerHTML = numeri + '<p class="sez" style="margin-top:4px">Crew</p>' +
       (conLista ? '<div class="pills"><button class="pill' + (!SEL.filtro ? ' on' : '') + '" data-f="" style="background:var(--ink);color:#fff">' + VG.length + ' in crew</button>' +
-        '<button class="pill' + (SEL.filtro === 'ok' ? ' on' : '') + '" data-f="ok" style="color:#2E6B3C"><span class="pd" style="background:#3E9B58"></span>' + n.ok + ' risposte</button>' +
-        '<button class="pill' + (SEL.filtro === 'mandato' ? ' on' : '') + '" data-f="mandato" style="color:#8A6A00"><span class="pd" style="background:#E0A800"></span>' + n.mandato + ' mandati</button>' +
+        '<button class="pill' + (SEL.filtro === 'ok' ? ' on' : '') + '" data-f="ok" style="color:#2E6B3C"><span class="pd" style="background:#3E9B58"></span>' + n.ok + (n.ok === 1 ? ' risposta' : ' risposte') + '</button>' +
+        '<button class="pill' + (SEL.filtro === 'mandato' ? ' on' : '') + '" data-f="mandato" style="color:#8A6A00"><span class="pd" style="background:#E0A800"></span>' + n.mandato + (n.mandato === 1 ? ' mandato' : ' mandati') + '</button>' +
         '<button class="pill' + (SEL.filtro === 'da' ? ' on' : '') + '" data-f="da" style="color:var(--muted)"><span class="pd" style="background:#C9C8C3"></span>' + n.da + ' da mandare</button></div>' : '') +
       (lista.length ? '<div class="card list" style="padding:2px 16px">' + lista.map(function(v, i){
         var y = v.r, p = v.p;
