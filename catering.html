@@ -25,7 +25,7 @@ h1{font-size:26px;line-height:1.15;margin:0 4px 14px;letter-spacing:-.015em}
 h2{font-size:15px;margin:0 0 10px}
 .lab{display:block;font-size:13px;font-weight:600;margin:0 0 4px 2px}
 .f{margin-bottom:10px}.f:last-child{margin-bottom:0}
-input[type=text],input[type=date],input[type=password]{color:var(--ink);-webkit-text-fill-color:var(--ink);width:100%;height:44px;border:1px solid var(--line);border-radius:12px;padding:0 14px;font-size:16px;background:#fff;outline:none;-webkit-appearance:none;appearance:none}
+input[type=text],input[type=email],input[type=date],input[type=password]{color:var(--ink);-webkit-text-fill-color:var(--ink);width:100%;height:44px;border:1px solid var(--line);border-radius:12px;padding:0 14px;font-size:16px;background:#fff;outline:none;-webkit-appearance:none;appearance:none}
 input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,58,138,.12)}
 .seg{display:flex;flex-wrap:wrap;gap:4px;background:var(--soft);padding:4px;border-radius:12px}
 .seg button{flex:1 1 40%;min-height:40px;border:none;border-radius:9px;background:transparent;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
@@ -42,6 +42,7 @@ input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(30,58,138,.12)}
 .main{background:var(--ink);color:#fff}.sec{background:#fff;border:1px solid var(--line);color:var(--ink)}.wa{background:var(--wa);color:#fff}
 .row{display:flex;gap:10px}.row>*{flex:1}
 .muted{color:var(--muted);font-size:13px;line-height:1.45}
+.oppure{display:flex;align-items:center;gap:10px;margin:16px 0 12px;color:var(--muted,#6B6F76);font-size:13px}.oppure:before,.oppure:after{content:'';flex:1;height:1px;background:var(--line)}
 .err{background:#FBECEC;color:var(--err);border-radius:12px;padding:10px 12px;font-size:14px;margin-bottom:12px}
 .fine{text-align:center;padding:34px 20px}.fine .big{font-size:24px;font-weight:700}
 pre{white-space:pre-wrap;word-break:break-all;font:inherit;font-size:14px;background:var(--soft);border-radius:12px;padding:10px 12px;margin:0 0 12px}
@@ -145,6 +146,7 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function avvia(){
     var F = window.FB;
     app.innerHTML = '<div class="card"><p class="muted" style="margin:0">Un attimo…</p></div>';
+    if (F.isSignInWithEmailLink(F.auth, location.href)) return entraDaLink();
     F.onAuthStateChanged(F.auth, function(u){
       ferma(); U = u; ME = null;
       if (!u) return vLogin();
@@ -236,8 +238,15 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
   function vLogin(msg){
     VISTA = null;
     app.innerHTML = '<p class="brand">Catering<span>.</span></p><h1>' + (INV ? 'Hai un invito per una produzione' : 'Accedi') + '</h1><div class="card">' + (msg ? '<div class="err">' + esc(msg) + '</div>' : '') +
-      (INV ? '<p style="margin:0 0 12px">Entra con il tuo account Google: vedrai le risposte della crew e potrai mandare il modulo.</p>' : '') +
-      '<button class="btn main" id="gg">Accedi con Google</button><p class="muted" style="margin:10px 0 0">Usa l\'account Google che Simone ha abilitato.</p></div>';
+      (INV ? '<p style="margin:0 0 12px">Entra con Google o con la tua email: vedrai le risposte della crew e potrai mandare il modulo.</p>' : '') +
+      '<button class="btn main" id="gg">Accedi con Google</button>' +
+      '<div class="oppure"><span>oppure</span></div>' +
+      '<label class="lab" for="lem">Entra con la tua email</label><input type="email" id="lem" autocomplete="email" inputmode="email" placeholder="nome@esempio.com">' +
+      '<p class="ferr" id="lemr" hidden>Scrivi un indirizzo email valido</p>' +
+      '<button class="btn sec" id="lmail" style="margin-top:10px">Mandami il link di accesso</button>' +
+      '<p class="muted" style="margin:10px 0 0">Ti arriva un\'email con un link: aprilo da questo telefono e sei dentro. Non serve una password.</p></div>';
+    document.getElementById('lmail').onclick = inviaLink;
+    document.getElementById('lem').onkeydown = function(e){ if (e.key === 'Enter') inviaLink(); };
     document.getElementById('gg').onclick = function(){
       var F = window.FB, b = this; b.disabled = true; b.textContent = 'Apro Google…';
       F.signInWithPopup(F.auth, new F.GoogleAuthProvider()).catch(function(e){
@@ -245,6 +254,41 @@ window.API_URL = "https://script.google.com/macros/s/AKfycbxuOnDHJY_1vsG9MTow36k
         if (!/popup-closed|cancelled-popup/.test(e.code || '')) vLogin('Accesso non riuscito (' + (e.code || e.message) + '). Riprova.');
       });
     };
+  }
+  function inviaLink(){
+    var F = window.FB, b = document.getElementById('lmail'), em = (document.getElementById('lem').value || '').trim().toLowerCase();
+    var ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em); document.getElementById('lemr').hidden = ok; if (!ok) return;
+    b.disabled = true; b.textContent = 'Invio…';
+    var torna = BASE + (INV ? '?invito=' + INV : '');
+    F.sendSignInLinkToEmail(F.auth, em, { url: torna, handleCodeInApp: true }).then(function(){
+      try { localStorage.setItem('cat_email', em); } catch (e) {}
+      VISTA = null;
+      app.innerHTML = '<p class="brand">Catering<span>.</span></p><h1>Controlla la posta</h1><div class="card"><p style="margin:0 0 10px">Abbiamo mandato un link di accesso a <b>' + esc(em) + '</b>.</p><p class="muted" style="margin:0 0 14px">Aprilo da questo telefono. Se non lo trovi, guarda anche nello spam.</p><button class="btn sec" id="lback">Usa un altro indirizzo</button></div>';
+      document.getElementById('lback').onclick = function(){ vLogin(); };
+    }).catch(function(e){
+      var c = e.code || e.message;
+      vLogin(/quota|too-many/.test(c) ? 'Oggi sono già stati mandati troppi link di accesso. Riprova domani o entra con Google.' : 'Non sono riuscito a mandare il link (' + c + '). Riprova.');
+    });
+  }
+  function entraDaLink(){
+    var F = window.FB, em = '';
+    try { em = localStorage.getItem('cat_email') || ''; } catch (e) {}
+    var fai = function(addr){
+      app.innerHTML = '<div class="card"><p class="muted" style="margin:0">Un attimo…</p></div>';
+      F.signInWithEmailLink(F.auth, addr, location.href).then(function(){
+        try { localStorage.removeItem('cat_email'); history.replaceState(null, '', BASE + (INV ? '?invito=' + INV : '')); } catch (e) {}
+        avvia();
+      }).catch(function(e){
+        try { history.replaceState(null, '', BASE + (INV ? '?invito=' + INV : '')); } catch (x) {}
+        var c = e.code || e.message;
+        vLogin(/invalid-action-code|expired/.test(c) ? 'Questo link di accesso è scaduto o è già stato usato. Chiedine uno nuovo qui sotto.' : /invalid-email/.test(c) ? 'L\'email non corrisponde a quella a cui è arrivato il link. Chiedine uno nuovo qui sotto.' : 'Accesso non riuscito (' + c + '). Riprova.');
+      });
+    };
+    if (em) return fai(em);
+    // link aperto su un altro telefono o browser: chiedo di nuovo l'indirizzo
+    VISTA = null;
+    app.innerHTML = '<p class="brand">Catering<span>.</span></p><h1>Conferma la tua email</h1><div class="card"><label class="lab" for="cem">Indirizzo a cui è arrivato il link</label><input type="email" id="cem" autocomplete="email" inputmode="email" placeholder="nome@esempio.com"><button class="btn main" id="cok" style="margin-top:12px">Entra</button></div>';
+    document.getElementById('cok').onclick = function(){ var v = (document.getElementById('cem').value || '').trim().toLowerCase(); if (v) fai(v); };
   }
   function vNonAbilitato(email, motivo){
     VISTA = null;
