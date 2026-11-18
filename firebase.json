@@ -26,10 +26,26 @@
           ]
         }
       ],
-      "rewrites": [
+      "redirects": [
         {
-          "source": "**",
-          "destination": "/index.html"
+          "source": "/catering.html",
+          "destination": "/",
+          "type": 301
+        },
+        {
+          "source": "/troupe/catering.html",
+          "destination": "/",
+          "type": 301
+        },
+        {
+          "source": "/troupe",
+          "destination": "/",
+          "type": 301
+        },
+        {
+          "source": "/troupe/",
+          "destination": "/",
+          "type": 301
         }
       ]
     }
